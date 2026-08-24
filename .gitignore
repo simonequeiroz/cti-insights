@@ -1,0 +1,59 @@
+# ==========================================
+# GITIGNORE OFICIAL - SISTEMA CTI INSIGHTS
+# ==========================================
+
+# --- Front-end (Vue 3 / Node / Vite) ---
+frontend-vue/node_modules/
+frontend-vue/dist/
+frontend-vue/dist-ssr/
+frontend-vue/*.local
+frontend-vue/.env
+frontend-vue/.env.*.local
+frontend-vue/npm-debug.log*
+frontend-vue/yarn-debug.log*
+frontend-vue/yarn-error.log*
+
+# --- Back-end (Java / Spring Boot / Maven) ---
+backend-java/target/
+backend-java/pom.xml.tag
+backend-java/pom.xml.releaseBackup
+backend-java/pom.xml.versionsBackup
+backend-java/pom.xml.next
+backend-java/release.properties
+backend-java/.mvn/wrapper/maven-wrapper.jar
+
+# --- Ciência de Dados (Python / Pandas) ---
+analytics-python/__pycache__/
+analytics-python/*.pyc
+analytics-python/*.pyo
+analytics-python/*.pyd
+analytics-python/.pytest_cache/
+analytics-python/.venv/
+analytics-python/venv/
+analytics-python/env/
+analytics-python/ENV/
+
+# --- IDEs e Editores de Código (VS Code, IntelliJ, Eclipse) ---
+.vscode/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# --- Sistema Operacional (Windows / macOS) ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Banco de Dados e Segurança ---
+*.log
+*.sqlite
+.env
+database/.env
