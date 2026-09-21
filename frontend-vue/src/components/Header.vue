@@ -1,44 +1,20 @@
 <template>
-  <header class="w-full border-b border-gray-200 bg-white/95">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-
-      <!-- Logo -->
-      <div class="text-xl font-bold tracking-tight text-[#2874BE]">
-        CTI Insights<span class="text-[#F7941D]">.</span>
-      </div>
-
-      <!-- Menu -->
-      <nav class="hidden items-center gap-20 md:flex">
-        <a
-          href="#apresentacao"
-          class="text-xs text-gray-500 transition hover:text-[#2874BE]"
-        >
-          Apresentação
-        </a>
-
-        <a
-          href="#etl"
-          class="text-xs text-gray-500 transition hover:text-[#2874BE]"
-        >
-          Motor ETL
-        </a>
-
-        <a
-          href="#arquitetura"
-          class="text-xs text-gray-500 transition hover:text-[#2874BE]"
-        >
-          Arquitetura
-        </a>
-      </nav>
-
-      <!-- Botão -->
-      <RouterLink
-  to="/login"
-  class="rounded-md bg-[#2874BE] px-5 py-2.5 text-xs font-medium text-white shadow-sm transition hover:bg-[#2165a5]"
->
-  Acessar Sistema
-</RouterLink>
-
+  <!-- Header -->
+  <nav class="flex items-center justify-between py-8 px-10 max-w-[1280px] mx-auto w-full">
+    <!-- Logo -->
+    <div class="font-['Space_Grotesk'] font-bold text-[26px] tracking-tight text-[#006EB7]">
+      CTI Insights<span class="text-[#FF8F00]">.</span>
     </div>
-  </header>
+    <!-- Menu -->
+    <div class="hidden md:flex gap-10 text-base text-[#4A5D66] font-medium">
+      <router-link to="/dashboard" class="hover:text-[#292930] transition-colors">Dashboard</router-link>
+      <router-link to="/etl" class="hover:text-[#292930] transition-colors">Motor ETL</router-link>
+      <router-link to="/consultores" class="hover:text-[#292930] transition-colors">Consultores</router-link>
+      <router-link to="/relatorios" class="hover:text-[#292930] transition-colors">Relatórios</router-link>
+    </div>
+    <!-- Botão -->
+    <router-link to="/login" class="bg-[#006EB7] text-[#FAFAF7] px-6 py-3 rounded text-base font-semibold shadow-md hover:bg-[#03558c] transition-all">
+      Acessar Sistema
+    </router-link>
+  </nav>
 </template>
