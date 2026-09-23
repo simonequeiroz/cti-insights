@@ -16,6 +16,7 @@ const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 const CHAVE_AUTH = 'ctiAuth'
 const CHAVE_USUARIO = 'ctiUsuario'
+const CHAVE_NOME = 'ctiNome'
 const CHAVE_CLIENTES = 'ctiClientes'
 const CHAVE_TELEMETRIA = 'ctiTelemetria'
 
@@ -51,7 +52,23 @@ export const usuarioAtual = () => {
   return localStorage.getItem(CHAVE_USUARIO) || ''
 }
 
-// API: POST /auth/login  { email, senha } -> { email }
+// Nome para exibir na Sidebar. Vem da API quando ela informa (campo "nome"
+// do login). Sem isso — no mock, ou se a API só devolver o e-mail — deriva
+// do e-mail: "ana.lima@empresa.com" -> "Ana Lima".
+const nomeAPartirDoEmail = email => {
+  return String(email || '')
+    .split('@')[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
+    .join(' ')
+}
+
+export const nomeUsuario = () => {
+  return localStorage.getItem(CHAVE_NOME) || nomeAPartirDoEmail(usuarioAtual())
+}
+
+// API: POST /auth/login  { email, senha } -> { email, nome? }
 export const login = async (email, senha) => {
   if (!USAR_MOCK) {
     const usuario = await http('/auth/login', {
@@ -60,12 +77,18 @@ export const login = async (email, senha) => {
     })
     localStorage.setItem(CHAVE_AUTH, 'true')
     localStorage.setItem(CHAVE_USUARIO, usuario.email)
+
+    if (usuario.nome) {
+      localStorage.setItem(CHAVE_NOME, usuario.nome)
+    }
+
     return usuario
   }
 
   // Mock: qualquer e-mail/senha "autenticam".
   localStorage.setItem(CHAVE_AUTH, 'true')
   localStorage.setItem(CHAVE_USUARIO, email)
+  localStorage.removeItem(CHAVE_NOME)
   return { email }
 }
 
@@ -73,6 +96,7 @@ export const login = async (email, senha) => {
 export const logout = async () => {
   localStorage.removeItem(CHAVE_AUTH)
   localStorage.removeItem(CHAVE_USUARIO)
+  localStorage.removeItem(CHAVE_NOME)
 
   if (!USAR_MOCK) {
     await http('/auth/logout', { method: 'POST' })
@@ -119,6 +143,26 @@ export const salvarHistorico = async historico => {
   }
 
   localStorage.setItem(CHAVE_TELEMETRIA, JSON.stringify(historico))
+}
+
+// ---------- Apoio a testes ----------
+
+// Só em desenvolvimento (npm run dev): se a chave ctiDelayUpload do
+// localStorage tiver um número (milissegundos), o processamento do upload
+// espera esse tempo, para dar para ver o status PROCESSANDO na tela. Em
+// produção (npm run build) não faz nada. Para usar, no console do navegador:
+//   localStorage.setItem('ctiDelayUpload', 3000)
+// e para desligar: localStorage.removeItem('ctiDelayUpload')
+export const esperarSimulado = async () => {
+  if (!import.meta.env.DEV) {
+    return
+  }
+
+  const atraso = Number(localStorage.getItem('ctiDelayUpload'))
+
+  if (atraso > 0) {
+    await new Promise(resolver => setTimeout(resolver, atraso))
+  }
 }
 
 // ---------- Limpeza ----------

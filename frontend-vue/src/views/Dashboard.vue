@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
 import { listarClientes } from '../services/api'
+import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import {
   Chart,
   LineElement,
@@ -32,6 +33,13 @@ const clientes = ref([])
 const filtroSegmento = ref('Todos')
 const filtroNivel = ref('Todos')
 
+// Período (data de contratação), como "aaaa-mm-dd"; vazio = sem limite.
+const dataInicio = ref('')
+const dataFim = ref('')
+
+const periodoAtivo = computed(() => Boolean(dataInicio.value || dataFim.value))
+const periodoImpossivel = computed(() => periodoInvertido(dataInicio.value, dataFim.value))
+
 onMounted(async () => {
   clientes.value = await listarClientes()
 })
@@ -52,7 +60,9 @@ const clientesFiltrados = computed(() => {
       filtroNivel.value === 'Todos' ||
       cliente.nivel_cliente === filtroNivel.value
 
-    return segmento && nivel
+    const periodo = dentroDoPeriodo(cliente, dataInicio.value, dataFim.value)
+
+    return segmento && nivel && periodo
   })
 })
 
@@ -70,7 +80,7 @@ const clientesPaginados = computed(() => {
 })
 
 // Muda o filtro (segmento/nível), volta pra primeira página do resultado
-watch([filtroSegmento, filtroNivel], () => {
+watch([filtroSegmento, filtroNivel, dataInicio, dataFim], () => {
   paginaAtual.value = 1
 })
 
@@ -86,10 +96,14 @@ const totalClientes = computed(() => {
   return clientesFiltrados.value.length
 })
 
-const clientesNivelA = computed(() => {
-  return clientesFiltrados.value.filter(
-    cliente => cliente.nivel_cliente === 'A'
-  ).length
+// Total de serviços contratados na base filtrada: cada cliente pode ter
+// vários serviços na mesma linha (lista "servicos"). Bases salvas antes
+// dessa lista existir só têm o texto "servico", contado como 1.
+const totalServicos = computed(() => {
+  return clientesFiltrados.value.reduce(
+    (total, cliente) => total + (cliente.servicos?.length ?? (cliente.servico ? 1 : 0)),
+    0
+  )
 })
 
 // Este modelo de aula não exige faturamento (o exemplo da professora só
@@ -545,6 +559,16 @@ const formatarMoeda = valor => {
   })
 }
 
+// Para os cartões de KPI: sem centavos ("R$ 2.458.760"), como no Figma.
+// O valor exato continua nas tabelas e nos tooltips dos gráficos.
+const formatarMoedaInteira = valor => {
+  return valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0
+  })
+}
+
 const formatarData = valor => {
   if (!valor) {
     return '—'
@@ -557,6 +581,8 @@ const formatarData = valor => {
 const limparFiltros = () => {
   filtroSegmento.value = 'Todos'
   filtroNivel.value = 'Todos'
+  dataInicio.value = ''
+  dataFim.value = ''
 }
 
 // "Exportar PDF" via impressão nativa do navegador: não exige nenhuma
@@ -704,8 +730,36 @@ const exportarCSV = () => {
 
           </select>
 
+          <!-- Período: filtra pela data de contratação -->
+
+          <label
+            for="filtro-data-inicio"
+            class="flex items-center gap-2 text-sm text-gray-600"
+          >
+            De
+            <input
+              id="filtro-data-inicio"
+              v-model="dataInicio"
+              type="date"
+              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+            />
+          </label>
+
+          <label
+            for="filtro-data-fim"
+            class="flex items-center gap-2 text-sm text-gray-600"
+          >
+            Até
+            <input
+              id="filtro-data-fim"
+              v-model="dataFim"
+              type="date"
+              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+            />
+          </label>
+
           <button
-            v-if="filtroSegmento !== 'Todos' || filtroNivel !== 'Todos'"
+            v-if="filtroSegmento !== 'Todos' || filtroNivel !== 'Todos' || periodoAtivo"
             type="button"
             @click="limparFiltros"
             class="text-sm text-[#006EB7] transition hover:underline"
@@ -734,6 +788,25 @@ const exportarCSV = () => {
       </div>
 
 
+      <!-- Avisos do filtro de período -->
+
+      <p
+        v-if="periodoImpossivel"
+        class="no-print mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+      >
+        A data inicial é posterior à data final — nenhum cliente pode aparecer nesse período.
+      </p>
+
+      <p
+        v-else-if="periodoAtivo"
+        class="mt-4 text-xs text-gray-500"
+      >
+        Período filtrado pela data de contratação. O faturamento exibido é o
+        faturamento anual de cada cliente contratado no período, não a receita
+        gerada nele.
+      </p>
+
+
       <!-- SEM DADOS: guia o usuário até o Upload em vez de mostrar KPIs zerados -->
 
       <div
@@ -760,25 +833,36 @@ const exportarCSV = () => {
       </div>
 
 
-      <!-- KPIs -->
+      <!-- KPIs, GRÁFICOS e, abaixo deles, INSIGHTS INTELIGENTES, todos na
+           largura toda. As grades internas respondem à largura deste bloco
+           (@container), não da janela, porque o menu lateral ocupa parte
+           da tela. -->
 
       <div
         v-if="clientes.length"
-        class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        class="@container mt-6 space-y-5"
+      >
+
+      <div class="space-y-5">
+
+      <!-- KPIs -->
+
+      <div
+        class="grid grid-cols-1 gap-5 @sm:grid-cols-2 @xl:grid-cols-4"
       >
 
         <!-- Total -->
 
         <div
-          class="rounded-lg border border-gray-200 bg-white p-5"
+          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
         >
 
-          <p class="text-sm text-gray-500">
+          <p class="text-xs text-gray-500">
             Faturamento Total
           </p>
 
-          <p class="mt-2 text-2xl font-bold">
-            {{ formatarMoeda(faturamentoTotal) }}
+          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
+            {{ formatarMoedaInteira(faturamentoTotal) }}
           </p>
 
         </div>
@@ -787,34 +871,34 @@ const exportarCSV = () => {
         <!-- Total de clientes -->
 
         <div
-          class="rounded-lg border border-gray-200 bg-white p-5"
+          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
         >
 
-          <p class="text-sm text-gray-500">
+          <p class="text-xs text-gray-500">
             Clientes Ativos
           </p>
 
-          <p class="mt-2 text-2xl font-bold">
+          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
             {{ totalClientes }}
           </p>
 
         </div>
 
 
-        <!-- Nível A -->
+        <!-- Serviços contratados -->
 
         <div
-          class="rounded-lg border border-gray-200 bg-white p-5"
+          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
         >
 
-          <p class="text-sm text-gray-500">
-            Clientes Nível A
+          <p class="text-xs text-gray-500">
+            Serviços Contratados
           </p>
 
           <p
-            class="mt-2 text-2xl font-bold text-[#006EB7]"
+            class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]"
           >
-            {{ clientesNivelA }}
+            {{ totalServicos }}
           </p>
 
         </div>
@@ -823,15 +907,15 @@ const exportarCSV = () => {
         <!-- Ticket -->
 
         <div
-          class="rounded-lg border border-gray-200 bg-white p-5"
+          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
         >
 
-          <p class="text-sm text-gray-500">
+          <p class="text-xs text-gray-500">
             Ticket Médio
           </p>
 
-          <p class="mt-2 text-2xl font-bold">
-            {{ formatarMoeda(ticketMedio) }}
+          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
+            {{ formatarMoedaInteira(ticketMedio) }}
           </p>
 
         </div>
@@ -839,31 +923,23 @@ const exportarCSV = () => {
       </div>
 
 
-      <!-- GRÁFICOS + INSIGHTS: layout de 2 colunas igual ao Figma
-           (gráficos ocupam 2/3, painel de Insights Inteligentes 1/3) -->
-
-      <div
-        v-if="clientes.length"
-        class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3"
-      >
-
       <!-- GRÁFICOS: grade 2x2, igual ao Figma
            (Faturamento por segmento / Evolução das contratações /
            Distribuição por nível A/B/C / Top 5 Serviços por Faturamento) -->
 
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:col-span-2">
+      <div class="grid grid-cols-1 gap-5 @xl:grid-cols-2">
 
         <!-- GRÁFICO DE ROSCA: SEGMENTO -->
 
-        <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <div class="flex flex-col rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Faturamento por segmento
           </h2>
 
-          <div class="mt-5 flex items-center gap-6">
+          <div class="mt-5 flex flex-1 items-center gap-6 @xl:@max-3xl:gap-4">
 
-            <div class="relative h-44 w-44 flex-shrink-0">
+            <div class="relative h-44 w-44 @xl:@max-3xl:h-36 @xl:@max-3xl:w-36 flex-shrink-0">
 
               <Doughnut
                 :data="graficoDonutData"
@@ -920,11 +996,11 @@ const exportarCSV = () => {
             Evolução das contratações
           </h2>
 
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 @xl:@max-3xl:hidden">
             Número de contratos fechados por período na base selecionada.
           </p>
 
-          <div class="mt-5 h-80">
+          <div class="mt-5 h-80 @xl:@max-3xl:h-56">
 
             <Line
               v-if="evolucaoContratacoes.length"
@@ -953,11 +1029,11 @@ const exportarCSV = () => {
             Distribuição por nível A/B/C
           </h2>
 
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 @xl:@max-3xl:hidden">
             Quantidade de clientes em cada classificação, na base selecionada.
           </p>
 
-          <div class="mt-5 h-80">
+          <div class="mt-5 h-80 @xl:@max-3xl:h-56">
 
             <Bar
               :data="graficoNivelData"
@@ -977,7 +1053,7 @@ const exportarCSV = () => {
             Top 5 serviços por faturamento
           </h2>
 
-          <p class="mt-1 text-sm text-gray-500">
+          <p class="mt-1 text-sm text-gray-500 @xl:@max-3xl:hidden">
             Serviços que mais faturam na base selecionada.
           </p>
 
@@ -985,7 +1061,7 @@ const exportarCSV = () => {
             Cliente com mais de um serviço: faturamento dividido em partes iguais entre eles (estimativa).
           </p>
 
-          <div class="mt-5 h-80 overflow-y-auto">
+          <div class="mt-5 h-80 overflow-y-auto @xl:@max-3xl:h-64">
 
             <ul
               v-if="top5Servicos.length"
@@ -1034,16 +1110,18 @@ const exportarCSV = () => {
 
       </div>
 
+      </div>
+
 
       <!-- INSIGHTS INTELIGENTES -->
 
-      <div class="rounded-lg border border-gray-200 bg-white p-6 xl:col-span-1">
+      <div class="rounded-lg border border-gray-200 bg-white p-6">
 
         <h2 class="text-lg font-bold text-[#292A2F]">
           Insights Inteligentes
         </h2>
 
-        <div class="mt-5 space-y-3">
+        <div class="mt-5 grid grid-cols-1 gap-3 @2xl:grid-cols-2 @5xl:grid-cols-4">
 
           <div
             v-for="insight in insights"

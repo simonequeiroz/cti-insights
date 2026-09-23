@@ -82,8 +82,11 @@ Requisição:
 Resposta `200`:
 
 ```json
-{ "email": "usuario@empresa.com" }
+{ "email": "usuario@empresa.com", "nome": "Ana Lima" }
 ```
+
+`nome` é opcional: a Sidebar exibe o nome e as iniciais (como no Figma). Sem
+ele, o front deriva o nome do e-mail (`ana.lima@…` → "Ana Lima").
 
 Erro `401`: credenciais inválidas (o front mostra "E-mail ou senha
 inválidos.").
@@ -165,6 +168,36 @@ campo `linhasLidas`, acrescentado por decisão do grupo).
 
 Regra de negócio importante: um upload com `ERRO_SCHEMA` **não deve
 substituir** a última base válida servida por `GET /clientes`.
+
+### Regras de validação da planilha (hoje aplicadas no front)
+
+Hoje o front recusa o arquivo **inteiro** (`ERRO_SCHEMA`) se, em **qualquer
+linha**, um destes campos estiver vazio ou inválido:
+
+| Campo | Regra |
+|---|---|
+| `codigo_cliente`, `nome_cliente`, `consultor`, `segmento` | Preenchidos |
+| `nivel_cliente` | `A`, `B` ou `C` |
+| `data_contratacao` | Data válida (`aaaa-mm-dd` ou `dd/mm/aaaa`) |
+| `servicos_contratados` | Pelo menos um serviço |
+
+`faturamento_anual` é opcional (vazio conta como 0). A `mensagem` do registro
+diz quais campos falharam e em quais linhas da planilha (o cabeçalho é a
+linha 1), por exemplo: *"3 de 4 linha(s) com campo obrigatório vazio ou
+inválido: consultor (1), nível (A, B ou C) (1). Linhas: 3, 4, 5."*
+
+Ao migrar a validação para o back-end/Python (ponto em aberto nº 1), estas
+são as regras a preservar, ou a alterar em comum acordo. **Ainda não decidido:**
+recusar o arquivo todo (como hoje) ou importar as linhas boas e listar as
+ruins.
+
+### Filtro por período
+
+Dashboard e Relatórios filtram por **data de contratação** (`De`/`Até`) no
+próprio navegador, sobre a lista devolvida por `GET /clientes`. Se a base
+crescer, o filtro pode virar parâmetro da API (por exemplo,
+`GET /clientes?de=aaaa-mm-dd&ate=aaaa-mm-dd`); isso é uma sugestão, não uma
+exigência.
 
 ### `POST /uploads` (a definir)
 

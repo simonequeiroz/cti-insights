@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import {
+  esperarSimulado,
   limparDados as limparDadosSalvos,
   listarClientes,
   listarHistorico,
@@ -141,6 +142,62 @@ const celulaParaTexto = valor => {
   return valor
 }
 
+// Campos obrigatórios de cada linha (base: colunas da planilha e diagrama de
+// classes). Uma planilha com qualquer um deles vazio ou inválido não entra na
+// base. Faturamento não é obrigatório: o Dashboard trata ausência como 0.
+const NIVEIS_VALIDOS = ['A', 'B', 'C']
+
+const CAMPOS_OBRIGATORIOS = [
+  { rotulo: 'código do cliente', invalido: c => !c.codigo_cliente },
+  { rotulo: 'nome do cliente', invalido: c => !c.nome_cliente },
+  { rotulo: 'consultor', invalido: c => !c.consultor },
+  { rotulo: 'segmento', invalido: c => !c.segmento },
+  { rotulo: 'nível (A, B ou C)', invalido: c => !NIVEIS_VALIDOS.includes(c.nivel_cliente) },
+  { rotulo: 'data de contratação', invalido: c => !c.data_contratacao },
+  { rotulo: 'serviço', invalido: c => !c.servicos.length }
+]
+
+// Confere todas as linhas e resume os problemas: quantas linhas falharam,
+// quantas vezes cada campo falhou e quais as primeiras linhas (número da
+// linha na planilha: cabeçalho é a 1, então o primeiro cliente é a 2).
+const validarClientes = clientes => {
+  const contagemPorCampo = CAMPOS_OBRIGATORIOS.map(() => 0)
+  const linhasComProblema = []
+
+  clientes.forEach((cliente, indice) => {
+    let temProblema = false
+
+    CAMPOS_OBRIGATORIOS.forEach((campo, posicao) => {
+      if (campo.invalido(cliente)) {
+        contagemPorCampo[posicao]++
+        temProblema = true
+      }
+    })
+
+    if (temProblema) {
+      linhasComProblema.push(indice + 2)
+    }
+  })
+
+  const camposComProblema = CAMPOS_OBRIGATORIOS
+    .map((campo, posicao) => ({ rotulo: campo.rotulo, quantidade: contagemPorCampo[posicao] }))
+    .filter(campo => campo.quantidade > 0)
+
+  return { linhasComProblema, camposComProblema }
+}
+
+const montarMensagemDeErro = (validacao, totalLinhas) => {
+  const campos = validacao.camposComProblema
+    .map(campo => `${campo.rotulo} (${campo.quantidade})`)
+    .join(', ')
+
+  const primeiras = validacao.linhasComProblema.slice(0, 5).join(', ')
+  const restantes = validacao.linhasComProblema.length - 5
+  const linhas = restantes > 0 ? `${primeiras} e mais ${restantes}` : primeiras
+
+  return `${validacao.linhasComProblema.length} de ${totalLinhas} linha(s) com campo obrigatório vazio ou inválido: ${campos}. Linhas: ${linhas}.`
+}
+
 export const useUploadStore = defineStore('upload', {
   state: () => ({
     arquivo: null,
@@ -184,7 +241,7 @@ export const useUploadStore = defineStore('upload', {
       const valido = nome.endsWith('.xlsx') || nome.endsWith('.xls') || nome.endsWith('.csv')
 
       if (!valido) {
-        this.erros.push('Formato inválido.')
+        this.erros.push('Formato inválido. Envie um arquivo .xlsx, .xls ou .csv.')
       }
 
       return valido
@@ -228,7 +285,18 @@ export const useUploadStore = defineStore('upload', {
       }
     },
 
+    // Envolve o processamento para "carregando" sempre voltar a false, mesmo
+    // se algo inesperado lançar erro (senão a tela ficaria presa em
+    // "Processando...").
     async processarPlanilha() {
+      try {
+        await this.executarProcessamento()
+      } finally {
+        this.carregando = false
+      }
+    },
+
+    async executarProcessamento() {
       if (!this.validarArquivo()) {
         return
       }
@@ -250,6 +318,10 @@ export const useUploadStore = defineStore('upload', {
 
       this.historico = [registro, ...this.historico]
       this.salvarHistorico()
+
+      // Só em desenvolvimento e só se ctiDelayUpload estiver definido: deixa o
+      // status PROCESSANDO visível para testar (veja README).
+      await esperarSimulado()
 
       const ehPlanilhaExcel = /\.(xlsx|xls)$/i.test(this.arquivo.name)
 
@@ -301,49 +373,88 @@ export const useUploadStore = defineStore('upload', {
         return
       }
 
-      this.dadosTratados = this.dadosOriginais.map(this.tratarLinha)
+      const tratados = this.dadosOriginais.map(this.tratarLinha)
 
-      // Validação real: um cliente sem nome nem código não é um cliente —
-      // planilha sem essa informação básica não entra na base.
-      const linhaInvalida = cliente => !cliente.nome_cliente && !cliente.codigo_cliente
-      const invalidos = this.dadosTratados.filter(linhaInvalida)
+      // Validação: todos os campos obrigatórios (CAMPOS_OBRIGATORIOS) devem
+      // estar preenchidos em todas as linhas — senão o arquivo inteiro é
+      // recusado e a última base válida é mantida.
+      const validacao = validarClientes(tratados)
 
-      if (this.dadosTratados.length === 0) {
+      if (tratados.length === 0) {
         item.status = 'ERRO_SCHEMA'
         item.linhasLidas = 0
         item.mensagem = 'Nenhuma linha de dados encontrada no arquivo.'
         item.conteudoOriginal = conteudoParaDownload
         item.nomeArquivoDownload = nomeParaDownload
         this.erros = [item.mensagem]
-      } else if (invalidos.length > 0) {
+      } else if (validacao.linhasComProblema.length > 0) {
         item.status = 'ERRO_SCHEMA'
-        item.linhasLidas = this.dadosTratados.length
-        item.mensagem = `${invalidos.length} de ${this.dadosTratados.length} linha(s) sem nome nem código de cliente.`
+        item.linhasLidas = tratados.length
+        item.mensagem = montarMensagemDeErro(validacao, tratados.length)
         item.conteudoOriginal = conteudoParaDownload
         item.nomeArquivoDownload = nomeParaDownload
         this.erros = [item.mensagem]
       } else {
-        item.status = 'NORMALIZADO'
-        item.linhasLidas = this.dadosTratados.length
-        item.mensagem = ''
-        this.erros = []
-
-        // Só sobrescreve a base usada pelo Dashboard/Relatórios quando o
-        // arquivo passou na validação — um upload com erro não deve apagar
-        // a última base boa que já estava carregada.
-        await salvarClientes(this.dadosTratados)
+        // Só sobrescreve a base usada pelo Dashboard/Relatórios (e a prévia)
+        // quando o arquivo passou na validação — um upload com erro não deve
+        // apagar a última base boa que já estava carregada.
+        try {
+          await salvarClientes(tratados)
+          this.dadosTratados = tratados
+          item.status = 'NORMALIZADO'
+          item.linhasLidas = tratados.length
+          item.mensagem = ''
+          this.erros = []
+        } catch (erro) {
+          // Ex.: estourou o limite do armazenamento local do navegador.
+          console.error('Erro ao salvar a base:', erro)
+          item.status = 'ERRO_SCHEMA'
+          item.linhasLidas = tratados.length
+          item.mensagem = 'Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local).'
+          this.erros = [item.mensagem]
+        }
       }
 
       this.salvarHistorico()
-      this.carregando = false
     },
 
-    salvarHistorico() {
-      return salvarHistorico(this.historico)
+    // Nunca lança erro: se o armazenamento local estiver cheio, tenta de novo
+    // sem o conteúdo original dos arquivos com erro (a parte mais pesada).
+    async salvarHistorico() {
+      try {
+        await salvarHistorico(this.historico)
+      } catch {
+        try {
+          const leve = this.historico.map(item => ({ ...item, conteudoOriginal: undefined }))
+          await salvarHistorico(leve)
+        } catch (erro) {
+          console.warn('Não foi possível salvar o histórico:', erro)
+        }
+      }
     },
 
     async carregarHistorico() {
       this.historico = await listarHistorico()
+
+      // Registro ainda PROCESSANDO, mas sem nenhum processamento em andamento:
+      // a página foi recarregada ou fechada no meio. Marca como interrompido
+      // em vez de deixar "PROCESSANDO..." para sempre.
+      if (!this.carregando) {
+        let mudou = false
+
+        this.historico.forEach(item => {
+          if (item.status === 'PROCESSANDO') {
+            item.status = 'ERRO_SCHEMA'
+            item.linhasLidas = 0
+            item.mensagem = 'Processamento interrompido (a página foi recarregada ou fechada). Envie o arquivo novamente.'
+            mudou = true
+          }
+        })
+
+        if (mudou) {
+          await this.salvarHistorico()
+        }
+      }
     },
 
     removerDoHistorico(id) {

@@ -53,8 +53,8 @@ use o botão de limpar dados em **Relatórios**.
 | `/` | Página inicial (landing) | Pública |
 | `/login` | Login | Pública |
 | `/upload` | Upload e histórico de processamento | Requer login |
-| `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, exportação CSV/PDF) | Requer login |
-| `/relatorios` | Base de clientes detalhada, com busca | Requer login |
+| `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, filtros por segmento, nível e período, exportação CSV/PDF) | Requer login |
+| `/relatorios` | Base de clientes detalhada, com busca por empresa e filtro por período | Requer login |
 
 ## Estrutura de `src/`
 
@@ -67,6 +67,8 @@ src/
 │   └── api.js        # ÚNICO ponto de acesso a dados e sessão (mock ou API)
 ├── stores/
 │   └── uploadStore.js   # leitura, limpeza e validação da planilha; histórico
+├── utils/
+│   └── periodo.js       # filtro por período de contratação (Dashboard e Relatórios)
 ├── views/            # uma por rota: Home, Login, UploadView, Dashboard, Relatorios
 └── components/       # Sidebar e blocos da página inicial (Hero, Metrics, ...)
 ```
@@ -77,8 +79,10 @@ src/
 2. As linhas são **normalizadas** (espaços, maiúsculas, segmentos
    equivalentes como "IND." e "Indústria", faturamento em texto → número,
    datas `dd/mm/aaaa` → `aaaa-mm-dd`).
-3. A planilha é **validada** (hoje: sem linhas, ou linha sem nome e sem
-   código de cliente).
+3. A planilha é **validada**: todo campo obrigatório (lista abaixo) precisa
+   estar preenchido em **todas** as linhas. Se alguma falhar, o arquivo
+   inteiro é recusado (`ERRO_SCHEMA`), a mensagem no histórico diz quais
+   campos e quais linhas corrigir, e a última base válida é mantida.
 4. O resultado é salvo pelo serviço (`services/api.js`, hoje no `localStorage`); Dashboard e Relatórios leem dele.
 
 Chaves usadas no `localStorage`:
@@ -92,20 +96,40 @@ Chaves usadas no `localStorage`:
 
 ### Formato esperado da planilha
 
-Colunas reconhecidas (o nome da coluna é a chave):
+O **nome da coluna no cabeçalho precisa ser exatamente o da tabela** (minúsculas, com `_`). Colunas obrigatórias: se estiverem vazias ou inválidas em qualquer linha, o arquivo é recusado.
 
-| Coluna | Observação |
-|---|---|
-| `consultor` | Texto |
-| `codigo_cliente` | Texto |
-| `nome_cliente` | Texto |
-| `segmento` | Grafias diferentes são unificadas |
-| `nivel_cliente` | `A`, `B` ou `C` |
-| `faturamento_anual` (ou `faturamento`) | Número ou texto como `R$ 1.850.000,00` |
-| `data_contratacao` | `aaaa-mm-dd` ou `dd/mm/aaaa` |
-| `servicos_contratados` (ou `servico`) | Vários serviços separados por `;` |
+| Coluna | Obrigatória | Observação |
+|---|---|---|
+| `consultor` | Sim | Texto |
+| `codigo_cliente` | Sim | Texto |
+| `nome_cliente` | Sim | Texto |
+| `segmento` | Sim | Grafias diferentes são unificadas |
+| `nivel_cliente` | Sim | `A`, `B` ou `C` |
+| `data_contratacao` | Sim | `aaaa-mm-dd` ou `dd/mm/aaaa`; data inválida também recusa o arquivo |
+| `servicos_contratados` (ou `servico`) | Sim | Vários serviços separados por `;` |
+| `faturamento_anual` (ou `faturamento`) | Não | Número ou texto como `R$ 1.850.000,00`; vazio conta como 0 |
 
 Estados do histórico de upload: `PROCESSANDO`, `NORMALIZADO`, `ERRO_SCHEMA`.
+Um registro que ficou em `PROCESSANDO` porque a página foi fechada é marcado
+como interrompido na próxima vez que a tela de Upload abrir.
+
+### Filtro por período
+
+Dashboard e Relatórios têm os campos **De** e **Até**, que filtram pela **data
+de contratação** (limites inclusivos; um dos dois pode ficar vazio). Com o
+filtro ativo, clientes sem data ficam de fora. O faturamento exibido é o
+**faturamento anual** de cada cliente contratado no período, não a receita
+gerada nele. O filtro roda no navegador (`src/utils/periodo.js`).
+
+### Testando o Upload
+
+- Arquivos de exemplo com erros (campo obrigatório vazio, sem linhas etc.)
+  ajudam a ver as mensagens do histórico.
+- O status `PROCESSANDO` dura milissegundos. Para vê-lo, em **modo de
+  desenvolvimento** (`npm run dev`) rode no console do navegador:
+  `localStorage.setItem('ctiDelayUpload', 3000)` (espera 3 s por upload) e,
+  para desligar, `localStorage.removeItem('ctiDelayUpload')`. No build de
+  produção essa espera não existe.
 
 ## Integração com as outras squads
 

@@ -33,8 +33,8 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
          Nenhum item aqui leva para telas internas do sistema — quem ainda
          não fez login não deve conseguir "entrar" pelo menu. -->
     <div class="hidden md:flex gap-10 text-base text-[#4A5D66] font-medium">
-      <a href="#inicio" class="hover:text-[#292930] transition-colors">Visão Geral</a>
-      <a href="#resultados" class="hover:text-[#292930] transition-colors">Resultados</a>
+      <a href="#inicio" class="hover:text-[#292930] transition-colors">Apresentação</a>
+      <a href="#resultados" class="hover:text-[#292930] transition-colors">Motor ETL</a>
       <a href="#arquitetura" class="hover:text-[#292930] transition-colors">Arquitetura</a>
     </div>
     <!-- Botão (desktop) -->
@@ -64,8 +64,8 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
       id="menu-mobile"
       class="md:hidden absolute left-4 right-4 top-full z-50 flex flex-col rounded-lg border border-[#CDDADF] bg-white p-4 shadow-lg"
     >
-      <a href="#inicio" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Visão Geral</a>
-      <a href="#resultados" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Resultados</a>
+      <a href="#inicio" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Apresentação</a>
+      <a href="#resultados" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Motor ETL</a>
       <a href="#arquitetura" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Arquitetura</a>
       <router-link
         to="/login"

@@ -2,25 +2,37 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
 import { limparDados as limparDadosLocais, listarClientes } from '../services/api'
+import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 
 const clientes = ref([])
 const busca = ref('')
+
+// Período (data de contratação), como "aaaa-mm-dd"; vazio = sem limite.
+const dataInicio = ref('')
+const dataFim = ref('')
+
+const periodoAtivo = computed(() => Boolean(dataInicio.value || dataFim.value))
+const periodoImpossivel = computed(() => periodoInvertido(dataInicio.value, dataFim.value))
+
+const limparPeriodo = () => {
+  dataInicio.value = ''
+  dataFim.value = ''
+}
 
 onMounted(async () => {
   clientes.value = await listarClientes()
 })
 
 // Busca por nome da empresa (case-insensitive), igual ao "Buscar empresa..."
-// do wireframe.
+// do wireframe, combinada com o filtro de período.
 const clientesFiltrados = computed(() => {
   const termo = busca.value.trim().toLowerCase()
 
-  if (!termo) {
-    return clientes.value
-  }
-
   return clientes.value.filter(cliente => {
-    return cliente.nome_cliente?.toLowerCase().includes(termo)
+    const nome = !termo || cliente.nome_cliente?.toLowerCase().includes(termo)
+    const periodo = dentroDoPeriodo(cliente, dataInicio.value, dataFim.value)
+
+    return nome && periodo
   })
 })
 
@@ -37,8 +49,8 @@ const clientesPaginados = computed(() => {
   return clientesFiltrados.value.slice(inicio, inicio + ITENS_POR_PAGINA)
 })
 
-// Toda vez que a busca muda, volta pra primeira página do resultado
-watch(busca, () => {
+// Toda vez que a busca ou o período mudam, volta pra primeira página do resultado
+watch([busca, dataInicio, dataFim], () => {
   paginaAtual.value = 1
 })
 
@@ -134,7 +146,7 @@ const limparDados = async () => {
             </h1>
 
             <p class="mt-2 text-sm text-gray-500">
-              Base de clientes detalhada, com busca por empresa.
+              Base de clientes detalhada, com busca por empresa e por período de contratação.
             </p>
 
           </div>
@@ -145,8 +157,44 @@ const limparDados = async () => {
               v-model="busca"
               type="search"
               placeholder="Buscar empresa..."
+              aria-label="Buscar empresa"
               class="w-full max-w-xs rounded-md border border-gray-300 bg-white px-4 py-2 text-sm outline-none focus:border-[#006EB7] sm:w-64"
             />
+
+            <label
+              for="relatorio-data-inicio"
+              class="flex items-center gap-2 text-sm text-gray-600"
+            >
+              De
+              <input
+                id="relatorio-data-inicio"
+                v-model="dataInicio"
+                type="date"
+                class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+              />
+            </label>
+
+            <label
+              for="relatorio-data-fim"
+              class="flex items-center gap-2 text-sm text-gray-600"
+            >
+              Até
+              <input
+                id="relatorio-data-fim"
+                v-model="dataFim"
+                type="date"
+                class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+              />
+            </label>
+
+            <button
+              v-if="periodoAtivo"
+              type="button"
+              @click="limparPeriodo"
+              class="text-sm text-[#006EB7] transition hover:underline"
+            >
+              Limpar período
+            </button>
 
             <button
               v-if="clientes.length"
@@ -161,6 +209,13 @@ const limparDados = async () => {
           </div>
 
         </div>
+
+        <p
+          v-if="periodoImpossivel"
+          class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+        >
+          A data inicial é posterior à data final — nenhum cliente pode aparecer nesse período.
+        </p>
 
         <!-- TABELA -->
 
@@ -329,7 +384,7 @@ const limparDados = async () => {
           </h2>
 
           <p class="mt-2 text-sm text-gray-500">
-            {{ clientes.length ? 'Tente buscar por outro nome.' : 'Importe uma base na tela de Upload.' }}
+            {{ clientes.length ? 'Tente buscar por outro nome ou ajustar o período.' : 'Importe uma base na tela de Upload.' }}
           </p>
 
           <RouterLink

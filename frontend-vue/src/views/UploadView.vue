@@ -55,6 +55,10 @@ const aoSelecionarArquivo = event => {
 
   upload.selecionarArquivo(file)
   upload.processarPlanilha()
+
+  // Zera o campo: sem isso, enviar de novo o MESMO arquivo (por exemplo,
+  // depois de corrigir a planilha) não dispara o evento de mudança.
+  event.target.value = ''
 }
 
 const formatarDataHora = iso => {
@@ -167,14 +171,31 @@ const statusInfo = status => {
             Arquivo selecionado: {{ upload.arquivo.name }}
           </p>
 
+          <!-- Erros do envio: formato inválido, campos obrigatórios etc. -->
+          <div
+            v-if="upload.erros.length"
+            role="alert"
+            class="mt-4 w-full max-w-xl rounded-md border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-600"
+          >
+            <p
+              v-for="erro in upload.erros"
+              :key="erro"
+            >
+              {{ erro }}
+            </p>
+          </div>
+
           <!-- Formatos -->
           <p class="mt-4 text-[11px] uppercase tracking-wider text-gray-500">
             Formatos aceitos: .xlsx · .csv — máx. 20mb
           </p>
 
           <!-- Colunas esperadas -->
-          <p class="mt-2 text-[11px] uppercase tracking-wider text-gray-500">
-            Colunas: Consultor, Código do Cliente, Nome do Cliente, Segmento, Nível
+          <p class="mt-2 max-w-xl text-[11px] tracking-wider text-gray-500">
+            <span class="uppercase">Colunas obrigatórias (nome exato no cabeçalho):</span>
+            consultor, codigo_cliente, nome_cliente, segmento, nivel_cliente
+            (A, B ou C), data_contratacao, servicos_contratados.
+            Opcional: faturamento_anual.
           </p>
 
         </div>

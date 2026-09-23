@@ -6,7 +6,7 @@
       <!-- Eyebrow -->
       <div class="text-[14px] tracking-[0.14em] uppercase text-[#006EB7] font-bold mb-6 flex items-center gap-2.5">
         <span class="w-2.5 h-2.5 bg-[#FF8F00] rounded-full inline-block"></span>
-        Tratamento de Dados via Pandas
+        Automação e Consolidação de Dados
       </div>
 
       <!-- Título Principal Bem Maior -->
@@ -19,17 +19,16 @@
         Importe suas planilhas comerciais, consolide faturamentos e centralize a gestão de clientes em um painel interativo — elimine inconsistências operacionais.
       </p>
 
-      <!-- Botões Maiores:
-           - Primário leva para o login (única porta de entrada no sistema).
-           - Secundário apenas rola até a demonstração nesta mesma página,
-             sem exigir acesso, coerente com o papel de uma landing page. -->
+      <!-- Botões Maiores (textos do Figma). Os dois levam a telas do sistema,
+           que exigem login: a guarda de rota manda para /login e, depois de
+           entrar, volta para o destino pedido (Upload ou Dashboard). -->
       <div class="flex flex-col sm:flex-row gap-4 mt-10">
-        <router-link to="/login" class="bg-[#292930] text-[#FAFAF7] px-8 py-4 text-base font-medium rounded inline-flex items-center justify-center gap-2.5 hover:-translate-y-0.5 transition-transform shadow-md">
-          Acessar Sistema →
+        <router-link to="/upload" class="bg-[#006EB7] text-[#FAFAF7] px-8 py-4 text-base font-medium rounded inline-flex items-center justify-center gap-2.5 hover:-translate-y-0.5 hover:bg-[#03558c] transition-transform shadow-[0_8px_20px_rgba(0,110,183,0.3)]">
+          Importar Base de Clientes →
         </router-link>
-        <a href="#resultados" class="px-8 py-4 text-base font-medium text-center text-[#292930] border border-[#CDDADF] rounded bg-white/90 hover:border-[#292930] hover:bg-white transition-colors">
-          Ver Demonstração
-        </a>
+        <router-link to="/dashboard" class="px-8 py-4 text-base font-medium text-center text-[#292930] border border-[#CDDADF] rounded bg-white/90 hover:border-[#292930] hover:bg-white transition-colors">
+          Visualizar Dashboard
+        </router-link>
       </div>
 
     </div>

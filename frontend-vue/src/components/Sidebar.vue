@@ -1,19 +1,31 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { logout, usuarioAtual } from '../services/api'
+import { logout, nomeUsuario, usuarioAtual } from '../services/api'
 
 const route = useRoute()
 const router = useRouter()
 
-// Ainda não existe cadastro de nome/perfil — o e-mail digitado no login
-// (Login.vue) é o dado real mais próximo que temos de quem está logado.
+// O nome vem da API quando ela informar; enquanto isso, é derivado do
+// e-mail digitado no login (veja nomeUsuario em services/api.js). O cargo
+// "Consultor" ainda é fixo: não existe perfil no back-end.
 const emailUsuario = computed(() => {
   return usuarioAtual() || 'consultor@cti.com'
 })
 
+const nomeExibido = computed(() => {
+  return nomeUsuario() || 'Consultor'
+})
+
+// Iniciais: primeira letra do primeiro e do último nome ("Ana Lima" -> "AL").
 const iniciais = computed(() => {
-  return emailUsuario.value.slice(0, 2).toUpperCase()
+  const partes = nomeExibido.value.split(' ').filter(Boolean)
+
+  if (partes.length > 1) {
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
+  }
+
+  return nomeExibido.value.slice(0, 2).toUpperCase()
 })
 
 const linkAtivo = caminho => {
@@ -70,7 +82,7 @@ const sair = async () => {
 <template>
 
   <aside
-    class="flex flex-wrap items-center justify-between border-b border-gray-200 bg-white px-4 py-3 md:h-screen md:w-64 md:shrink-0 md:flex-col md:flex-nowrap md:items-stretch md:justify-between md:border-b-0 md:border-r md:px-5 md:py-6"
+    class="flex flex-wrap items-center justify-between border-b border-gray-200 bg-white px-4 py-3 md:h-screen md:w-48 md:shrink-0 md:flex-col md:flex-nowrap md:items-stretch md:justify-between md:border-b-0 md:border-r md:px-4 md:py-6 2xl:w-64 2xl:px-5"
   >
 
     <!-- Logo + botão hambúrguer (mobile) + navegação -->
@@ -136,6 +148,7 @@ const sair = async () => {
             :key="item.caminho"
             :to="item.caminho"
             :title="item.rotulo"
+            :aria-label="item.rotulo"
             class="flex items-center gap-3"
           >
             <span
@@ -179,13 +192,18 @@ const sair = async () => {
 
       <div class="flex items-center gap-3">
 
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-[#A85700]">
+        <div
+          :title="nomeExibido"
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-[#A85700]">
           {{ iniciais }}
         </div>
 
         <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-[#292A2F]">
-            {{ emailUsuario }}
+          <p
+            class="truncate text-sm font-semibold text-[#292A2F]"
+            :title="emailUsuario"
+          >
+            {{ nomeExibido }}
           </p>
 
           <p class="font-['IBM_Plex_Mono'] text-[11px] uppercase tracking-wide text-gray-500">
@@ -198,6 +216,8 @@ const sair = async () => {
       <button
         type="button"
         @click="sair"
+        title="Encerrar a Sessão"
+        aria-label="Encerrar a Sessão"
         class="mt-4 flex items-center gap-2 text-sm font-medium text-red-500 transition hover:text-red-600"
       >
         <svg
@@ -215,7 +235,7 @@ const sair = async () => {
           />
         </svg>
 
-        Encerrar a Sessão
+        <span>Encerrar a Sessão</span>
       </button>
 
     </div>
