@@ -195,7 +195,7 @@ const montarMensagemDeErro = (validacao, totalLinhas) => {
   const restantes = validacao.linhasComProblema.length - 5
   const linhas = restantes > 0 ? `${primeiras} e mais ${restantes}` : primeiras
 
-  return `${validacao.linhasComProblema.length} de ${totalLinhas} linha(s) com campo obrigatório vazio ou inválido: ${campos}. Linhas: ${linhas}.`
+  return `${validacao.linhasComProblema.length} de ${totalLinhas} linha(s) com campo obrigatório vazio ou inválido: ${campos}. Linhas: ${linhas}. Corrija esses dados na planilha e envie o arquivo novamente.`
 }
 
 export const useUploadStore = defineStore('upload', {
@@ -366,7 +366,7 @@ export const useUploadStore = defineStore('upload', {
       } catch (erro) {
         item.status = 'ERRO_SCHEMA'
         item.linhasLidas = 0
-        item.mensagem = 'Não foi possível ler o arquivo. Confira se o formato não está corrompido.'
+        item.mensagem = 'Não foi possível ler o arquivo. Confira se o formato não está corrompido (abra-o no Excel para testar) e envie novamente.'
         this.salvarHistorico()
         this.carregando = false
         console.error('Erro ao processar planilha:', erro)
@@ -383,7 +383,7 @@ export const useUploadStore = defineStore('upload', {
       if (tratados.length === 0) {
         item.status = 'ERRO_SCHEMA'
         item.linhasLidas = 0
-        item.mensagem = 'Nenhuma linha de dados encontrada no arquivo.'
+        item.mensagem = 'Nenhuma linha de dados encontrada no arquivo. Confira se a planilha tem o cabeçalho e ao menos uma linha de dados, e envie novamente.'
         item.conteudoOriginal = conteudoParaDownload
         item.nomeArquivoDownload = nomeParaDownload
         this.erros = [item.mensagem]
@@ -410,7 +410,7 @@ export const useUploadStore = defineStore('upload', {
           console.error('Erro ao salvar a base:', erro)
           item.status = 'ERRO_SCHEMA'
           item.linhasLidas = tratados.length
-          item.mensagem = 'Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local).'
+          item.mensagem = 'Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local). Envie uma planilha menor.'
           this.erros = [item.mensagem]
         }
       }

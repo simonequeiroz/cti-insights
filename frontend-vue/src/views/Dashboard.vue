@@ -166,7 +166,7 @@ const graficoLinhaData = computed(() => {
 
     datasets: [
       {
-        label: 'Contratos',
+        label: 'Contratos fechados',
 
         data: evolucaoContratacoes.value.map(item => item.contratos),
 
@@ -189,7 +189,11 @@ const graficoLinhaOptions = {
 
   plugins: {
     legend: {
-      display: false
+      display: true,
+      position: 'bottom',
+      labels: {
+        usePointStyle: true
+      }
     },
 
     tooltip: {
@@ -203,8 +207,19 @@ const graficoLinhaOptions = {
   },
 
   scales: {
+    x: {
+      title: {
+        display: true,
+        text: 'Período (mês/ano)'
+      }
+    },
+
     y: {
       beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Quantidade de contratos'
+      },
       ticks: {
         stepSize: 1
       }

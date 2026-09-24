@@ -53,7 +53,7 @@
       <!-- Linha separada do copyright oficial da CTI: identifica o trabalho
            como projeto acadêmico, sem se passar por parte da marca do cliente. -->
       <p class="mt-4 text-xs text-[#6B6B70]">
-        Projeto acadêmico — Grupo Data Pulse — SENAI Roberto Mange · Simone, Miguel, Thyphanny, Ryann, Ricardo
+        Projeto acadêmico — Grupo Data Pulse — SENAI Roberto Mange · Simone, Miguel, Thyphanny, Ryan, Ricardo
       </p>
     </div>
   </footer>
