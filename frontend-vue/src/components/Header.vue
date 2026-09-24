@@ -40,7 +40,7 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
     <!-- Botão (desktop) -->
     <router-link to="/login"
       class="hidden md:inline-block bg-[#006EB7] text-[#FAFAF7] px-6 py-3 rounded text-base font-semibold whitespace-nowrap shadow-md hover:bg-[#03558c] transition-all">
-      Acessar Sistema
+      Entrar no Sistema
     </router-link>
 
     <!-- Botão hambúrguer (mobile) -->
@@ -72,7 +72,7 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
         @click="fecharMenu"
         class="mt-3 rounded bg-[#006EB7] px-4 py-3 text-center text-base font-semibold text-[#FAFAF7] hover:bg-[#03558c]"
       >
-        Acessar Sistema
+        Entrar no Sistema
       </router-link>
     </div>
   </nav>
