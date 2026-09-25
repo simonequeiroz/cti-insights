@@ -1,84 +1,76 @@
 <template>
-  <section class="px-4 pb-10 sm:px-6 lg:px-10">
-    <div class="mx-auto max-w-7xl">
+  <!-- Bloco: Gráfico de Faturamento Consolidado -->
+  <div id="resultados" class="max-w-[1360px] mx-auto px-8">
+    <div class="border border-[#CDDADF] bg-white/75 backdrop-blur-[8px] rounded-lg p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
+      
+      <!-- Cabeçalho do Painel -->
+      <div class="flex justify-between items-baseline mb-[18px] flex-wrap gap-2">
+        <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">FATURAMENTO CONSOLIDADO — Q3</span>
+        <span class="text-[13px] text-[#292930] font-semibold font-['IBM_Plex_Mono']">R$ 261.580 <span class="text-[#4D7C0F]">↑ 18,2%</span></span>
+      </div>
 
-      <!-- Card principal -->
-      <div
-        class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-      >
+      <!-- Traçado do Gráfico com Animação SVG -->
+      <div class="relative">
+        <svg class="w-full h-[220px] block overflow-visible" viewBox="0 0 1000 220" preserveAspectRatio="none">
+          <line x1="0" y1="180" x2="1000" y2="180" stroke="#CDDADF" stroke-width="1"/>
 
-        <!-- Cabeçalho do gráfico -->
-        <div
-          class="flex flex-col gap-3 px-6 pt-5 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <span
-            class="text-[9px] font-semibold uppercase tracking-[0.15em] text-gray-500"
-          >
-            Faturamento consolidado — Q3
-          </span>
+          <!-- Caminho animado: pathLength normaliza o comprimento do traço,
+               assim o dasharray cobre a linha inteira em qualquer largura -->
+          <path
+            fill="none"
+            stroke="#006EB7"
+            stroke-width="3"
+            pathLength="1000"
+            stroke-dasharray="1000"
+            stroke-dashoffset="1000"
+            class="animate-draw"
+            d="M0,150 L80,160 L150,120 L220,140 L300,90 L370,110 L440,70 L520,95 L590,55 L660,75 L740,40 L820,58 L890,25 L960,35"
+          />
+        </svg>
 
-          <div class="text-xs font-bold text-gray-800">
-            R$ 261.580
-            <span class="ml-1 text-[#72B82A]">
-              ↑ 18,2%
-            </span>
-          </div>
-        </div>
+        <!-- Ponto de Alerta: fora do SVG, porque o SVG é esticado
+             (preserveAspectRatio="none") e deformaria o círculo. Posição
+             equivale a cx=960/1000 e cy=35 do traçado. -->
+        <span class="animate-pop opacity-0 absolute h-3.5 w-3.5 rounded-full bg-[#FF8F00] left-[96%] top-[35px] -ml-[7px] -mt-[7px]"></span>
+      </div>
 
-        <!-- Gráfico -->
-        <div class="px-6 pt-5">
-
-          <div class="relative h-36 w-full">
-
-            <!-- Linha horizontal -->
-            <div
-              class="absolute bottom-4 left-0 right-0 h-px bg-gray-300"
-            ></div>
-
-            <!-- Gráfico -->
-            <svg
-              viewBox="0 0 700 150"
-              class="h-full w-full overflow-visible"
-              preserveAspectRatio="none"
-            >
-              <polyline
-                points="10,115 70,125 130,75 190,90 250,55 310,78 370,45 430,65 490,35 550,58 610,28 670,50"
-                fill="none"
-                stroke="#2874BE"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-
-              <!-- Ponto final -->
-              <circle
-                cx="670"
-                cy="50"
-                r="4"
-                fill="#2874BE"
-              />
-            </svg>
-
-          </div>
-        </div>
-
-        <!-- Alerta -->
-        <div
-          class="flex items-start gap-2 px-6 pb-4 pt-1 text-[9px] font-semibold text-[#F7941D]"
-        >
-          <span>•</span>
-
-          <span>
-            ALERTA IDENTIFICADO — AÇÃO SUGERIDA:
-            <span class="font-normal">
-              Focar conversão de Upsell no segmento Indústria
-              (Nível B para A)
-            </span>
-          </span>
-        </div>
-
+      <!-- Alerta / Sugestão -->
+      <div class="text-[12px] text-[#A85700] text-left md:text-right font-['IBM_Plex_Mono'] font-medium mt-2 animate-fadeup opacity-0">
+        <span class="text-[#FF8F00]">●</span> ALERTA IDENTIFICADO — AÇÃO SUGERIDA: Focar conversão de Upsell no segmento Indústria (Nível B para A)
       </div>
 
     </div>
-  </section>
+  </div>
 </template>
+
+<style scoped>
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0); }
+  70% { opacity: 1; transform: scale(1.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-draw {
+  animation: draw 2.4s cubic-bezier(.2, .7, .3, 1) forwards .3s;
+}
+
+.animate-pop {
+  animation: pop .4s ease forwards 2.4s;
+  transform-origin: center;
+}
+
+.animate-fadeup {
+  animation: fadeup .5s ease forwards 2.6s;
+}
+</style>

@@ -1,69 +1,36 @@
 <template>
-  <section
-    id="apresentacao"
-    class="px-6 py-16 md:px-12 lg:px-16 lg:py-20"
-  >
-    <div class="mx-auto max-w-7xl">
+  <!-- Hero -->
+  <header id="inicio" class="py-16 pb-12">
+    <div class="max-w-[1280px] mx-auto px-6 md:px-10">
+      
+      <!-- Eyebrow -->
+      <div class="text-[14px] tracking-[0.14em] uppercase text-[#006EB7] font-bold mb-6 flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 bg-[#FF8F00] rounded-full inline-block"></span>
+        Automação e Consolidação de Dados
+      </div>
 
-      <!-- Texto principal -->
-      <div class="max-w-3xl">
+      <!-- Título Principal Bem Maior -->
+      <h1 class="font-['Space_Grotesk'] font-bold text-[clamp(44px,6vw,72px)] leading-[1.02] tracking-[-0.025em] text-[#292930] max-w-[800px] m-0">
+        Da planilha bruta<br>à <em class="not-italic text-[#006EB7] underline decoration-[#FF8F00] decoration-[5px] underline-offset-[6px]">ação estratégica</em>.
+      </h1>
 
-        <!-- Pequeno título -->
-        <div class="mb-4 flex items-center gap-2">
-          <span class="h-1 w-1 rounded-full bg-[#F7941D]"></span>
+      <!-- Subtítulo Confortável para Leitura -->
+      <p class="mt-7 text-[19px] leading-[1.6] text-[#4A5D66] max-w-[580px]">
+        Importe suas planilhas comerciais, consolide faturamentos e centralize a gestão de clientes em um painel interativo — elimine inconsistências operacionais.
+      </p>
 
-          <span
-            class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2874BE]"
-          >
-            Automação e consolidação de dados
-          </span>
-        </div>
-
-        <!-- Título -->
-        <h1
-          class="text-5xl font-bold leading-[1.05] tracking-tight text-[#292A2F] md:text-6xl lg:text-7xl"
-        >
-          Da planilha bruta
-          <br />
-
-          <span class="text-[#2874BE]">
-            à ação estratégica
-          </span><span class="text-[#292A2F]">.</span>
-        </h1>
-
-        <!-- Linha laranja -->
-        <div class="mt-3 h-0.5 w-3/4 bg-[#F7941D] md:w-[335px]"></div>
-
-        <!-- Descrição -->
-        <p
-          class="mt-5 max-w-xl text-sm leading-relaxed text-gray-500 md:text-base"
-        >
-          Importe suas planilhas comerciais, consolide faturamentos e
-          centralize a gestão de clientes em um painel interativo —
-          elimine inconsistências operacionais.
-        </p>
-
-        <!-- Botões -->
-        <div class="mt-9 flex flex-col gap-3 sm:flex-row">
-
-          <RouterLink
-  to="/upload"
-  class="rounded-md bg-[#2874BE] px-5 py-3 text-xs font-semibold text-white shadow-md transition hover:bg-[#2165A5]"
->
-  Importar Base de Clientes →
-</RouterLink>
-
-          <RouterLink
-  to="/dashboard"
-  class="rounded-md border border-gray-300 bg-white px-5 py-3 text-xs font-medium text-gray-600 transition hover:border-[#2874BE] hover:text-[#2874BE]"
->
-  Visualizar Dashboard
-</RouterLink>
-
-        </div>
-
+      <!-- Botões Maiores (textos do Figma). Os dois levam a telas do sistema,
+           que exigem login: a guarda de rota manda para /login e, depois de
+           entrar, volta para o destino pedido (Upload ou Dashboard). -->
+      <div class="flex flex-col sm:flex-row gap-4 mt-10">
+        <router-link to="/upload" class="bg-[#006EB7] text-[#FAFAF7] px-8 py-4 text-base font-medium rounded inline-flex items-center justify-center gap-2.5 hover:-translate-y-0.5 hover:bg-[#03558c] transition-transform shadow-[0_8px_20px_rgba(0,110,183,0.3)]">
+          Importar Base de Clientes →
+        </router-link>
+        <router-link to="/dashboard" class="px-8 py-4 text-base font-medium text-center text-[#292930] border border-[#CDDADF] rounded bg-white/90 hover:border-[#292930] hover:bg-white transition-colors">
+          Visualizar Dashboard
+        </router-link>
       </div>
 
     </div>
-  </section>
+  </header>
 </template>

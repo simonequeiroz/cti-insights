@@ -1,69 +1,30 @@
 <template>
-  <section class="px-4 pb-16 sm:px-6 lg:px-10">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 sm:grid-cols-2 lg:grid-cols-4">
+  <!-- Métricas / KPIs -->
+  <section class="border-t border-b border-[#CDDADF] bg-white mb-8">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-10 grid grid-cols-2 md:grid-cols-4">
 
-      <!-- Clientes nível A -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Clientes nível A
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          320
-        </p>
-
-        <p class="mt-1 text-[9px] text-gray-400">
-          22,1% da base total
-        </p>
+      <div class="p-5 md:p-8 border-r border-b md:border-b-0 border-[#CDDADF] last:border-r-0">
+        <h3 class="text-[13px] text-[#4A5D66] mb-3 font-bold font-['IBM_Plex_Mono']">CLIENTES NÍVEL A</h3>
+        <p class="font-['Space_Grotesk'] font-bold text-3xl text-[#006EB7] m-0">320</p>
+        <p class="text-sm mt-2 font-semibold text-[#4D7C0F]">↑ 60% da receita total</p>
       </div>
 
-      <!-- Total de clientes -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Total de clientes
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          1.450
-        </p>
-
-        <p class="mt-1 text-[9px] text-[#72B82A]">
-          ↑ 12,4% no período
-        </p>
+      <div class="p-5 md:p-8 border-b md:border-b-0 md:border-r border-[#CDDADF] last:border-r-0">
+        <h3 class="text-[13px] text-[#4A5D66] mb-3 font-bold font-['IBM_Plex_Mono']">TOTAL DE CLIENTES</h3>
+        <p class="font-['Space_Grotesk'] font-bold text-3xl text-[#006EB7] m-0">1.450</p>
+        <p class="text-sm mt-2 font-semibold text-[#4D7C0F]">↑ Base atualizada via ETL</p>
       </div>
 
-      <!-- Ticket médio -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Ticket médio
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          R$ 180,4
-        </p>
-
-        <p class="mt-1 text-[9px] text-[#72B82A]">
-          ↑ 6,8% no período
-        </p>
+      <div class="p-5 md:p-8 border-r border-[#CDDADF] last:border-r-0">
+        <h3 class="text-[13px] text-[#4A5D66] mb-3 font-bold font-['IBM_Plex_Mono']">TICKET MÉDIO</h3>
+        <p class="font-['Space_Grotesk'] font-bold text-3xl text-[#292930] m-0">R$ 180.4k</p>
+        <p class="text-sm mt-2 font-semibold text-[#A85700]">Estável vs. ciclo anterior</p>
       </div>
 
-      <!-- Integridade -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Integridade dos dados
-        </p>
-
-        <div class="mt-2 flex items-center gap-2">
-          <p class="text-2xl font-bold text-[#292A2F]">
-            100%
-          </p>
-
-          <span class="h-2 w-2 rounded-full bg-[#72B82A]"></span>
-        </div>
-
-        <p class="mt-1 text-[9px] text-gray-400">
-          Última atualização: agora
-        </p>
+      <div class="p-5 md:p-8 last:border-r-0">
+        <h3 class="text-[13px] text-[#4A5D66] mb-3 font-bold font-['IBM_Plex_Mono']">INTEGRIDADE DOS DADOS</h3>
+        <p class="font-['Space_Grotesk'] font-bold text-3xl text-[#006EB7] m-0">100%</p>
+        <p class="text-sm mt-2 font-semibold text-[#4D7C0F]">Relacional (PostgreSQL)</p>
       </div>
 
     </div>

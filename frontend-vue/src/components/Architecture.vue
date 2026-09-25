@@ -1,144 +1,45 @@
 <template>
-  <section
-    id="arquitetura"
-    class="px-4 py-16 sm:px-6 lg:px-10 lg:py-24"
-  >
-    <div class="mx-auto max-w-7xl">
+  <!-- Arquitetura / Features -->
+  <section id="arquitetura" class="py-24">
+    <div class="max-w-[1280px] mx-auto px-10">
 
-      <!-- Título da seção -->
-      <div class="mb-10 max-w-2xl">
-
-        <p
-          class="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2874BE]"
-        >
-          Por que o CTI Insights transforma sua operação
-        </p>
-
-        <h2
-          class="text-3xl font-bold tracking-tight text-[#292A2F] md:text-4xl"
-        >
-          Dados organizados.
-          <span class="text-[#2874BE]">
-            Decisões mais inteligentes.
-          </span>
+      <div class="max-w-[600px] mb-14">
+        <span class="text-[13px] tracking-[0.14em] uppercase text-[#A85700] font-bold mb-4 block">Arquitetura do
+          Sistema</span>
+        <h2 class="font-['Space_Grotesk'] font-bold text-[36px] tracking-[-0.02em] text-[#292930]">
+          Por que o CTI Insights transforma sua operação.
         </h2>
-
-        <p class="mt-4 text-sm leading-relaxed text-gray-500">
-          Uma arquitetura pensada para transformar dados brutos
-          em informações confiáveis e úteis para o negócio.
-        </p>
-
       </div>
 
-      <!-- Cards -->
-      <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <div
+        class="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-[#CDDADF] border border-[#CDDADF] rounded-xl overflow-hidden shadow-sm">
 
-        <!-- Card 01 -->
-        <article
-          class="group rounded-lg border border-gray-200 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-        >
-          <div class="flex items-start justify-between">
-            <span class="text-xs font-bold text-[#F7941D]">
-              01
-            </span>
-
-            <span
-              class="text-xs text-gray-300 transition group-hover:text-[#2874BE]"
-            >
-              ETL
-            </span>
+        <div class="bg-white p-10 min-h-[260px] flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-[4px] bg-[#FF8F00] mb-6 rounded"></div>
+            <h3 class="font-['Space_Grotesk'] font-bold text-xl mb-3 text-[#006EB7]">ETL Automatizado</h3>
+            <p class="text-base text-[#4A5D66] leading-[1.6]">Motor em Python/Pandas que recebe, limpa e padroniza
+              planilhas comerciais automaticamente, eliminando erros de digitação e duplicidades de segmentos.</p>
           </div>
+        </div>
 
-          <div class="mt-10">
-            <h3 class="text-lg font-bold text-[#292A2F]">
-              ETL Automatizado
-            </h3>
-
-            <p class="mt-3 text-sm leading-relaxed text-gray-500">
-              Extração, transformação e organização dos dados
-              de forma automatizada, reduzindo processos manuais
-              e inconsistências.
-            </p>
+        <div class="bg-white p-10 min-h-[260px] flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-[4px] bg-[#FF8F00] mb-6 rounded"></div>
+            <h3 class="font-['Space_Grotesk'] font-bold text-xl mb-3 text-[#006EB7]">Visualização Reativa</h3>
+            <p class="text-base text-[#4A5D66] leading-[1.6]">Interface responsiva em Vue.js que consome dados de forma
+              síncrona. Gráficos que se atualizam imediatamente sem necessidade de exportar relatórios manuais.</p>
           </div>
+        </div>
 
-          <div class="mt-8 h-px w-full bg-gray-100"></div>
-
-          <p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            Menos trabalho manual
-          </p>
-        </article>
-
-
-        <!-- Card 02 -->
-        <article
-          class="group rounded-lg border border-gray-200 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-        >
-          <div class="flex items-start justify-between">
-            <span class="text-xs font-bold text-[#F7941D]">
-              02
-            </span>
-
-            <span
-              class="text-xs text-gray-300 transition group-hover:text-[#2874BE]"
-            >
-              BI
-            </span>
+        <div class="bg-white p-10 min-h-[260px] flex flex-col justify-between">
+          <div>
+            <div class="w-8 h-[4px] bg-[#FF8F00] mb-6 rounded"></div>
+            <h3 class="font-['Space_Grotesk'] font-bold text-xl mb-3 text-[#006EB7]">Gestão Estruturada</h3>
+            <p class="text-base text-[#4A5D66] leading-[1.6]">Base de dados sólida em PostgreSQL gerenciada por Spring
+              Boot. Histórico, níveis A/B/C e consultores responsáveis mapeados com total integridade referencial.</p>
           </div>
-
-          <div class="mt-10">
-            <h3 class="text-lg font-bold text-[#292A2F]">
-              Visualização Reativa
-            </h3>
-
-            <p class="mt-3 text-sm leading-relaxed text-gray-500">
-              Dashboards interativos que transformam grandes
-              volumes de informações em indicadores fáceis
-              de interpretar.
-            </p>
-          </div>
-
-          <div class="mt-8 h-px w-full bg-gray-100"></div>
-
-          <p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            Informação em tempo real
-          </p>
-        </article>
-
-
-        <!-- Card 03 -->
-        <article
-          class="group rounded-lg border border-gray-200 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-        >
-          <div class="flex items-start justify-between">
-            <span class="text-xs font-bold text-[#F7941D]">
-              03
-            </span>
-
-            <span
-              class="text-xs text-gray-300 transition group-hover:text-[#2874BE]"
-            >
-              CRM
-            </span>
-          </div>
-
-          <div class="mt-10">
-            <h3 class="text-lg font-bold text-[#292A2F]">
-              Gestão Estruturada
-            </h3>
-
-            <p class="mt-3 text-sm leading-relaxed text-gray-500">
-              Centralização das informações de clientes para
-              facilitar o acompanhamento, a análise e a tomada
-              de decisões estratégicas.
-            </p>
-          </div>
-
-          <div class="mt-8 h-px w-full bg-gray-100"></div>
-
-          <p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            Visão centralizada
-          </p>
-        </article>
+        </div>
 
       </div>
 
