@@ -147,22 +147,42 @@ const celulaParaTexto = valor => {
 // base. Faturamento não é obrigatório: o Dashboard trata ausência como 0.
 const NIVEIS_VALIDOS = ['A', 'B', 'C']
 
+// "coluna" é o nome no cabeçalho da planilha (pra mostrar o valor que veio
+// no arquivo); "dica" completa a descrição quando o valor veio mas é inválido.
 const CAMPOS_OBRIGATORIOS = [
-  { rotulo: 'código do cliente', invalido: c => !c.codigo_cliente },
-  { rotulo: 'nome do cliente', invalido: c => !c.nome_cliente },
-  { rotulo: 'consultor', invalido: c => !c.consultor },
-  { rotulo: 'segmento', invalido: c => !c.segmento },
-  { rotulo: 'nível (A, B ou C)', invalido: c => !NIVEIS_VALIDOS.includes(c.nivel_cliente) },
-  { rotulo: 'data de contratação', invalido: c => !c.data_contratacao },
-  { rotulo: 'serviço', invalido: c => !c.servicos.length }
+  { rotulo: 'código do cliente', coluna: 'codigo_cliente', invalido: c => !c.codigo_cliente },
+  { rotulo: 'nome do cliente', coluna: 'nome_cliente', invalido: c => !c.nome_cliente },
+  { rotulo: 'consultor', coluna: 'consultor', invalido: c => !c.consultor },
+  { rotulo: 'segmento', coluna: 'segmento', invalido: c => !c.segmento },
+  { rotulo: 'nível (A, B ou C)', coluna: 'nivel_cliente', dica: 'use A, B ou C', invalido: c => !NIVEIS_VALIDOS.includes(c.nivel_cliente) },
+  { rotulo: 'data de contratação', coluna: 'data_contratacao', dica: 'use dd/mm/aaaa ou aaaa-mm-dd', invalido: c => !c.data_contratacao },
+  { rotulo: 'serviço', coluna: 'servicos_contratados', invalido: c => !c.servicos.length }
 ]
 
+// Guardamos no histórico no máximo esta quantidade de problemas detalhados
+// (o armazenamento local é limitado); a contagem total continua exata.
+const MAX_PROBLEMAS_DETALHADOS = 200
+
+const descreverProblema = (campo, linhaOriginal) => {
+  const bruto = linhaOriginal?.[campo.coluna] ?? (campo.coluna === 'servicos_contratados' ? linhaOriginal?.servico : undefined)
+  const valor = String(bruto ?? '').trim()
+
+  if (!valor) {
+    return 'vazio'
+  }
+
+  return campo.dica ? `"${valor}" é inválido (${campo.dica})` : `"${valor}" é inválido`
+}
+
 // Confere todas as linhas e resume os problemas: quantas linhas falharam,
-// quantas vezes cada campo falhou e quais as primeiras linhas (número da
-// linha na planilha: cabeçalho é a 1, então o primeiro cliente é a 2).
-const validarClientes = clientes => {
+// quantas vezes cada campo falhou e, linha a linha, o que está errado
+// (número da linha na planilha: cabeçalho é a 1, então o primeiro cliente
+// é a 2).
+const validarClientes = (clientes, originais) => {
   const contagemPorCampo = CAMPOS_OBRIGATORIOS.map(() => 0)
   const linhasComProblema = []
+  const problemas = []
+  let totalProblemas = 0
 
   clientes.forEach((cliente, indice) => {
     let temProblema = false
@@ -171,6 +191,15 @@ const validarClientes = clientes => {
       if (campo.invalido(cliente)) {
         contagemPorCampo[posicao]++
         temProblema = true
+        totalProblemas++
+
+        if (problemas.length < MAX_PROBLEMAS_DETALHADOS) {
+          problemas.push({
+            linha: indice + 2,
+            campo: campo.rotulo,
+            descricao: descreverProblema(campo, originais[indice])
+          })
+        }
       }
     })
 
@@ -183,7 +212,7 @@ const validarClientes = clientes => {
     .map((campo, posicao) => ({ rotulo: campo.rotulo, quantidade: contagemPorCampo[posicao] }))
     .filter(campo => campo.quantidade > 0)
 
-  return { linhasComProblema, camposComProblema }
+  return { linhasComProblema, camposComProblema, problemas, totalProblemas }
 }
 
 const montarMensagemDeErro = (validacao, totalLinhas) => {
@@ -233,7 +262,20 @@ export const useUploadStore = defineStore('upload', {
       return state.dadosTratados.filter(c => c.nivel_cliente === 'A').length
     },
 
-    temDados: state => state.dadosTratados.length > 0
+    temDados: state => state.dadosTratados.length > 0,
+
+    // Registro do histórico que gerou a base atual: o NORMALIZADO mais
+    // recente (o histórico é do mais novo pro mais antigo). null se esse
+    // registro foi removido do histórico.
+    origemBaseAtual: state => {
+      return state.historico.find(item => item.status === 'NORMALIZADO') || null
+    },
+
+    // Último envio terminou em erro: a base exibida é a anterior, mantida.
+    ultimoEnvioComErro: state => {
+      const ultimo = state.historico.find(item => item.status !== 'PROCESSANDO')
+      return ultimo?.status === 'ERRO_SCHEMA' ? ultimo : null
+    }
   },
 
   actions: {
@@ -297,17 +339,41 @@ export const useUploadStore = defineStore('upload', {
         ? servicoBruto.split(';').map(s => s.trim()).filter(Boolean)
         : []
 
+      const nivelOriginal = String(linha.nivel_cliente || '').trim()
+      const nivelTratado = nivelOriginal.toUpperCase()
+
+      const dataOriginal = String(linha.data_contratacao ?? '').trim()
+      const dataTratada = parseDataContratacao(linha.data_contratacao)
+
+      const faturamentoOriginal = linha.faturamento_anual ?? linha.faturamento
+      const faturamentoTratado = parseFaturamento(faturamentoOriginal)
+
+      // Valor ORIGINAL de cada campo que o tratamento alterou — é o que
+      // permite mostrar na tela "o que o ETL corrigiu" (resumoEtl.js).
+      // Diferença só de espaços nas pontas não conta como correção.
+      const etlOriginal = {}
+
+      if (segmentoOriginal !== segmentoTratado) etlOriginal.segmento = segmentoOriginal
+      if (consultorOriginal !== consultorTratado) etlOriginal.consultor = consultorOriginal
+      if (nivelOriginal !== nivelTratado) etlOriginal.nivel_cliente = nivelOriginal
+      if (dataTratada && dataOriginal !== dataTratada) etlOriginal.data_contratacao = dataOriginal
+
+      if (typeof faturamentoOriginal === 'string' && faturamentoTratado !== null && faturamentoOriginal.trim() !== String(faturamentoTratado)) {
+        etlOriginal.faturamento = faturamentoOriginal.trim()
+      }
+
       return {
         ...linha,
         consultor: consultorTratado,
         codigo_cliente: String(linha.codigo_cliente || '').trim(),
         nome_cliente: String(linha.nome_cliente || '').trim(),
         segmento: segmentoTratado,
-        nivel_cliente: String(linha.nivel_cliente || '').trim().toUpperCase(),
-        faturamento: parseFaturamento(linha.faturamento_anual ?? linha.faturamento),
-        data_contratacao: parseDataContratacao(linha.data_contratacao),
+        nivel_cliente: nivelTratado,
+        faturamento: faturamentoTratado,
+        data_contratacao: dataTratada,
         servico: listaServicos.length ? listaServicos.join(', ') : null,
-        servicos: listaServicos
+        servicos: listaServicos,
+        etl_original: etlOriginal
       }
     },
 
@@ -434,7 +500,7 @@ export const useUploadStore = defineStore('upload', {
       // Validação: todos os campos obrigatórios (CAMPOS_OBRIGATORIOS) devem
       // estar preenchidos em todas as linhas — senão o arquivo inteiro é
       // recusado e a última base válida é mantida.
-      const validacao = validarClientes(tratados)
+      const validacao = validarClientes(tratados, this.dadosOriginais)
 
       if (tratados.length === 0) {
         item.status = 'ERRO_SCHEMA'
@@ -447,6 +513,9 @@ export const useUploadStore = defineStore('upload', {
         item.status = 'ERRO_SCHEMA'
         item.linhasLidas = tratados.length
         item.mensagem = montarMensagemDeErro(validacao, tratados.length)
+        item.linhasComProblema = validacao.linhasComProblema.length
+        item.problemas = validacao.problemas
+        item.totalProblemas = validacao.totalProblemas
         item.conteudoOriginal = conteudoParaDownload
         item.nomeArquivoDownload = nomeParaDownload
         this.erros = [item.mensagem]
@@ -455,10 +524,15 @@ export const useUploadStore = defineStore('upload', {
         // quando o arquivo passou na validação — um upload com erro não deve
         // apagar a última base boa que já estava carregada.
         try {
+          const codigosAnteriores = new Set(this.dadosTratados.map(c => c.codigo_cliente))
+          const codigosAtuais = new Set(tratados.map(c => c.codigo_cliente))
+
           await salvarClientes(tratados)
           this.dadosTratados = tratados
           item.status = 'NORMALIZADO'
           item.linhasLidas = tratados.length
+          item.clientesNovos = [...codigosAtuais].filter(c => !codigosAnteriores.has(c)).length
+          item.clientesRemovidos = [...codigosAnteriores].filter(c => !codigosAtuais.has(c)).length
           item.mensagem = ''
           this.erros = []
         } catch (erro) {
