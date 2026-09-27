@@ -198,6 +198,17 @@ const montarMensagemDeErro = (validacao, totalLinhas) => {
   return `${validacao.linhasComProblema.length} de ${totalLinhas} linha(s) com campo obrigatório vazio ou inválido: ${campos}. Linhas: ${linhas}. Corrija esses dados na planilha e envie o arquivo novamente.`
 }
 
+export const TAMANHO_MAXIMO_MB = 20
+const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024
+
+export const formatarTamanho = bytes => {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+}
+
 export const useUploadStore = defineStore('upload', {
   state: () => ({
     arquivo: null,
@@ -226,25 +237,40 @@ export const useUploadStore = defineStore('upload', {
   },
 
   actions: {
+    // Valida já na seleção (formato e tamanho), pra tela só habilitar o
+    // "Enviar e Processar" quando o arquivo pode de fato ser enviado.
     selecionarArquivo(file) {
       this.arquivo = file
+      this.validarArquivo()
+    },
+
+    descartarArquivo() {
+      this.arquivo = null
       this.erros = []
     },
 
     validarArquivo() {
+      this.erros = []
+
       if (!this.arquivo) {
         this.erros.push('Selecione uma planilha.')
         return false
       }
 
       const nome = this.arquivo.name.toLowerCase()
-      const valido = nome.endsWith('.xlsx') || nome.endsWith('.xls') || nome.endsWith('.csv')
+      const formatoValido = nome.endsWith('.xlsx') || nome.endsWith('.xls') || nome.endsWith('.csv')
 
-      if (!valido) {
+      if (!formatoValido) {
         this.erros.push('Formato inválido. Envie um arquivo .xlsx, .xls ou .csv.')
+        return false
       }
 
-      return valido
+      if (this.arquivo.size > TAMANHO_MAXIMO_BYTES) {
+        this.erros.push(`Arquivo muito grande (${formatarTamanho(this.arquivo.size)}). O limite é ${TAMANHO_MAXIMO_MB} MB.`)
+        return false
+      }
+
+      return true
     },
 
     // Limpa espaços, padroniza maiúsculas e unifica grafias de segmento e
@@ -288,17 +314,28 @@ export const useUploadStore = defineStore('upload', {
     // Envolve o processamento para "carregando" sempre voltar a false, mesmo
     // se algo inesperado lançar erro (senão a tela ficaria presa em
     // "Processando...").
+    //
+    // Devolve o registro do histórico já finalizado (NORMALIZADO ou
+    // ERRO_SCHEMA), pra tela mostrar o retorno; null se nada foi processado
+    // (arquivo inválido ou processamento cancelado).
     async processarPlanilha() {
+      // Um envio por vez: evita dois processamentos disputando a mesma base.
+      if (this.carregando) {
+        return null
+      }
+
       try {
-        await this.executarProcessamento()
+        return await this.executarProcessamento()
       } finally {
         this.carregando = false
+        // Arquivo já enviado: a área de upload volta ao estado inicial.
+        this.arquivo = null
       }
     },
 
     async executarProcessamento() {
       if (!this.validarArquivo()) {
-        return
+        return null
       }
 
       this.carregando = true
@@ -323,12 +360,16 @@ export const useUploadStore = defineStore('upload', {
       // status PROCESSANDO visível para testar (veja README).
       await esperarSimulado()
 
-      const ehPlanilhaExcel = /\.(xlsx|xls)$/i.test(this.arquivo.name)
+      // O "X" do histórico cancela removendo o registro. Depois de cada
+      // etapa assíncrona conferimos se ele ainda existe; se não, descarta o
+      // resultado sem tocar na base.
+      const foiCancelado = () => !this.historico.some(r => r.id === registro.id)
 
-      // "registro" é o objeto original, não a versão reativa que o Pinia
-      // guardou ao fazer this.historico = [...]; buscamos de volta pelo id
-      // antes de mutar, senão a tela não atualiza.
-      const item = this.historico.find(r => r.id === registro.id)
+      if (foiCancelado()) {
+        return null
+      }
+
+      const ehPlanilhaExcel = /\.(xlsx|xls)$/i.test(this.arquivo.name)
 
       let conteudoParaDownload
       let nomeParaDownload = this.arquivo.name
@@ -364,14 +405,29 @@ export const useUploadStore = defineStore('upload', {
           conteudoParaDownload = texto
         }
       } catch (erro) {
-        item.status = 'ERRO_SCHEMA'
-        item.linhasLidas = 0
-        item.mensagem = 'Não foi possível ler o arquivo. Confira se o formato não está corrompido (abra-o no Excel para testar) e envie novamente.'
-        this.salvarHistorico()
-        this.carregando = false
         console.error('Erro ao processar planilha:', erro)
-        return
+
+        if (foiCancelado()) {
+          return null
+        }
+
+        const itemComErro = this.historico.find(r => r.id === registro.id)
+        itemComErro.status = 'ERRO_SCHEMA'
+        itemComErro.linhasLidas = 0
+        itemComErro.mensagem = 'Não foi possível ler o arquivo. Confira se o formato não está corrompido (abra-o no Excel para testar) e envie novamente.'
+        this.erros = [itemComErro.mensagem]
+        this.salvarHistorico()
+        return itemComErro
       }
+
+      if (foiCancelado()) {
+        return null
+      }
+
+      // "registro" é o objeto original, não a versão reativa que o Pinia
+      // guardou ao fazer this.historico = [...]; buscamos de volta pelo id
+      // antes de mutar, senão a tela não atualiza.
+      const item = this.historico.find(r => r.id === registro.id)
 
       const tratados = this.dadosOriginais.map(this.tratarLinha)
 
@@ -416,6 +472,7 @@ export const useUploadStore = defineStore('upload', {
       }
 
       this.salvarHistorico()
+      return item
     },
 
     // Nunca lança erro: se o armazenamento local estiver cheio, tenta de novo
