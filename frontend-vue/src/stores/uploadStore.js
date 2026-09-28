@@ -2,12 +2,11 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
   esperarSimulado,
   limparDados as limparDadosSalvos,
-  listarClientes,
   listarHistorico,
-  salvarClientes,
   salvarHistorico
 } from '../services/api'
 import { useAuthStore } from './authStore'
+import { useClientesStore } from './clientesStore'
 
 // ---------------------------------------------------------------------------
 // REGRA DE NEGÓCIO (decidir em grupo)
@@ -325,7 +324,6 @@ export const formatarTamanho = bytes => {
 export const useUploadStore = defineStore('upload', {
   state: () => ({
     arquivo: null,
-    dadosTratados: [],
     erros: [],
     carregando: false,
 
@@ -338,15 +336,7 @@ export const useUploadStore = defineStore('upload', {
   }),
 
   getters: {
-    totalClientes: state => state.dadosTratados.length,
-
     totalErros: state => state.erros.length,
-
-    clientesNivelA: state => {
-      return state.dadosTratados.filter(c => c.nivel_cliente === 'A').length
-    },
-
-    temDados: state => state.dadosTratados.length > 0,
 
     // Registro do histórico que gerou a base atual
     origemBaseAtual: state => {
@@ -507,7 +497,8 @@ export const useUploadStore = defineStore('upload', {
         const validos = tratados.filter((_, indice) => !indicesComErro.has(indice))
 
         // Comparação com a base atual (pelo código do cliente)
-        const codigosAnteriores = new Set(this.dadosTratados.map(c => c.codigo_cliente))
+        const baseAtual = useClientesStore().lista
+        const codigosAnteriores = new Set(baseAtual.map(c => c.codigo_cliente))
         const codigosNovos = new Set(validos.map(c => c.codigo_cliente))
         const clientesNovos = [...codigosNovos].filter(c => !codigosAnteriores.has(c)).length
 
@@ -522,7 +513,7 @@ export const useUploadStore = defineStore('upload', {
           clientesNovos,
           clientesAtualizados: codigosNovos.size - clientesNovos,
           clientesRemovidos: [...codigosAnteriores].filter(c => !codigosNovos.has(c)).length,
-          baseAnterior: this.dadosTratados.length,
+          baseAnterior: baseAtual.length,
           hashArquivo,
           importacaoAnterior: anterior
             ? { nomeArquivo: anterior.nomeArquivo, dataHora: anterior.dataHora, enviadoPor: anterior.enviadoPor || null }
@@ -562,8 +553,7 @@ export const useUploadStore = defineStore('upload', {
       const ignoradas = analise.linhasComErro.length
 
       try {
-        await salvarClientes(analise.validos)
-        this.dadosTratados = analise.validos
+        await useClientesStore().substituirBase(analise.validos)
 
         const item = {
           id: Date.now(),
@@ -673,17 +663,15 @@ export const useUploadStore = defineStore('upload', {
       baixarCsv(item.conteudoOriginal, item.nomeArquivoDownload || item.nomeArquivo)
     },
 
-    async carregarClientesSalvos() {
-      this.dadosTratados = await listarClientes()
-    },
-
+    // Ferramenta de teste (Relatórios → "Limpar dados locais"): apaga a
+    // base e o histórico do armazenamento e da memória.
     async limparDados() {
+      await limparDadosSalvos()
       this.arquivo = null
       this.analise = null
-      this.dadosTratados = []
       this.erros = []
       this.historico = []
-      await limparDadosSalvos()
+      useClientesStore().esvaziar()
     }
   }
 })

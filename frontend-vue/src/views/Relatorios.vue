@@ -1,10 +1,14 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
-import { limparDados as limparDadosLocais, listarClientes } from '../services/api'
+import { useClientesStore } from '../stores/clientesStore'
+import { useUploadStore } from '../stores/uploadStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 
-const clientes = ref([])
+// Base de clientes: vem do clientesStore (a mesma do Dashboard e da
+// importação). Continua "clientes.value" no resto do arquivo.
+const clientesStore = useClientesStore()
+const clientes = computed(() => clientesStore.lista)
 const busca = ref('')
 
 // Período (data de contratação), como "aaaa-mm-dd"; vazio = sem limite.
@@ -19,8 +23,8 @@ const limparPeriodo = () => {
   dataFim.value = ''
 }
 
-onMounted(async () => {
-  clientes.value = await listarClientes()
+onMounted(() => {
+  clientesStore.carregar()
 })
 
 // Busca por nome da empresa (case-insensitive), igual ao "Buscar empresa..."
@@ -120,8 +124,9 @@ const limparDados = async () => {
     return
   }
 
-  await limparDadosLocais()
-  clientes.value = []
+  // Zera armazenamento e memória (base + histórico) de uma vez, pra
+  // nenhuma tela continuar mostrando a base apagada.
+  await useUploadStore().limparDados()
 }
 </script>
 

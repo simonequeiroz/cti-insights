@@ -1,6 +1,7 @@
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
 import { useUploadStore } from '../stores/uploadStore'
+import { useClientesStore } from '../stores/clientesStore'
 import Sidebar from '../components/Sidebar.vue'
 import PassosImportacao from '../components/importacao/PassosImportacao.vue'
 import EtapaEnviar from '../components/importacao/EtapaEnviar.vue'
@@ -18,7 +19,8 @@ const registroConcluido = ref(null)
 const tituloEtapa = ref(null)
 
 onMounted(async () => {
-  await upload.carregarClientesSalvos()
+  // A base atual é usada na análise (novos / atualizados / saem da base)
+  await useClientesStore().carregar()
   upload.carregarHistorico()
 
   // Voltou pra tela com uma análise ainda aberta: retoma na revisão

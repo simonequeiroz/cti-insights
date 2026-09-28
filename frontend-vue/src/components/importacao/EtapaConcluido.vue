@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useUploadStore } from '../../stores/uploadStore'
+import { useClientesStore } from '../../stores/clientesStore'
 import { formatarNumero } from '../../utils/datas'
 import { gerarInsights } from '../../utils/insights'
 
@@ -10,9 +10,9 @@ defineProps({
 })
 
 const emit = defineEmits(['nova'])
-const upload = useUploadStore()
+const clientes = useClientesStore()
 
-const insights = computed(() => gerarInsights(upload.dadosTratados))
+const insights = computed(() => gerarInsights(clientes.lista))
 </script>
 
 <template>

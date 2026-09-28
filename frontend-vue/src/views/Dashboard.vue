@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
-import { listarClientes } from '../services/api'
+import { useClientesStore } from '../stores/clientesStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import {
   Chart,
@@ -28,7 +28,10 @@ Chart.register(
   Legend
 )
 
-const clientes = ref([])
+// Base de clientes: vem do clientesStore (a mesma que Relatórios e a
+// importação usam). Continua "clientes.value" no resto do arquivo.
+const clientesStore = useClientesStore()
+const clientes = computed(() => clientesStore.lista)
 
 const filtroSegmento = ref('Todos')
 const filtroNivel = ref('Todos')
@@ -40,8 +43,8 @@ const dataFim = ref('')
 const periodoAtivo = computed(() => Boolean(dataInicio.value || dataFim.value))
 const periodoImpossivel = computed(() => periodoInvertido(dataInicio.value, dataFim.value))
 
-onMounted(async () => {
-  clientes.value = await listarClientes()
+onMounted(() => {
+  clientesStore.carregar()
 })
 
 const segmentos = computed(() => {
