@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useUploadStore } from '../../stores/uploadStore'
-import { nomeUsuario } from '../../services/api'
+import { useAuthStore } from '../../stores/authStore'
 import { formatarNumero } from '../../utils/datas'
 
 // Etapa 3: mostrar o impacto na base. Quem salva é a tela (evento
@@ -19,7 +19,7 @@ const impacto = computed(() => [
   { rotulo: 'Saem da base', valor: analise.value.clientesRemovidos ? `−${formatarNumero(analise.value.clientesRemovidos)}` : '0', classe: analise.value.clientesRemovidos ? 'text-[#A85700]' : 'text-[#292A2F]' }
 ])
 
-const responsavel = nomeUsuario()
+const auth = useAuthStore()
 </script>
 
 <template>
@@ -84,7 +84,7 @@ const responsavel = nomeUsuario()
 
     <p class="text-xs text-gray-500">
       Fica registrado no histórico: arquivo {{ analise.nomeArquivo }}, enviado por
-      <span class="font-semibold text-gray-700">{{ responsavel || 'usuário atual' }}</span>, com data e hora do envio.
+      <span class="font-semibold text-gray-700">{{ auth.nome || 'usuário atual' }}</span>, com data e hora do envio.
     </p>
 
     <footer class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-between">

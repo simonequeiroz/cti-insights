@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { login } from '../services/api'
+import { useAuthStore } from '../stores/authStore'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const email = ref('')
 const senha = ref('')
@@ -27,9 +28,9 @@ const entrar = async () => {
 
   // Ainda não há back-end validando credenciais: em modo mock, qualquer
   // e-mail/senha válidos "autenticam" (veja services/api.js). A guarda de
-  // rota (router/index.js) e a Sidebar leem essa sessão pelo mesmo serviço.
+  // rota (router/index.js) e a Sidebar leem essa sessão do authStore.
   try {
-    await login(email.value, senha.value)
+    await auth.entrar(email.value, senha.value)
   } catch {
     erro.value = 'E-mail ou senha inválidos.'
     return

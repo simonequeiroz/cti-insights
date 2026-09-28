@@ -1,32 +1,18 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { logout, nomeUsuario, usuarioAtual } from '../services/api'
+import { useAuthStore } from '../stores/authStore'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 // O nome vem da API quando ela informar; enquanto isso, é derivado do
-// e-mail digitado no login (veja nomeUsuario em services/api.js). O cargo
-// "Consultor" ainda é fixo: não existe perfil no back-end.
-const emailUsuario = computed(() => {
-  return usuarioAtual() || 'consultor@cti.com'
-})
-
-const nomeExibido = computed(() => {
-  return nomeUsuario() || 'Consultor'
-})
-
-// Iniciais: primeira letra do primeiro e do último nome ("Ana Lima" -> "AL").
-const iniciais = computed(() => {
-  const partes = nomeExibido.value.split(' ').filter(Boolean)
-
-  if (partes.length > 1) {
-    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
-  }
-
-  return nomeExibido.value.slice(0, 2).toUpperCase()
-})
+// e-mail digitado no login (veja authStore). O cargo "Consultor" ainda é
+// fixo: não existe perfil no back-end.
+const emailUsuario = computed(() => auth.email || 'consultor@cti.com')
+const nomeExibido = computed(() => auth.nome || 'Consultor')
+const iniciais = computed(() => auth.iniciais)
 
 const linkAtivo = caminho => {
   return route.path === caminho
@@ -74,7 +60,7 @@ onMounted(() => window.addEventListener('keydown', aoPressionarTecla))
 onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
 
 const sair = async () => {
-  await logout()
+  await auth.sair()
   router.push('/login')
 }
 </script>

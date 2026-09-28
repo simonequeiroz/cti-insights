@@ -4,11 +4,10 @@ import {
   limparDados as limparDadosSalvos,
   listarClientes,
   listarHistorico,
-  nomeUsuario,
   salvarClientes,
-  salvarHistorico,
-  usuarioAtual
+  salvarHistorico
 } from '../services/api'
+import { useAuthStore } from './authStore'
 
 // ---------------------------------------------------------------------------
 // REGRA DE NEGÓCIO (decidir em grupo)
@@ -308,12 +307,9 @@ const calcularHash = async arquivo => {
   }
 }
 
-// Quem está fazendo o envio (no modo simulado vem do login do navegador;
-// com o back-end, virá do usuário autenticado na API).
-const responsavelAtual = () => ({
-  nome: nomeUsuario(),
-  email: usuarioAtual()
-})
+// Quem está fazendo o envio: vem da sessão (authStore). Chamada só dentro
+// das actions, quando o Pinia já está ativo.
+const responsavelAtual = () => useAuthStore().responsavel
 
 export const TAMANHO_MAXIMO_MB = 20
 const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024
