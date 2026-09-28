@@ -4,8 +4,10 @@ import {
   limparDados as limparDadosSalvos,
   listarClientes,
   listarHistorico,
+  nomeUsuario,
   salvarClientes,
-  salvarHistorico
+  salvarHistorico,
+  usuarioAtual
 } from '../services/api'
 
 // ---------------------------------------------------------------------------
@@ -292,6 +294,27 @@ const baixarCsv = (conteudo, nome) => {
 
 const nomeArquivoErros = nomeArquivo => nomeArquivo.replace(/\.(xlsx|xls|csv)$/i, '') + '_linhas-com-erro.csv'
 
+// "Impressão digital" do conteúdo do arquivo (SHA-256). Mesma planilha
+// renomeada gera o mesmo hash; planilhas diferentes com o mesmo nome, não.
+// crypto.subtle só existe em contexto seguro (https ou localhost): fora
+// disso devolve null e a checagem de duplicidade é pulada.
+const calcularHash = async arquivo => {
+  try {
+    if (!globalThis.crypto?.subtle) return null
+    const digest = await crypto.subtle.digest('SHA-256', await arquivo.arrayBuffer())
+    return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+  } catch {
+    return null
+  }
+}
+
+// Quem está fazendo o envio (no modo simulado vem do login do navegador;
+// com o back-end, virá do usuário autenticado na API).
+const responsavelAtual = () => ({
+  nome: nomeUsuario(),
+  email: usuarioAtual()
+})
+
 export const TAMANHO_MAXIMO_MB = 20
 const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024
 
@@ -476,6 +499,12 @@ export const useUploadStore = defineStore('upload', {
           return null
         }
 
+        // Mesma planilha (mesmo conteúdo) já importada antes?
+        const hashArquivo = await calcularHash(this.arquivo)
+        const anterior = hashArquivo
+          ? this.historico.find(item => item.status === 'NORMALIZADO' && item.hashArquivo === hashArquivo)
+          : null
+
         const tratados = originais.map(linha => this.tratarLinha(linha))
         const validacao = validarClientes(tratados, originais)
         const indicesComErro = new Set(validacao.linhasComErro.map(item => item.indice))
@@ -497,7 +526,11 @@ export const useUploadStore = defineStore('upload', {
           clientesNovos,
           clientesAtualizados: codigosNovos.size - clientesNovos,
           clientesRemovidos: [...codigosAnteriores].filter(c => !codigosNovos.has(c)).length,
-          baseAnterior: this.dadosTratados.length
+          baseAnterior: this.dadosTratados.length,
+          hashArquivo,
+          importacaoAnterior: anterior
+            ? { nomeArquivo: anterior.nomeArquivo, dataHora: anterior.dataHora, enviadoPor: anterior.enviadoPor || null }
+            : null
         }
 
         return this.analise
@@ -542,6 +575,9 @@ export const useUploadStore = defineStore('upload', {
           nomeArquivo: analise.nomeArquivo,
           dataHora: new Date().toISOString(),
           status: 'NORMALIZADO',
+          enviadoPor: responsavelAtual(),
+          hashArquivo: analise.hashArquivo,
+          reimportacao: Boolean(analise.importacaoAnterior),
           linhasLidas: analise.linhasLidas,
           linhasImportadas: analise.validos.length,
           linhasIgnoradas: ignoradas,
@@ -583,6 +619,7 @@ export const useUploadStore = defineStore('upload', {
         nomeArquivo: this.arquivo?.name || 'arquivo',
         dataHora: new Date().toISOString(),
         status: 'ERRO_SCHEMA',
+        enviadoPor: responsavelAtual(),
         linhasLidas: 0,
         mensagem
       }, ...this.historico]

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { PERMITIR_IMPORTACAO_PARCIAL, formatarTamanho, useUploadStore } from '../../stores/uploadStore'
 import { resumirCorrecoes } from '../../utils/correcoes'
-import { formatarNumero } from '../../utils/datas'
+import { formatarDataHora, formatarNumero } from '../../utils/datas'
 import TabelaProblemas from '../TabelaProblemas.vue'
 import PreviaClientes from '../PreviaClientes.vue'
 
@@ -47,6 +47,22 @@ const trocarArquivo = () => {
         {{ analise.nomeArquivo }} · {{ formatarTamanho(analise.tamanho) }}
       </p>
     </header>
+
+    <!-- Mesma planilha (mesmo conteúdo) já importada antes -->
+    <div
+      v-if="analise.importacaoAnterior"
+      role="alert"
+      class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      <p class="font-semibold">Esta planilha já foi importada.</p>
+      <p class="mt-1">
+        O mesmo conteúdo foi enviado como
+        <span class="font-semibold">{{ analise.importacaoAnterior.nomeArquivo }}</span>
+        em {{ formatarDataHora(analise.importacaoAnterior.dataHora) }}<template v-if="analise.importacaoAnterior.enviadoPor?.nome">
+          por <span class="font-semibold">{{ analise.importacaoAnterior.enviadoPor.nome }}</span></template>.
+        Importar de novo só repete a mesma base.
+      </p>
+    </div>
 
     <!-- Números da análise -->
     <dl class="grid grid-cols-2 gap-3 lg:grid-cols-4">

@@ -22,8 +22,8 @@ const statusInfo = item => {
 
   if (item.status === 'NORMALIZADO') {
     return item.linhasIgnoradas
-      ? { texto: `✓ Importado (${item.linhasIgnoradas} ignoradas)`, classe: 'bg-amber-50 text-amber-700' }
-      : { texto: '✓ Importado', classe: 'bg-green-50 text-green-600' }
+      ? { texto: `✓ ${item.reimportacao ? 'Reimportado' : 'Importado'} (${item.linhasIgnoradas} ignoradas)`, classe: 'bg-amber-50 text-amber-700' }
+      : { texto: `✓ ${item.reimportacao ? 'Reimportado' : 'Importado'}`, classe: 'bg-green-50 text-green-600' }
   }
 
   return { texto: '✗ Com erro', classe: 'bg-red-50 text-red-500' }
@@ -60,13 +60,14 @@ const statusInfo = item => {
       </p>
 
       <div v-else class="overflow-x-auto">
-        <table class="w-full min-w-[640px] text-left text-xs">
+        <table class="w-full min-w-[760px] text-left text-xs">
           <caption class="sr-only">Planilhas enviadas, da mais recente para a mais antiga</caption>
 
           <thead class="bg-gray-50 text-gray-500">
             <tr>
               <th scope="col" class="px-6 py-3 font-semibold">Arquivo</th>
               <th scope="col" class="px-6 py-3 font-semibold">Enviado em</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Enviado por</th>
               <th scope="col" class="px-6 py-3 font-semibold">Importados</th>
               <th scope="col" class="px-6 py-3 font-semibold">Situação</th>
               <th scope="col" class="px-6 py-3 font-semibold"><span class="sr-only">Ações</span></th>
@@ -80,6 +81,10 @@ const statusInfo = item => {
 
                 <td class="px-6 py-4 text-gray-500">
                   <time :datetime="item.dataHora">{{ formatarDataHora(item.dataHora) }}</time>
+                </td>
+
+                <td class="px-6 py-4 text-gray-500" :title="item.enviadoPor?.email || ''">
+                  {{ item.enviadoPor?.nome || '--' }}
                 </td>
 
                 <td class="px-6 py-4 text-gray-500">
@@ -133,7 +138,7 @@ const statusInfo = item => {
               </tr>
 
               <tr v-if="item.mensagem && detalhesAbertos.has(item.id)" class="bg-gray-50/60">
-                <td colspan="5" class="px-6 pb-5 pt-1">
+                <td colspan="6" class="px-6 pb-5 pt-1">
                   <TabelaProblemas
                     v-if="item.problemas?.length"
                     :problemas="item.problemas"

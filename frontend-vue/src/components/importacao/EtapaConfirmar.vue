@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useUploadStore } from '../../stores/uploadStore'
+import { nomeUsuario } from '../../services/api'
 import { formatarNumero } from '../../utils/datas'
 
 // Etapa 3: mostrar o impacto na base. Quem salva é a tela (evento
@@ -18,6 +19,7 @@ const impacto = computed(() => [
   { rotulo: 'Saem da base', valor: analise.value.clientesRemovidos ? `−${formatarNumero(analise.value.clientesRemovidos)}` : '0', classe: analise.value.clientesRemovidos ? 'text-[#A85700]' : 'text-[#292A2F]' }
 ])
 
+const responsavel = nomeUsuario()
 </script>
 
 <template>
@@ -51,6 +53,13 @@ const impacto = computed(() => [
     </dl>
 
     <p
+      v-if="analise.importacaoAnterior"
+      class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      Atenção: esta mesma planilha já foi importada antes. Confirme só se quiser reimportá-la.
+    </p>
+
+    <p
       v-if="ignoradas"
       class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
     >
@@ -73,6 +82,11 @@ const impacto = computed(() => [
       <p v-for="erro in upload.erros" :key="erro">{{ erro }}</p>
     </div>
 
+    <p class="text-xs text-gray-500">
+      Fica registrado no histórico: arquivo {{ analise.nomeArquivo }}, enviado por
+      <span class="font-semibold text-gray-700">{{ responsavel || 'usuário atual' }}</span>, com data e hora do envio.
+    </p>
+
     <footer class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-between">
       <button
         type="button"
@@ -93,7 +107,7 @@ const impacto = computed(() => [
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="3" />
           <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
         </svg>
-        {{ upload.carregando ? 'Importando...' : `Importar ${formatarNumero(analise.validos.length)} clientes` }}
+        {{ upload.carregando ? 'Importando...' : `${analise.importacaoAnterior ? 'Reimportar' : 'Importar'} ${formatarNumero(analise.validos.length)} clientes` }}
       </button>
     </footer>
   </section>
