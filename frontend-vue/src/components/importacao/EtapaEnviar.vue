@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { formatarTamanho, TAMANHO_MAXIMO_MB, useUploadStore } from '../../stores/uploadStore'
+import { useUploadStore } from '../../stores/uploadStore'
+import { formatarTamanho, TAMANHO_MAXIMO_MB } from '../../utils/etl'
 import { baixarModelo } from '../../utils/modeloPlanilha'
 
 // Etapa 1: escolher o arquivo e pedir a análise. Nada é salvo aqui.

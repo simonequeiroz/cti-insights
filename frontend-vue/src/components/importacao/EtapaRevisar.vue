@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
-import { PERMITIR_IMPORTACAO_PARCIAL, formatarTamanho, useUploadStore } from '../../stores/uploadStore'
+import { PERMITIR_IMPORTACAO_PARCIAL, useUploadStore } from '../../stores/uploadStore'
+import { formatarTamanho } from '../../utils/etl'
 import { resumirCorrecoes } from '../../utils/correcoes'
 import { formatarDataHora, formatarNumero } from '../../utils/datas'
 import TabelaProblemas from '../TabelaProblemas.vue'
