@@ -7,7 +7,9 @@ export const COLUNAS_MODELO = [
   'nivel_cliente',
   'data_contratacao',
   'servicos_contratados',
-  'faturamento_anual'
+  'faturamento_anual',
+  'cidade',
+  'uf'
 ]
 
 export const baixarModelo = async () => {
@@ -26,7 +28,11 @@ export const baixarModelo = async () => {
     ['nivel_cliente', 'Sim', 'Somente A, B ou C', 'A'],
     ['data_contratacao', 'Sim', 'Data no formato dd/mm/aaaa', '15/03/2026'],
     ['servicos_contratados', 'Sim', 'Um ou mais serviços; se forem vários, separe com ";"', 'Link Dedicado;Firewall'],
-    ['faturamento_anual', 'Não', 'Valor em reais, só números', 120000],
+    ['faturamento_anual', 'Sim', 'Valor em reais, só números (sem negativo)', 1850000],
+    ['cidade', 'Não', 'Cidade do cliente', 'Campinas'],
+    ['uf', 'Não', 'Sigla do estado com 2 letras', 'SP'],
+    [],
+    ['Atenção', '', 'Cada codigo_cliente só pode aparecer uma vez. Linhas repetidas não são importadas.', ''],
     [],
     ['Preencha os clientes na aba "Clientes", uma linha por cliente, sem mudar o cabeçalho.']
   ])

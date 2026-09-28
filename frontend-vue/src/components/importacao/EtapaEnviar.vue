@@ -182,9 +182,9 @@ const aoSoltar = event => {
         class="mt-3 space-y-1 rounded-md bg-gray-50 p-3 text-xs text-gray-600"
       >
         <dt class="font-semibold text-gray-700">Obrigatórias</dt>
-        <dd class="font-['IBM_Plex_Mono']">consultor, codigo_cliente, nome_cliente, segmento, nivel_cliente (A, B ou C), data_contratacao, servicos_contratados</dd>
-        <dt class="pt-1 font-semibold text-gray-700">Opcional</dt>
-        <dd class="font-['IBM_Plex_Mono']">faturamento_anual</dd>
+        <dd class="font-['IBM_Plex_Mono']">codigo_cliente (sem repetir), nome_cliente, consultor, segmento, nivel_cliente (A, B ou C), faturamento_anual, servicos_contratados, data_contratacao</dd>
+        <dt class="pt-1 font-semibold text-gray-700">Opcionais</dt>
+        <dd class="font-['IBM_Plex_Mono']">cidade, uf (2 letras)</dd>
       </dl>
     </div>
   </section>
