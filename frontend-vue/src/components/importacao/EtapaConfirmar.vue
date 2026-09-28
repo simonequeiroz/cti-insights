@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { useUploadStore } from '../../stores/uploadStore'
 import { formatarNumero } from '../../utils/datas'
 
-// Etapa 3: mostrar o impacto na base e só então salvar.
-const emit = defineEmits(['voltar', 'confirmado'])
+// Etapa 3: mostrar o impacto na base. Quem salva é a tela (evento
+// "confirmar"): confirmarImportacao() limpa a análise, e isso tira este
+// componente da tela antes de ele conseguir avisar que terminou.
+const emit = defineEmits(['voltar', 'confirmar'])
 const upload = useUploadStore()
 
 const analise = computed(() => upload.analise)
@@ -16,10 +18,6 @@ const impacto = computed(() => [
   { rotulo: 'Saem da base', valor: analise.value.clientesRemovidos ? `−${formatarNumero(analise.value.clientesRemovidos)}` : '0', classe: analise.value.clientesRemovidos ? 'text-[#A85700]' : 'text-[#292A2F]' }
 ])
 
-const confirmar = async () => {
-  const registro = await upload.confirmarImportacao()
-  if (registro) emit('confirmado', registro)
-}
 </script>
 
 <template>
@@ -89,7 +87,7 @@ const confirmar = async () => {
         type="button"
         :disabled="upload.carregando || !upload.podeConfirmar"
         class="inline-flex items-center justify-center gap-2 rounded-md bg-[#FF8F00] px-6 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:enabled:bg-[#E68100] disabled:cursor-not-allowed disabled:opacity-50"
-        @click="confirmar"
+        @click="emit('confirmar')"
       >
         <svg v-if="upload.carregando" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="3" />

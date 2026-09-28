@@ -32,9 +32,16 @@ const irPara = async numero => {
   tituloEtapa.value?.focus()
 }
 
-const aoConfirmar = registro => {
-  registroConcluido.value = registro
-  irPara(4)
+// Salva aqui, e não dentro da EtapaConfirmar: confirmarImportacao() limpa a
+// análise, o que tira a etapa 3 da tela antes do fim do await, e um
+// componente que já saiu da tela não consegue mais emitir eventos.
+const confirmar = async () => {
+  const registro = await upload.confirmarImportacao()
+
+  if (registro) {
+    registroConcluido.value = registro
+    irPara(4)
+  }
 }
 
 const novaImportacao = () => {
@@ -47,10 +54,10 @@ const novaImportacao = () => {
 <template>
   <!-- dragover/drop no container todo: soltar o arquivo fora da área não
        deve fazer o navegador abrir o arquivo e sair do app. -->
-  <div class="flex min-h-screen flex-col md:flex-row" @dragover.prevent @drop.prevent>
+  <div class="flex min-h-screen flex-col sm:flex-row" @dragover.prevent @drop.prevent>
     <Sidebar />
 
-    <div class="grid-background flex-1">
+    <div class="grid-background min-w-0 flex-1">
       <main class="mx-auto max-w-4xl space-y-8 px-6 py-12 sm:py-16">
         <header>
           <h1
@@ -79,7 +86,7 @@ const novaImportacao = () => {
         <EtapaConfirmar
           v-else-if="etapa === 3 && upload.analise"
           @voltar="irPara(2)"
-          @confirmado="aoConfirmar"
+          @confirmar="confirmar"
         />
 
         <EtapaConcluido

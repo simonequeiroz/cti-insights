@@ -127,11 +127,11 @@ const limparDados = async () => {
 
 <template>
 
-  <div class="flex min-h-screen flex-col md:flex-row">
+  <div class="flex min-h-screen flex-col sm:flex-row">
 
     <Sidebar />
 
-    <div class="grid-background flex-1">
+    <div class="grid-background min-w-0 flex-1">
 
       <main class="mx-auto max-w-7xl px-6 py-10">
 

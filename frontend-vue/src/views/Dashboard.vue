@@ -653,11 +653,11 @@ const exportarCSV = () => {
 
 <template>
 
-  <div class="flex min-h-screen flex-col md:flex-row">
+  <div class="flex min-h-screen flex-col sm:flex-row">
 
     <Sidebar class="no-print" />
 
-    <div class="grid-background flex-1">
+    <div class="grid-background min-w-0 flex-1">
 
     <!-- CONTEÚDO -->
 

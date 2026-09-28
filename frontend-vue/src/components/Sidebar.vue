@@ -82,20 +82,20 @@ const sair = async () => {
 <template>
 
   <aside
-    class="flex flex-wrap items-center justify-between border-b border-gray-200 bg-white px-4 py-3 md:h-screen md:w-48 md:shrink-0 md:flex-col md:flex-nowrap md:items-stretch md:justify-between md:border-b-0 md:border-r md:px-4 md:py-6 2xl:w-64 2xl:px-5"
+    class="flex flex-wrap items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:h-screen sm:w-16 sm:shrink-0 md:w-48 sm:flex-col sm:flex-nowrap sm:items-stretch sm:justify-between sm:border-b-0 sm:border-r sm:px-2 sm:py-6 md:px-4 2xl:w-64 2xl:px-5"
   >
 
     <!-- Logo + botão hambúrguer (mobile) + navegação -->
 
-    <div class="w-full md:w-auto">
+    <div class="w-full sm:w-auto">
 
-      <div class="flex items-center justify-between md:block">
+      <div class="flex items-center justify-between sm:block">
 
         <RouterLink
           to="/dashboard"
-          class="text-lg font-bold tracking-tight text-[#006EB7] md:text-xl"
+          class="text-lg font-bold tracking-tight text-[#006EB7] sm:block sm:text-center md:text-left md:text-xl"
         >
-          CTI Insights<span class="text-[#FF8F00]">.</span>
+          <span class="sm:hidden md:inline">CTI Insights</span><span class="hidden sm:inline md:hidden">CTI</span><span class="text-[#FF8F00]">.</span>
         </RouterLink>
 
         <button
@@ -104,7 +104,7 @@ const sair = async () => {
           :aria-expanded="menuAberto"
           aria-controls="menu-principal"
           :aria-label="menuAberto ? 'Fechar menu' : 'Abrir menu'"
-          class="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 md:hidden"
+          class="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 sm:hidden"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -133,15 +133,15 @@ const sair = async () => {
 
       <div
         id="menu-principal"
-        class="md:block"
+        class="sm:block"
         :class="menuAberto ? 'block' : 'hidden'"
       >
 
-        <p class="mt-4 border-b border-dashed border-gray-300 pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 md:mb-3.5 md:mt-8">
+        <p class="mt-4 border-b border-dashed border-gray-300 pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:hidden md:mb-3.5 md:mt-8 md:block">
           Navegação
         </p>
 
-        <nav class="mt-3 flex flex-col space-y-2 md:mt-0">
+        <nav class="mt-3 flex flex-col space-y-2 sm:mt-8 md:mt-0">
 
           <RouterLink
             v-for="item in itensMenu"
@@ -149,7 +149,7 @@ const sair = async () => {
             :to="item.caminho"
             :title="item.rotulo"
             :aria-label="item.rotulo"
-            class="flex items-center gap-3"
+            class="flex items-center gap-3 sm:justify-center md:justify-start"
           >
             <span
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
@@ -172,7 +172,7 @@ const sair = async () => {
             </span>
 
             <span
-              class="font-['IBM_Plex_Mono'] text-[12.5px] uppercase tracking-wide"
+              class="font-['IBM_Plex_Mono'] text-[12.5px] uppercase tracking-wide sm:hidden md:inline"
               :class="linkAtivo(item.caminho) ? 'font-semibold text-[#006EB7]' : 'font-medium text-gray-500'"
             >{{ item.rotulo }}</span>
           </RouterLink>
@@ -186,11 +186,11 @@ const sair = async () => {
     <!-- Usuário logado + sair (no mobile fica dentro do menu aberto) -->
 
     <div
-      class="w-full border-t border-dashed border-gray-300 pt-4 md:block md:w-auto"
+      class="w-full border-t border-dashed border-gray-300 pt-4 sm:block sm:w-auto"
       :class="menuAberto ? 'mt-4 block' : 'hidden'"
     >
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 sm:justify-center md:justify-start">
 
         <div
           :title="nomeExibido"
@@ -198,7 +198,7 @@ const sair = async () => {
           {{ iniciais }}
         </div>
 
-        <div class="min-w-0">
+        <div class="min-w-0 sm:hidden md:block">
           <p
             class="truncate text-sm font-semibold text-[#292A2F]"
             :title="emailUsuario"
@@ -218,7 +218,7 @@ const sair = async () => {
         @click="sair"
         title="Encerrar a Sessão"
         aria-label="Encerrar a Sessão"
-        class="mt-4 flex items-center gap-2 text-sm font-medium text-red-500 transition hover:text-red-600"
+        class="mt-4 flex items-center gap-2 text-sm font-medium text-red-500 sm:w-full sm:justify-center md:w-auto md:justify-start transition hover:text-red-600"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -235,7 +235,7 @@ const sair = async () => {
           />
         </svg>
 
-        <span>Encerrar a Sessão</span>
+        <span class="sm:hidden md:inline">Encerrar a Sessão</span>
       </button>
 
     </div>
