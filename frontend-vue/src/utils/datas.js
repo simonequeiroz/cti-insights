@@ -8,3 +8,7 @@ export const formatarDataHora = iso => {
   const minuto = String(data.getMinutes()).padStart(2, '0')
   return `${dia}/${mes}/${ano} às ${hora}:${minuto}`
 }
+
+export const formatarNumero = valor => {
+  return valor === null || valor === undefined ? '--' : Number(valor).toLocaleString('pt-BR')
+}

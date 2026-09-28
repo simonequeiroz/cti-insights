@@ -11,7 +11,6 @@ export const COLUNAS_MODELO = [
 ]
 
 export const baixarModelo = async () => {
-  // SheetJS só no clique: no topo ela entraria no pacote principal.
   const XLSX = await import('xlsx')
 
   // Aba "Clientes" só com o cabeçalho: o exemplo fica nas instruções,

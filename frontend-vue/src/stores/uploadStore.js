@@ -8,15 +8,19 @@ import {
   salvarHistorico
 } from '../services/api'
 
+// ---------------------------------------------------------------------------
+// REGRA DE NEGÓCIO (decidir em grupo)
+// true  → importa as linhas válidas e ignora as com erro (o consultor vê
+//         quais foram ignoradas e pode baixar só elas pra corrigir).
+// false → qualquer linha com erro bloqueia a importação da planilha inteira.
+// ---------------------------------------------------------------------------
+export const PERMITIR_IMPORTACAO_PARCIAL = true
+
 // Unifica grafias diferentes do mesmo segmento (o problema original do
 // projeto: "IND.", "Industria", "INDUSTRIA" viravam 3 valores distintos).
-//
-// Em vez de listar cada variação (o exemplo da aula só cobria 3 segmentos e
-// uma planilha real apareceu com "SAUDE"/"SAÚDE"/"EDUCACAO"/"EDUCAÇÃO" como
-// 4 valores diferentes), a chave usada aqui já remove acento e pontuação
-// antes de comparar — então "Saúde", "SAUDE", "saude." e "SAÚDE" caem todos
-// na mesma entrada, sem precisar prever cada grafia possível.
-const removerAcentos = texto => texto.normalize('NFD').replace(/[̀-ͯ]/g, '')
+// A chave remove acento e pontuação antes de comparar, então "Saúde",
+// "SAUDE", "saude." e "SAÚDE" caem todos na mesma entrada.
+const removerAcentos = texto => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 const chaveSegmento = valor => {
   return removerAcentos(String(valor || '').trim().toUpperCase()).replace(/\.$/, '')
@@ -25,6 +29,7 @@ const chaveSegmento = valor => {
 const MAPA_SEGMENTOS = {
   'IND': 'Indústria',
   'INDUSTRIA': 'Indústria',
+  'COM': 'Comércio',
   'COMERCIO': 'Comércio',
   'SERVICOS': 'Serviços',
   'SAUDE': 'Saúde',
@@ -36,17 +41,15 @@ const MAPA_SEGMENTOS = {
   'LOGISTICA': 'Logística'
 }
 
-// Segmento que não está no mapa (uma categoria nova que ainda não previmos)
-// não fica gritando em CAIXA ALTA pra sempre — cai pra "Primeira Maiúscula",
-// pelo menos apresentável, até alguém adicionar a entrada certa no mapa.
+// Segmento fora do mapa cai pra "Primeira Maiúscula" até alguém adicionar
+// a entrada certa no mapa.
 const capitalizarPalavras = valor => {
   return valor
     .toLowerCase()
     .replace(/(^|\s)\S/g, letra => letra.toUpperCase())
 }
 
-// Aceita "aaaa-mm-dd" (ISO) ou "dd/mm/aaaa" e normaliza pra "aaaa-mm-dd",
-// formato usado pelo Dashboard pra agrupar por período.
+// Aceita "aaaa-mm-dd" (ISO) ou "dd/mm/aaaa" e normaliza pra "aaaa-mm-dd".
 const parseDataContratacao = valor => {
   const limpo = String(valor ?? '').trim()
 
@@ -68,10 +71,8 @@ const parseDataContratacao = valor => {
   return null
 }
 
-// Quando a célula já vem como número (Excel formatou como moeda mas o valor
-// por baixo é numérico), usa direto. Quando vem como texto — "R$ 1.850.000,00"
-// — remove tudo que não é dígito/vírgula, tira o ponto de milhar e troca a
-// vírgula decimal por ponto, pra não virar NaN.
+// Número direto quando o Excel já entrega numérico; texto tipo
+// "R$ 1.850.000,00" vira 1850000.
 const parseFaturamento = valor => {
   if (valor === undefined || valor === null || valor === '') {
     return null
@@ -90,17 +91,13 @@ const parseFaturamento = valor => {
   return Number.isNaN(numero) ? null : numero
 }
 
-// Excel em português-BR exporta CSV com ";" (a vírgula já é separador
-// decimal por lá). Detecta pelo cabeçalho em vez de forçar um fixo.
+// Excel em português-BR exporta CSV com ";". Detecta pelo cabeçalho.
 const detectarDelimitador = primeiraLinha => {
   const qtdPontoVirgula = (primeiraLinha.match(/;/g) || []).length
   const qtdVirgula = (primeiraLinha.match(/,/g) || []).length
   return qtdPontoVirgula > qtdVirgula ? ';' : ','
 }
 
-// CSV também vira uma lista de objetos com o nome da coluna como chave —
-// igual ao que o XLSX.utils.sheet_to_json já faz pra planilhas Excel —
-// pra alimentar tratarLinha() do mesmo jeito nos dois formatos.
 const linhasCsvParaObjetos = texto => {
   const linhas = texto
     .trim()
@@ -142,13 +139,33 @@ const celulaParaTexto = valor => {
   return valor
 }
 
-// Campos obrigatórios de cada linha (base: colunas da planilha e diagrama de
-// classes). Uma planilha com qualquer um deles vazio ou inválido não entra na
-// base. Faturamento não é obrigatório: o Dashboard trata ausência como 0.
+// Lê .xlsx/.xls/.csv e devolve as linhas como objetos { coluna: valor }.
+const lerArquivo = async arquivo => {
+  if (/\.(xlsx|xls)$/i.test(arquivo.name)) {
+    // SheetJS sob demanda, pra não pesar o carregamento das outras telas.
+    const XLSX = await import('xlsx')
+    const buffer = await arquivo.arrayBuffer()
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
+    const planilha = workbook.Sheets[workbook.SheetNames[0]]
+    const linhasCruas = XLSX.utils.sheet_to_json(planilha, { raw: true, defval: '' })
+
+    return linhasCruas.map(linha => {
+      const linhaTexto = {}
+      Object.keys(linha).forEach(chave => {
+        linhaTexto[chave] = celulaParaTexto(linha[chave])
+      })
+      return linhaTexto
+    })
+  }
+
+  return linhasCsvParaObjetos(await arquivo.text())
+}
+
+// ---------------------------------------------------------------------------
+// Validação
+// ---------------------------------------------------------------------------
 const NIVEIS_VALIDOS = ['A', 'B', 'C']
 
-// "coluna" é o nome no cabeçalho da planilha (pra mostrar o valor que veio
-// no arquivo); "dica" completa a descrição quando o valor veio mas é inválido.
 const CAMPOS_OBRIGATORIOS = [
   { rotulo: 'código do cliente', coluna: 'codigo_cliente', invalido: c => !c.codigo_cliente },
   { rotulo: 'nome do cliente', coluna: 'nome_cliente', invalido: c => !c.nome_cliente },
@@ -159,8 +176,8 @@ const CAMPOS_OBRIGATORIOS = [
   { rotulo: 'serviço', coluna: 'servicos_contratados', invalido: c => !c.servicos.length }
 ]
 
-// Guardamos no histórico no máximo esta quantidade de problemas detalhados
-// (o armazenamento local é limitado); a contagem total continua exata.
+// Limite de problemas detalhados guardados (armazenamento local é limitado);
+// a contagem total continua exata.
 const MAX_PROBLEMAS_DETALHADOS = 200
 
 const descreverProblema = (campo, linhaOriginal) => {
@@ -174,58 +191,73 @@ const descreverProblema = (campo, linhaOriginal) => {
   return campo.dica ? `"${valor}" é inválido (${campo.dica})` : `"${valor}" é inválido`
 }
 
-// Confere todas as linhas e resume os problemas: quantas linhas falharam,
-// quantas vezes cada campo falhou e, linha a linha, o que está errado
-// (número da linha na planilha: cabeçalho é a 1, então o primeiro cliente
-// é a 2).
+// Confere linha a linha. Número da linha = como aparece no Excel
+// (cabeçalho é a 1, então o primeiro cliente é a 2).
 const validarClientes = (clientes, originais) => {
-  const contagemPorCampo = CAMPOS_OBRIGATORIOS.map(() => 0)
-  const linhasComProblema = []
   const problemas = []
+  const linhasComErro = []
   let totalProblemas = 0
 
   clientes.forEach((cliente, indice) => {
-    let temProblema = false
+    const falhas = CAMPOS_OBRIGATORIOS.filter(campo => campo.invalido(cliente))
 
-    CAMPOS_OBRIGATORIOS.forEach((campo, posicao) => {
-      if (campo.invalido(cliente)) {
-        contagemPorCampo[posicao]++
-        temProblema = true
-        totalProblemas++
+    if (!falhas.length) {
+      return
+    }
 
-        if (problemas.length < MAX_PROBLEMAS_DETALHADOS) {
-          problemas.push({
-            linha: indice + 2,
-            campo: campo.rotulo,
-            descricao: descreverProblema(campo, originais[indice])
-          })
-        }
+    totalProblemas += falhas.length
+
+    const descricoes = falhas.map(campo => {
+      const descricao = descreverProblema(campo, originais[indice])
+
+      if (problemas.length < MAX_PROBLEMAS_DETALHADOS) {
+        problemas.push({ linha: indice + 2, campo: campo.rotulo, descricao })
       }
+
+      return `${campo.rotulo}: ${descricao}`
     })
 
-    if (temProblema) {
-      linhasComProblema.push(indice + 2)
-    }
+    linhasComErro.push({
+      indice,
+      linha: indice + 2,
+      problemas: descricoes.join(' | '),
+      original: originais[indice]
+    })
   })
 
-  const camposComProblema = CAMPOS_OBRIGATORIOS
-    .map((campo, posicao) => ({ rotulo: campo.rotulo, quantidade: contagemPorCampo[posicao] }))
-    .filter(campo => campo.quantidade > 0)
-
-  return { linhasComProblema, camposComProblema, problemas, totalProblemas }
+  return { problemas, totalProblemas, linhasComErro }
 }
 
-const montarMensagemDeErro = (validacao, totalLinhas) => {
-  const campos = validacao.camposComProblema
-    .map(campo => `${campo.rotulo} (${campo.quantidade})`)
-    .join(', ')
+// CSV (separado por ";", abre direto no Excel BR) só com as linhas que
+// precisam de ajuste, com a coluna "problema" na frente.
+const gerarCsvLinhasComErro = linhasComErro => {
+  const colunas = [...new Set(linhasComErro.flatMap(item => Object.keys(item.original || {})))]
+  const escapar = valor => `"${String(valor ?? '').replace(/"/g, '""')}"`
 
-  const primeiras = validacao.linhasComProblema.slice(0, 5).join(', ')
-  const restantes = validacao.linhasComProblema.length - 5
-  const linhas = restantes > 0 ? `${primeiras} e mais ${restantes}` : primeiras
+  const cabecalho = ['linha_na_planilha', 'problema', ...colunas].map(escapar).join(';')
+  const corpo = linhasComErro.map(item => {
+    return [item.linha, item.problemas, ...colunas.map(coluna => item.original?.[coluna])]
+      .map(escapar)
+      .join(';')
+  })
 
-  return `${validacao.linhasComProblema.length} de ${totalLinhas} linha(s) com campo obrigatório vazio ou inválido: ${campos}. Linhas: ${linhas}. Corrija esses dados na planilha e envie o arquivo novamente.`
+  // \ufeff (BOM) faz o Excel reconhecer os acentos
+  return '\ufeff' + [cabecalho, ...corpo].join('\n')
 }
+
+const baixarCsv = (conteudo, nome) => {
+  const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = nome
+  link.click()
+
+  URL.revokeObjectURL(url)
+}
+
+const nomeArquivoErros = nomeArquivo => nomeArquivo.replace(/\.(xlsx|xls|csv)$/i, '') + '_linhas-com-erro.csv'
 
 export const TAMANHO_MAXIMO_MB = 20
 const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024
@@ -241,15 +273,15 @@ export const formatarTamanho = bytes => {
 export const useUploadStore = defineStore('upload', {
   state: () => ({
     arquivo: null,
-    dadosOriginais: [],
     dadosTratados: [],
     erros: [],
     carregando: false,
 
-    // Telemetria: histórico de uploads (persistido pelo serviço, sobrevive
-    // a recarregar a página — diferente de dadosTratados, que é só o
-    // resultado do último arquivo processado nesta sessão). Começa vazio e
-    // é preenchido por carregarHistorico().
+    // Resultado da etapa "Revisar": planilha lida, padronizada e validada,
+    // mas AINDA NÃO salva. Só vira base em confirmarImportacao().
+    analise: null,
+
+    // Histórico de envios (persistido pelo serviço)
     historico: []
   }),
 
@@ -264,30 +296,34 @@ export const useUploadStore = defineStore('upload', {
 
     temDados: state => state.dadosTratados.length > 0,
 
-    // Registro do histórico que gerou a base atual: o NORMALIZADO mais
-    // recente (o histórico é do mais novo pro mais antigo). null se esse
-    // registro foi removido do histórico.
+    // Registro do histórico que gerou a base atual
     origemBaseAtual: state => {
       return state.historico.find(item => item.status === 'NORMALIZADO') || null
     },
 
-    // Último envio terminou em erro: a base exibida é a anterior, mantida.
-    ultimoEnvioComErro: state => {
-      const ultimo = state.historico.find(item => item.status !== 'PROCESSANDO')
-      return ultimo?.status === 'ERRO_SCHEMA' ? ultimo : null
+    // A análise atual pode ser importada?
+    podeConfirmar: state => {
+      const analise = state.analise
+
+      if (!analise || !analise.validos.length) {
+        return false
+      }
+
+      return PERMITIR_IMPORTACAO_PARCIAL || analise.linhasComErro.length === 0
     }
   },
 
   actions: {
-    // Valida já na seleção (formato e tamanho), pra tela só habilitar o
-    // "Enviar e Processar" quando o arquivo pode de fato ser enviado.
+    // Etapa 1 — escolher arquivo: valida formato e tamanho na hora.
     selecionarArquivo(file) {
       this.arquivo = file
+      this.analise = null
       this.validarArquivo()
     },
 
     descartarArquivo() {
       this.arquivo = null
+      this.analise = null
       this.erros = []
     },
 
@@ -315,13 +351,8 @@ export const useUploadStore = defineStore('upload', {
       return true
     },
 
-    // Limpa espaços, padroniza maiúsculas e unifica grafias de segmento e
-    // consultor. ...linha preserva qualquer outro campo que a planilha real
-    // tiver (ex.: cidade, uf), mesmo sem tratamento específico pra eles.
-    //
-    // Aceita tanto os nomes do exemplo da aula (faturamento, servico) quanto
-    // os nomes reais que apareceram na planilha da CTI (faturamento_anual,
-    // servicos_contratados) — sem exigir que a planilha use um nome exato.
+    // Limpa espaços, padroniza maiúsculas e unifica grafias. Guarda em
+    // etl_original o valor original de cada campo que foi corrigido.
     tratarLinha(linha) {
       const segmentoOriginal = String(linha.segmento || '').trim()
       const chaveSeg = chaveSegmento(segmentoOriginal)
@@ -330,10 +361,7 @@ export const useUploadStore = defineStore('upload', {
       const consultorOriginal = String(linha.consultor || '').trim()
       const consultorTratado = consultorOriginal ? capitalizarPalavras(consultorOriginal) : ''
 
-      // Um cliente pode ter mais de um serviço na mesma linha, separados por
-      // ";" (ex.: "Internet Dedicada;Firewall"). Guarda os dois formatos:
-      // "servico" como texto pra exibir em tabela, "servicos" como lista pra
-      // quem precisa contar/repartir por serviço individual (Dashboard).
+      // Vários serviços na mesma célula, separados por ";"
       const servicoBruto = String(linha.servicos_contratados ?? linha.servico ?? '').trim()
       const listaServicos = servicoBruto
         ? servicoBruto.split(';').map(s => s.trim()).filter(Boolean)
@@ -348,9 +376,6 @@ export const useUploadStore = defineStore('upload', {
       const faturamentoOriginal = linha.faturamento_anual ?? linha.faturamento
       const faturamentoTratado = parseFaturamento(faturamentoOriginal)
 
-      // Valor ORIGINAL de cada campo que o tratamento alterou — é o que
-      // permite mostrar na tela "o que o ETL corrigiu" (resumoEtl.js).
-      // Diferença só de espaços nas pontas não conta como correção.
       const etlOriginal = {}
 
       if (segmentoOriginal !== segmentoTratado) etlOriginal.segmento = segmentoOriginal
@@ -377,180 +402,151 @@ export const useUploadStore = defineStore('upload', {
       }
     },
 
-    // Envolve o processamento para "carregando" sempre voltar a false, mesmo
-    // se algo inesperado lançar erro (senão a tela ficaria presa em
-    // "Processando...").
-    //
-    // Devolve o registro do histórico já finalizado (NORMALIZADO ou
-    // ERRO_SCHEMA), pra tela mostrar o retorno; null se nada foi processado
-    // (arquivo inválido ou processamento cancelado).
-    async processarPlanilha() {
-      // Um envio por vez: evita dois processamentos disputando a mesma base.
-      if (this.carregando) {
-        return null
-      }
-
-      try {
-        return await this.executarProcessamento()
-      } finally {
-        this.carregando = false
-        // Arquivo já enviado: a área de upload volta ao estado inicial.
-        this.arquivo = null
-      }
-    },
-
-    async executarProcessamento() {
-      if (!this.validarArquivo()) {
+    // Etapa 2 — ANALISAR: lê, padroniza, valida e compara com a base atual.
+    // Não salva nada. Devolve a análise, ou null se não deu pra ler.
+    async analisarPlanilha() {
+      if (this.carregando || !this.validarArquivo()) {
         return null
       }
 
       this.carregando = true
-
-      // Registro provisório: o parse é assíncrono de verdade (arrayBuffer/
-      // FileReader), então "PROCESSANDO" reflete um estado real, ainda que
-      // rápido — não é decorativo.
-      const registro = {
-        id: Date.now(),
-        tipoOperacao: 'UPLOAD',
-        nomeArquivo: this.arquivo.name,
-        dataHora: new Date().toISOString(),
-        status: 'PROCESSANDO',
-        linhasLidas: null,
-        mensagem: ''
-      }
-
-      this.historico = [registro, ...this.historico]
-      this.salvarHistorico()
-
-      // Só em desenvolvimento e só se ctiDelayUpload estiver definido: deixa o
-      // status PROCESSANDO visível para testar (veja README).
-      await esperarSimulado()
-
-      // O "X" do histórico cancela removendo o registro. Depois de cada
-      // etapa assíncrona conferimos se ele ainda existe; se não, descarta o
-      // resultado sem tocar na base.
-      const foiCancelado = () => !this.historico.some(r => r.id === registro.id)
-
-      if (foiCancelado()) {
-        return null
-      }
-
-      const ehPlanilhaExcel = /\.(xlsx|xls)$/i.test(this.arquivo.name)
-
-      let conteudoParaDownload
-      let nomeParaDownload = this.arquivo.name
+      this.analise = null
 
       try {
-        if (ehPlanilhaExcel) {
-          // .xlsx/.xls são arquivos binários — não dá pra ler como texto
-          // puro. Importa a SheetJS sob demanda, só quando precisa, pra não
-          // pesar o carregamento inicial das outras telas.
-          const XLSX = await import('xlsx')
-          const buffer = await this.arquivo.arrayBuffer()
-          const workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
-          const planilha = workbook.Sheets[workbook.SheetNames[0]]
+        // Só em desenvolvimento, se ctiDelayUpload estiver definido (README)
+        await esperarSimulado()
 
-          const linhasCruas = XLSX.utils.sheet_to_json(planilha, {
-            raw: true,
-            defval: ''
-          })
+        let originais
 
-          this.dadosOriginais = linhasCruas.map(linha => {
-            const linhaTexto = {}
-            Object.keys(linha).forEach(chave => {
-              linhaTexto[chave] = celulaParaTexto(linha[chave])
-            })
-            return linhaTexto
-          })
-
-          conteudoParaDownload = XLSX.utils.sheet_to_csv(planilha)
-          nomeParaDownload = this.arquivo.name.replace(/\.(xlsx|xls)$/i, '.csv')
-        } else {
-          const texto = await this.arquivo.text()
-          this.dadosOriginais = linhasCsvParaObjetos(texto)
-          conteudoParaDownload = texto
-        }
-      } catch (erro) {
-        console.error('Erro ao processar planilha:', erro)
-
-        if (foiCancelado()) {
+        try {
+          originais = await lerArquivo(this.arquivo)
+        } catch (erro) {
+          console.error('Erro ao ler planilha:', erro)
+          this.registrarFalha('Não foi possível ler o arquivo. Confira se ele abre no Excel e envie novamente.')
           return null
         }
 
-        const itemComErro = this.historico.find(r => r.id === registro.id)
-        itemComErro.status = 'ERRO_SCHEMA'
-        itemComErro.linhasLidas = 0
-        itemComErro.mensagem = 'Não foi possível ler o arquivo. Confira se o formato não está corrompido (abra-o no Excel para testar) e envie novamente.'
-        this.erros = [itemComErro.mensagem]
-        this.salvarHistorico()
-        return itemComErro
+        if (originais.length === 0) {
+          this.registrarFalha('Nenhuma linha de dados encontrada. Confira se a planilha tem o cabeçalho e ao menos um cliente.')
+          return null
+        }
+
+        const tratados = originais.map(linha => this.tratarLinha(linha))
+        const validacao = validarClientes(tratados, originais)
+        const indicesComErro = new Set(validacao.linhasComErro.map(item => item.indice))
+        const validos = tratados.filter((_, indice) => !indicesComErro.has(indice))
+
+        // Comparação com a base atual (pelo código do cliente)
+        const codigosAnteriores = new Set(this.dadosTratados.map(c => c.codigo_cliente))
+        const codigosNovos = new Set(validos.map(c => c.codigo_cliente))
+        const clientesNovos = [...codigosNovos].filter(c => !codigosAnteriores.has(c)).length
+
+        this.analise = {
+          nomeArquivo: this.arquivo.name,
+          tamanho: this.arquivo.size,
+          linhasLidas: tratados.length,
+          validos,
+          linhasComErro: validacao.linhasComErro,
+          problemas: validacao.problemas,
+          totalProblemas: validacao.totalProblemas,
+          clientesNovos,
+          clientesAtualizados: codigosNovos.size - clientesNovos,
+          clientesRemovidos: [...codigosAnteriores].filter(c => !codigosNovos.has(c)).length,
+          baseAnterior: this.dadosTratados.length
+        }
+
+        return this.analise
+      } finally {
+        this.carregando = false
+      }
+    },
+
+    // Volta da revisão sem importar nada
+    cancelarAnalise() {
+      this.analise = null
+      this.arquivo = null
+      this.erros = []
+    },
+
+    // Planilha só com as linhas que precisam de ajuste (etapa Revisar)
+    baixarLinhasComErro() {
+      if (!this.analise?.linhasComErro.length) {
+        return
       }
 
-      if (foiCancelado()) {
+      baixarCsv(gerarCsvLinhasComErro(this.analise.linhasComErro), nomeArquivoErros(this.analise.nomeArquivo))
+    },
+
+    // Etapa 3 — CONFIRMAR: agora sim substitui a base e registra no histórico.
+    async confirmarImportacao() {
+      if (this.carregando || !this.podeConfirmar) {
         return null
       }
 
-      // "registro" é o objeto original, não a versão reativa que o Pinia
-      // guardou ao fazer this.historico = [...]; buscamos de volta pelo id
-      // antes de mutar, senão a tela não atualiza.
-      const item = this.historico.find(r => r.id === registro.id)
+      this.carregando = true
+      const analise = this.analise
+      const ignoradas = analise.linhasComErro.length
 
-      const tratados = this.dadosOriginais.map(this.tratarLinha)
+      try {
+        await salvarClientes(analise.validos)
+        this.dadosTratados = analise.validos
 
-      // Validação: todos os campos obrigatórios (CAMPOS_OBRIGATORIOS) devem
-      // estar preenchidos em todas as linhas — senão o arquivo inteiro é
-      // recusado e a última base válida é mantida.
-      const validacao = validarClientes(tratados, this.dadosOriginais)
-
-      if (tratados.length === 0) {
-        item.status = 'ERRO_SCHEMA'
-        item.linhasLidas = 0
-        item.mensagem = 'Nenhuma linha de dados encontrada no arquivo. Confira se a planilha tem o cabeçalho e ao menos uma linha de dados, e envie novamente.'
-        item.conteudoOriginal = conteudoParaDownload
-        item.nomeArquivoDownload = nomeParaDownload
-        this.erros = [item.mensagem]
-      } else if (validacao.linhasComProblema.length > 0) {
-        item.status = 'ERRO_SCHEMA'
-        item.linhasLidas = tratados.length
-        item.mensagem = montarMensagemDeErro(validacao, tratados.length)
-        item.linhasComProblema = validacao.linhasComProblema.length
-        item.problemas = validacao.problemas
-        item.totalProblemas = validacao.totalProblemas
-        item.conteudoOriginal = conteudoParaDownload
-        item.nomeArquivoDownload = nomeParaDownload
-        this.erros = [item.mensagem]
-      } else {
-        // Só sobrescreve a base usada pelo Dashboard/Relatórios (e a prévia)
-        // quando o arquivo passou na validação — um upload com erro não deve
-        // apagar a última base boa que já estava carregada.
-        try {
-          const codigosAnteriores = new Set(this.dadosTratados.map(c => c.codigo_cliente))
-          const codigosAtuais = new Set(tratados.map(c => c.codigo_cliente))
-
-          await salvarClientes(tratados)
-          this.dadosTratados = tratados
-          item.status = 'NORMALIZADO'
-          item.linhasLidas = tratados.length
-          item.clientesNovos = [...codigosAtuais].filter(c => !codigosAnteriores.has(c)).length
-          item.clientesRemovidos = [...codigosAnteriores].filter(c => !codigosAtuais.has(c)).length
-          item.mensagem = ''
-          this.erros = []
-        } catch (erro) {
-          // Ex.: estourou o limite do armazenamento local do navegador.
-          console.error('Erro ao salvar a base:', erro)
-          item.status = 'ERRO_SCHEMA'
-          item.linhasLidas = tratados.length
-          item.mensagem = 'Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local). Envie uma planilha menor.'
-          this.erros = [item.mensagem]
+        const item = {
+          id: Date.now(),
+          tipoOperacao: 'UPLOAD',
+          nomeArquivo: analise.nomeArquivo,
+          dataHora: new Date().toISOString(),
+          status: 'NORMALIZADO',
+          linhasLidas: analise.linhasLidas,
+          linhasImportadas: analise.validos.length,
+          linhasIgnoradas: ignoradas,
+          clientesNovos: analise.clientesNovos,
+          clientesAtualizados: analise.clientesAtualizados,
+          clientesRemovidos: analise.clientesRemovidos,
+          mensagem: ignoradas ? `${ignoradas} linha(s) com erro não foram importadas.` : '',
+          problemas: analise.problemas,
+          totalProblemas: analise.totalProblemas,
+          // Usado pelo botão de download do histórico (baixarOriginal)
+          conteudoOriginal: ignoradas ? gerarCsvLinhasComErro(analise.linhasComErro) : undefined,
+          nomeArquivoDownload: ignoradas ? nomeArquivoErros(analise.nomeArquivo) : undefined
         }
-      }
 
-      this.salvarHistorico()
-      return item
+        this.historico = [item, ...this.historico]
+        await this.salvarHistorico()
+
+        this.analise = null
+        this.arquivo = null
+        this.erros = []
+        return item
+      } catch (erro) {
+        // Ex.: estourou o limite do armazenamento local do navegador
+        console.error('Erro ao salvar a base:', erro)
+        this.erros = ['Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local). Envie uma planilha menor.']
+        return null
+      } finally {
+        this.carregando = false
+      }
     },
 
-    // Nunca lança erro: se o armazenamento local estiver cheio, tenta de novo
-    // sem o conteúdo original dos arquivos com erro (a parte mais pesada).
+    // Arquivo que nem chegou na revisão (ilegível ou vazio)
+    registrarFalha(mensagem) {
+      this.erros = [mensagem]
+
+      this.historico = [{
+        id: Date.now(),
+        tipoOperacao: 'UPLOAD',
+        nomeArquivo: this.arquivo?.name || 'arquivo',
+        dataHora: new Date().toISOString(),
+        status: 'ERRO_SCHEMA',
+        linhasLidas: 0,
+        mensagem
+      }, ...this.historico]
+
+      this.salvarHistorico()
+    },
+
+    // Nunca lança erro: se o armazenamento estiver cheio, tenta de novo sem
+    // o conteúdo dos downloads (a parte mais pesada).
     async salvarHistorico() {
       try {
         await salvarHistorico(this.historico)
@@ -567,9 +563,7 @@ export const useUploadStore = defineStore('upload', {
     async carregarHistorico() {
       this.historico = await listarHistorico()
 
-      // Registro ainda PROCESSANDO, mas sem nenhum processamento em andamento:
-      // a página foi recarregada ou fechada no meio. Marca como interrompido
-      // em vez de deixar "PROCESSANDO..." para sempre.
+      // Registros antigos que ficaram presos em PROCESSANDO
       if (!this.carregando) {
         let mudou = false
 
@@ -593,33 +587,21 @@ export const useUploadStore = defineStore('upload', {
       this.salvarHistorico()
     },
 
-    // Só existe pra quem deu ERRO_SCHEMA (guardamos o conteúdo original só
-    // nesse caso) — deixa reabrir o que foi enviado pra achar o problema.
     baixarOriginal(item) {
       if (!item.conteudoOriginal) {
         return
       }
 
-      const blob = new Blob([item.conteudoOriginal], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-
-      const link = document.createElement('a')
-      link.href = url
-      link.download = item.nomeArquivoDownload || item.nomeArquivo
-      link.click()
-
-      URL.revokeObjectURL(url)
+      baixarCsv(item.conteudoOriginal, item.nomeArquivoDownload || item.nomeArquivo)
     },
 
-    // Carrega a última base já processada (ex.: ao abrir o Dashboard sem
-    // ter feito upload nesta sessão do Pinia — o serviço já tem dado).
     async carregarClientesSalvos() {
       this.dadosTratados = await listarClientes()
     },
 
     async limparDados() {
       this.arquivo = null
-      this.dadosOriginais = []
+      this.analise = null
       this.dadosTratados = []
       this.erros = []
       this.historico = []
