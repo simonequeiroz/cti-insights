@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
   esperarSimulado,
   limparDados as limparDadosSalvos,
@@ -691,3 +691,10 @@ export const useUploadStore = defineStore('upload', {
     }
   }
 })
+
+// Só em desenvolvimento (npm run dev): quando este arquivo muda, o Vite troca
+// as actions/getters do store na hora, sem recarregar a página. Sem isso o
+// Pinia continuava usando a versão antiga que já estava na memória.
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useUploadStore, import.meta.hot))
+}
