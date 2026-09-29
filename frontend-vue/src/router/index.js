@@ -5,7 +5,7 @@ import Login from '../views/Login.vue'
 import UploadView from '../views/UploadView.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Relatorios from '../views/Relatorios.vue'
-import { estaAutenticado } from '../services/api'
+import { useAuthStore } from '../stores/authStore'
 
 const routes = [
   {
@@ -43,10 +43,11 @@ const router = createRouter({
   routes,
 })
 
-// A sessão vive em services/api.js (hoje simulada; troque lá quando a API
-// de autenticação existir).
+// A sessão é lida do authStore (que por sua vez usa services/api.js; troque
+// lá quando a API de autenticação existir). O store pode ser usado aqui
+// porque o Pinia é instalado no main.js antes da primeira navegação.
 router.beforeEach(to => {
-  const autenticado = estaAutenticado()
+  const autenticado = useAuthStore().autenticado
 
   // Rota protegida sem sessão: manda para o login e guarda para onde
   // o usuário queria ir, para redirecionar de volta depois de entrar.
