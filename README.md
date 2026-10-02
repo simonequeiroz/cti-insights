@@ -22,8 +22,8 @@ pelo Back-End e deploy. O login e os dados do front são simulados no navegador.
 
 ## Versão da entrega
 
-- **Tag:** `sprint-2` <!-- PREENCHER após criar a tag em 01/10 -->
-- **Commit:** `PREENCHER` <!-- código do commit da tag -->
+A versão avaliada da Sprint 2 é identificada pela tag **`sprint-2`** neste
+repositório (`git checkout sprint-2`), criada em 02/10/2026.
 
 ## Tecnologias e versões principais
 
