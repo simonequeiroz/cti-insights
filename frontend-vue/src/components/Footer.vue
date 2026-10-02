@@ -21,8 +21,8 @@
           <li><a href="#arquitetura" class="hover:text-[#FF8F00] transition-colors">Motor de Upload (ETL)</a></li>
           <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Gestão de
               Consultores</router-link></li>
-          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Catálogo de Serviços</router-link>
-          </li>
+          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Relatórios de
+              Clientes</router-link></li>
         </ul>
       </div>
 
