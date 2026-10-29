@@ -1,9 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
+import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { useUploadStore } from '../stores/uploadStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
+
+const auth = useAuthStore()
 
 // Base de clientes: vem do clientesStore (a mesma do Dashboard e da
 // importação). Continua "clientes.value" no resto do arquivo.
@@ -202,7 +205,7 @@ const limparDados = async () => {
             </button>
 
             <button
-              v-if="clientes.length"
+              v-if="clientes.length && auth.pode('limparDados')"
               type="button"
               @click="limparDados"
               class="text-sm font-medium text-red-500 transition hover:text-red-600"
@@ -389,11 +392,15 @@ const limparDados = async () => {
           </h2>
 
           <p class="mt-2 text-sm text-gray-500">
-            {{ clientes.length ? 'Tente buscar por outro nome ou ajustar o período.' : 'Importe uma base na tela de Upload.' }}
+            {{ clientes.length
+              ? 'Tente buscar por outro nome ou ajustar o período.'
+              : auth.pode('importarPlanilha')
+                ? 'Importe uma base na tela de Upload.'
+                : 'Peça a um Gestor para importar a base de clientes.' }}
           </p>
 
           <RouterLink
-            v-if="!clientes.length"
+            v-if="!clientes.length && auth.pode('importarPlanilha')"
             to="/upload"
             class="mt-6 inline-block rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
           >

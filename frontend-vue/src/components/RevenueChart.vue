@@ -1,11 +1,11 @@
 <template>
   <!-- Bloco: Gráfico de Faturamento Consolidado -->
-  <div id="resultados" class="max-w-[1360px] mx-auto px-8">
-    <div class="border border-[#CDDADF] bg-white/75 backdrop-blur-[8px] rounded-lg p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
-      
+  <section id="resultados" class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
+    <div class="border border-[#CDDADF] bg-white/75 backdrop-blur-[8px] rounded-lg p-5 sm:p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
+
       <!-- Cabeçalho do Painel -->
       <div class="flex justify-between items-baseline mb-[18px] flex-wrap gap-2">
-        <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">FATURAMENTO CONSOLIDADO — Q3</span>
+        <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">FATURAMENTO CONSOLIDADO — 3º TRIMESTRE</span>
         <span class="text-[13px] text-[#292930] font-semibold font-['IBM_Plex_Mono']">R$ 261.580 <span class="text-[#4D7C0F]">↑ 18,2%</span></span>
       </div>
 
@@ -40,7 +40,7 @@
       </div>
 
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>

@@ -50,8 +50,13 @@ campos novos abaixo são sugestão, a confirmar:
    `snake_case` (planilha). O front adapta o formato em `src/services/api.js`,
    então o back-end pode manter `camelCase`; só é preciso combinar os nomes.
    O `database/schema.sql` ainda está vazio.
-4. **Perfil do usuário:** a Sidebar mostra o e-mail e o cargo fixo
-   "Consultor". Se a API devolver nome e perfil, o front passa a exibi-los.
+4. **Papel do usuário (decidido no front):** `ANALISTA`, `GESTOR` ou
+   `ADMINISTRADOR`, escolhido no cadastro e aprovado por um Administrador.
+   Regras em `src/utils/papeis.js`: Analista consulta e exporta; Gestor também
+   importa planilhas; Administrador também aprova cadastros e apaga
+   dados/histórico. O back-end precisa aplicar as **mesmas regras em cada
+   endpoint** (o front só esconde telas e botões). Falta incluir uma classe
+   `Usuario` (id, nome, email, senha, papel, status) no diagrama de classes.
 5. **Insights:** o diagrama tem `Insight` por cliente, mas o front hoje
    calcula insights **agregados** (ex.: "60% do faturamento está na Classe
    A"). Definir se o back-end/Python vai gerar os insights (`GET /insights`)
@@ -82,18 +87,76 @@ Requisição:
 Resposta `200`:
 
 ```json
-{ "email": "usuario@empresa.com", "nome": "Ana Lima" }
+{ "email": "usuario@empresa.com", "nome": "Ana Lima", "papel": "GESTOR" }
 ```
 
-`nome` é opcional: a Sidebar exibe o nome e as iniciais (como no Figma). Sem
-ele, o front deriva o nome do e-mail (`ana.lima@…` → "Ana Lima").
+`papel` é obrigatório: define o menu e os botões que o front mostra. `nome`
+é opcional: sem ele, o front deriva o nome do e-mail (`ana.lima@…` → "Ana
+Lima").
 
-Erro `401`: credenciais inválidas (o front mostra "E-mail ou senha
-inválidos.").
+Erros:
+
+- `401`: credenciais inválidas (o front mostra "E-mail ou senha inválidos.").
+- `403` com `{ "codigo": "PENDENTE" }`: cadastro ainda não aprovado.
+- `403` com `{ "codigo": "REJEITADO" }`: cadastro recusado.
+
+### `POST /auth/cadastro`
+
+Primeiro acesso (tela `/cadastro`). Requisição:
+
+```json
+{ "nome": "Ana Lima", "email": "usuario@empresa.com", "senha": "...", "papel": "GESTOR" }
+```
+
+Resposta `201`:
+
+```json
+{ "id": 7, "nome": "Ana Lima", "email": "usuario@empresa.com", "papel": "GESTOR", "papelSolicitado": "GESTOR", "status": "PENDENTE", "criadoEm": "2026-10-29T16:28:00Z", "avaliadoEm": null, "avaliadoPor": null }
+```
+
+O cadastro nasce `PENDENTE` e só pode fazer login depois que um
+Administrador aprovar (`PATCH /usuarios/{id}`). **Exceção:** se ainda não
+existe nenhum usuário, a conta nasce `ADMINISTRADOR` e `APROVADO` (senão
+ninguém aprovaria os outros); nesse caso o front já faz o login em seguida.
+
+O front valida antes de enviar (nome e sobrenome, e-mail com `@`, papel
+escolhido, senha com no mínimo 8 caracteres e confirmação igual); o
+back-end deve validar de novo e guardar a senha com hash (ex.: BCrypt),
+nunca em texto.
+
+**Segurança:** no protótipo qualquer pessoa pode *pedir* o papel de
+Administrador; o pedido só vale depois da aprovação de outro Administrador,
+que pode trocar o papel antes de aprovar.
+
+Erro `409`: e-mail já cadastrado (o front mostra "Este e-mail já tem
+cadastro. Faça login para entrar.").
 
 ### `POST /auth/logout`
 
 Sem corpo. Resposta `204`.
+
+## Usuários (só Administrador)
+
+Tela `/usuarios`. Os dois endpoints devem responder `403` para quem não é
+`ADMINISTRADOR`.
+
+### `GET /usuarios`
+
+Lista todos os cadastros (sem a senha), no mesmo formato da resposta de
+`POST /auth/cadastro`. `avaliadoPor` é `{ "nome": "...", "email": "..." }`
+de quem aprovou/recusou.
+
+### `PATCH /usuarios/{id}`
+
+Aprova ou recusa um cadastro; o Administrador pode trocar o papel pedido.
+
+```json
+{ "status": "APROVADO", "papel": "ANALISTA" }
+```
+
+`status`: `APROVADO` ou `REJEITADO` (um recusado pode ser aprovado depois).
+Resposta `200` com o usuário atualizado; o back-end preenche `avaliadoEm` e
+`avaliadoPor` com quem está logado.
 
 ## Clientes
 

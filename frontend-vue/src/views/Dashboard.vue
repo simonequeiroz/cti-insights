@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
+import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import {
@@ -32,6 +33,9 @@ Chart.register(
 // importação usam). Continua "clientes.value" no resto do arquivo.
 const clientesStore = useClientesStore()
 const clientes = computed(() => clientesStore.lista)
+
+// Só Gestor e Administrador importam planilhas (utils/papeis.js)
+const auth = useAuthStore()
 
 const filtroSegmento = ref('Todos')
 const filtroNivel = ref('Todos')
@@ -837,11 +841,13 @@ const exportarCSV = () => {
         </h2>
 
         <p class="mx-auto mt-2 max-w-md text-sm text-gray-500">
-          Importe a base de clientes para ver faturamento, distribuição por nível
-          e insights de oportunidade.
+          {{ auth.pode('importarPlanilha')
+            ? 'Importe a base de clientes para ver faturamento, distribuição por nível e insights de oportunidade.'
+            : 'Peça a um Gestor para importar a base de clientes. Depois disso, o faturamento, a distribuição por nível e os insights aparecem aqui.' }}
         </p>
 
         <RouterLink
+          v-if="auth.pode('importarPlanilha')"
           to="/upload"
           class="mt-6 inline-block rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
         >
@@ -1304,10 +1310,10 @@ const exportarCSV = () => {
       </div>
 
 
-      <!-- SEM DADOS -->
+      <!-- FILTROS SEM RESULTADO (base vazia já tem o aviso lá em cima) -->
 
       <div
-        v-else
+        v-else-if="clientes.length"
         class="mt-6 rounded-lg border border-gray-200 bg-white p-8 text-center"
       >
 
@@ -1316,7 +1322,7 @@ const exportarCSV = () => {
         </h2>
 
         <p class="mt-2 text-sm text-gray-500">
-          Altere os filtros ou importe uma nova base.
+          Nenhum cliente corresponde aos filtros escolhidos. Altere os filtros.
         </p>
 
       </div>

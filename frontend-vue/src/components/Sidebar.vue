@@ -2,23 +2,23 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import AppToast from './AppToast.vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-// O nome vem da API quando ela informar; enquanto isso, é derivado do
-// e-mail digitado no login (veja authStore). O cargo "Consultor" ainda é
-// fixo: não existe perfil no back-end.
-const emailUsuario = computed(() => auth.email || 'consultor@cti.com')
-const nomeExibido = computed(() => auth.nome || 'Consultor')
+// Nome, e-mail e papel vêm da sessão (authStore), definidos no cadastro
+const emailUsuario = computed(() => auth.email)
+const nomeExibido = computed(() => auth.nome || 'Usuário')
 const iniciais = computed(() => auth.iniciais)
 
 const linkAtivo = caminho => {
   return route.path === caminho
 }
 
-const itensMenu = [
+// "permissao": o item só aparece para quem pode (regras em utils/papeis.js)
+const todosItensMenu = [
   {
     caminho: '/dashboard',
     rotulo: 'Dashboard',
@@ -27,14 +27,42 @@ const itensMenu = [
   {
     caminho: '/upload',
     rotulo: 'Upload',
-    icone: 'M12 16V4m0 0L8 8m4-4 4 4M5 20h14'
+    icone: 'M12 16V4m0 0L8 8m4-4 4 4M5 20h14',
+    permissao: 'importarPlanilha'
   },
   {
     caminho: '/relatorios',
     rotulo: 'Relatórios',
     icone: 'M9 17V9m3 8V5m3 12v-6M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z'
+  },
+  {
+    caminho: '/usuarios',
+    rotulo: 'Usuários',
+    icone: 'M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z',
+    permissao: 'gerenciarUsuarios'
   }
 ]
+
+const itensMenu = computed(() => {
+  return todosItensMenu.filter(item => !item.permissao || auth.pode(item.permissao))
+})
+
+// A guarda de rota manda para cá (?semPermissao=/upload) quem tenta abrir
+// uma tela que o papel não pode usar. Mostra o aviso e limpa o endereço.
+const avisoPermissao = ref('')
+
+watch(
+  () => route.query.semPermissao,
+  destino => {
+    if (!destino) {
+      return
+    }
+
+    avisoPermissao.value = `Seu papel (${auth.rotuloPapel}) não tem acesso a essa tela.`
+    router.replace({ query: { ...route.query, semPermissao: undefined } })
+  },
+  { immediate: true }
+)
 
 // Menu hambúrguer (só aparece abaixo de md). No desktop a sidebar é fixa.
 const menuAberto = ref(false)
@@ -193,7 +221,7 @@ const sair = async () => {
           </p>
 
           <p class="font-['IBM_Plex_Mono'] text-[11px] uppercase tracking-wide text-gray-500">
-            Consultor
+            {{ auth.rotuloPapel }}
           </p>
         </div>
 
@@ -225,6 +253,12 @@ const sair = async () => {
       </button>
 
     </div>
+
+    <AppToast
+      :mensagem="avisoPermissao"
+      tipo="erro"
+      @fechar="avisoPermissao = ''"
+    />
 
   </aside>
 
