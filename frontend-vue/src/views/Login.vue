@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import PainelInstitucional from '../components/PainelInstitucional.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +13,12 @@ const senha = ref('')
 const lembrar = ref(false)
 const mostrarSenha = ref(false)
 const erro = ref('')
+
+// Senha certa, mas o cadastro ainda não foi aprovado (erro 403 do login)
+const MENSAGENS_NAO_APROVADO = {
+  PENDENTE: 'Seu cadastro ainda está aguardando a aprovação de um administrador.',
+  REJEITADO: 'Seu cadastro não foi aprovado. Procure o administrador do sistema.'
+}
 
 const entrar = async () => {
   erro.value = ''
@@ -26,13 +33,15 @@ const entrar = async () => {
     return
   }
 
-  // Ainda não há back-end validando credenciais: em modo mock, qualquer
-  // e-mail/senha válidos "autenticam" (veja services/api.js). A guarda de
-  // rota (router/index.js) e a Sidebar leem essa sessão do authStore.
+  // Só entra quem se cadastrou (/cadastro) e foi aprovado por um
+  // Administrador (/usuarios); em modo mock, tudo neste navegador (veja
+  // services/api.js). A guarda de rota e a Sidebar leem a sessão do authStore.
   try {
     await auth.entrar(email.value, senha.value)
-  } catch {
-    erro.value = 'E-mail ou senha inválidos.'
+  } catch (falha) {
+    erro.value = falha.status === 403
+      ? MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
+      : 'E-mail ou senha inválidos.'
     return
   }
 
@@ -45,41 +54,11 @@ const entrar = async () => {
   <main class="min-h-screen flex flex-col md:flex-row">
 
     <!-- Painel esquerdo: identidade e proposta de valor (público, sem formulário) -->
-
-    <div
-      class="relative flex flex-col justify-between overflow-hidden bg-[#0B2545] px-8 py-10 text-white md:w-1/2 md:px-16 md:py-14 bg-[linear-gradient(to_right,#15335A_1px,transparent_1px),linear-gradient(to_bottom,#15335A_1px,transparent_1px)] bg-[size:40px_40px]"
-    >
-
-      <RouterLink
-        to="/"
-        class="text-2xl font-bold tracking-tight text-white"
-      >
-        CTI Insights<span class="text-[#FF8F00]">.</span>
-      </RouterLink>
-
-      <div class="max-w-md">
-
-        <h1 class="font-['Space_Grotesk'] text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-          Transforme dados em
-          <span class="text-[#FF8F00]">decisões estratégicas</span>
-        </h1>
-
-        <p class="mt-6 text-base leading-relaxed text-[#AFC2D8]">
-          Acesse o painel inteligente para gestão unificada de clientes,
-          faturamento, contratos e telemetria gerada via Python/Pandas
-        </p>
-
-      </div>
-
-      <p class="mt-12 text-xs text-[#7891AC]">
-        CTI Insights © 2026 — Ambiente Corporativo Seguro
-      </p>
-
-    </div>
+    <PainelInstitucional />
 
     <!-- Painel direito: formulário de login -->
 
-    <div class="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12 sm:py-16">
+    <div class="flex flex-1 flex-col items-center justify-center bg-white px-6 py-8 sm:py-16">
 
       <RouterLink
         to="/"
@@ -103,7 +82,7 @@ const entrar = async () => {
       </RouterLink>
 
       <div
-        class="w-full max-w-sm rounded-xl border-t-4 border-[#FF8F00] bg-white p-8 shadow-lg ring-1 ring-gray-200 sm:p-9"
+        class="w-full max-w-sm rounded-xl border-t-4 border-[#FF8F00] bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
       >
 
         <h1 class="text-2xl font-bold text-[#292A2F]">
@@ -134,6 +113,7 @@ const entrar = async () => {
               id="email"
               v-model="email"
               type="email"
+              autocomplete="email"
               placeholder="nome.sobrenome@empresa.com"
               class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
             />
@@ -157,6 +137,7 @@ const entrar = async () => {
                 id="password"
                 v-model="senha"
                 :type="mostrarSenha ? 'text' : 'password'"
+                autocomplete="current-password"
                 placeholder="Digite sua senha"
                 class="w-full rounded-md border border-gray-300 px-4 py-3 pr-11 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
               />
@@ -208,9 +189,10 @@ const entrar = async () => {
 
           </div>
 
-          <!-- Lembrar acesso / Esqueci minha senha -->
+          <!-- Lembrar acesso / Esqueci minha senha (cada um sem quebrar no
+               meio; em tela muito estreita o link desce para a linha de baixo) -->
 
-          <div class="flex items-center justify-between text-sm">
+          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 whitespace-nowrap text-sm">
 
             <label class="flex items-center gap-2 text-gray-600">
               <input
@@ -250,14 +232,16 @@ const entrar = async () => {
 
         </form>
 
+        <!-- Leva o redirect junto: quem veio de uma tela protegida volta
+             para ela depois de criar a conta -->
         <p class="mt-6 text-center text-sm text-gray-500">
-          Não possui acesso?
-          <a
-            href="#"
+          Primeiro acesso?
+          <RouterLink
+            :to="{ path: '/cadastro', query: route.query }"
             class="font-medium text-[#006EB7] hover:underline"
           >
-            Solicitar credencial
-          </a>
+            Criar conta
+          </RouterLink>
         </p>
 
       </div>

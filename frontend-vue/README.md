@@ -42,9 +42,29 @@ npm run dev        # servidor de desenvolvimento (http://localhost:5173)
 
 ### Como entrar (protótipo)
 
-Não há autenticação real. A tela `/login` aceita **qualquer e-mail válido
-(com `@`) e qualquer senha**. Para testar de novo o estado "sem dados",
-use o botão de limpar dados em **Relatórios**.
+Não há autenticação real (o back-end ainda não tem login). As contas ficam
+salvas só neste navegador.
+
+1. Crie uma conta em `/cadastro` (link **Criar conta** na tela de login):
+   nome e sobrenome, e-mail, **papel** e senha de no mínimo 8 caracteres.
+2. A **primeira conta** criada no navegador vira **Administrador** e já
+   entra. As seguintes ficam **aguardando aprovação** e não conseguem fazer
+   login.
+3. Entre como Administrador e aprove (ou recuse) os cadastros em
+   **Usuários** (`/usuarios`); dá para trocar o papel antes de aprovar.
+
+O que cada papel pode fazer (regras em `src/utils/papeis.js`):
+
+| Ação | Analista | Gestor | Administrador |
+|---|:---:|:---:|:---:|
+| Dashboard, Relatórios e exportar CSV/PDF | ✅ | ✅ | ✅ |
+| Upload (importar planilha) e histórico | ❌ | ✅ | ✅ |
+| Remover item do histórico e limpar dados locais | ❌ | ❌ | ✅ |
+| Aprovar cadastros (`/usuarios`) | ❌ | ❌ | ✅ |
+
+Quem abre pelo endereço uma tela que o papel não permite volta ao
+Dashboard com um aviso. Para testar de novo o estado "sem dados", use o
+botão de limpar dados em **Relatórios** (Administrador).
 
 ## Telas e rotas
 
@@ -52,9 +72,11 @@ use o botão de limpar dados em **Relatórios**.
 |---|---|---|
 | `/` | Página inicial (landing) | Pública |
 | `/login` | Login | Pública |
-| `/upload` | Upload e histórico de processamento | Requer login |
+| `/cadastro` | Cadastro (primeiro acesso) | Pública |
+| `/upload` | Upload e histórico de processamento | Gestor e Administrador |
 | `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, filtros por segmento, nível e período, exportação CSV/PDF) | Requer login |
 | `/relatorios` | Base de clientes detalhada, com busca por empresa e filtro por período | Requer login |
+| `/usuarios` | Aprovação de cadastros e papel de cada usuário | Administrador |
 
 ## Estrutura de `src/`
 
@@ -68,8 +90,9 @@ src/
 ├── stores/
 │   └── uploadStore.js   # leitura, limpeza e validação da planilha; histórico
 ├── utils/
+│   ├── papeis.js        # papéis (Analista, Gestor, Administrador) e permissões
 │   └── periodo.js       # filtro por período de contratação (Dashboard e Relatórios)
-├── views/            # uma por rota: Home, Login, UploadView, Dashboard, Relatorios
+├── views/            # uma por rota: Home, Login, Cadastro, UploadView, Dashboard, Relatorios, Usuarios
 └── components/       # Sidebar e blocos da página inicial (Hero, Metrics, ...)
 ```
 
@@ -93,6 +116,9 @@ Chaves usadas no `localStorage`:
 | `ctiTelemetria` | Histórico de uploads (status, linhas lidas, mensagem) |
 | `ctiAuth` | `"true"` quando há sessão simulada |
 | `ctiUsuario` | E-mail digitado no login |
+| `ctiNome` | Nome da conta logada (exibido na Sidebar) |
+| `ctiPapel` | Papel da conta logada (`ANALISTA`, `GESTOR` ou `ADMINISTRADOR`) |
+| `ctiContas` | Contas criadas no cadastro (nome, e-mail, SHA-256 da senha, papel e situação da aprovação) |
 
 ### Formato esperado da planilha
 
@@ -164,8 +190,9 @@ npm run dev
 3. Nomes finais dos campos, conforme o schema do banco.
 
 Continuam simulados até o back-end existir: login (autenticação real),
-persistência dos clientes e do histórico, e o nome/perfil do usuário (a
-Sidebar mostra o e-mail e o cargo fixo "Consultor").
+cadastro e aprovação de usuários, e persistência dos clientes e do
+histórico. As permissões por papel hoje só escondem telas e botões no
+front; o back-end precisa aplicar as mesmas regras em cada endpoint.
 
 ## Convenções
 

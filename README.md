@@ -70,8 +70,12 @@ npm run dev        # inicia em http://localhost:5173
 Outros comandos: `npm run build` (versão de produção), `npm run lint`
 (verificação de código) e `npm run format`.
 
-**Como entrar:** não há autenticação real. A tela de Login aceita qualquer
-e-mail com `@` e qualquer senha.
+**Como entrar:** não há autenticação real; as contas ficam salvas no próprio
+navegador. Use **Criar conta** na tela de Login (`/cadastro`) e escolha o
+papel (Analista, Gestor ou Administrador). A **primeira conta** vira
+Administrador e já entra; as outras aguardam a aprovação de um
+Administrador na tela **Usuários**. Detalhes e permissões de cada papel em
+[frontend-vue/README.md](frontend-vue/README.md).
 
 ## Como iniciar o Spring Boot
 
@@ -98,13 +102,16 @@ Fluxo: **Home pública → Login → área interna (Dashboard / Upload / Relató
 | Rota | Tela | O que faz |
 |---|---|---|
 | `/` | Home pública | Apresenta o CTI Insights, suas funcionalidades e o acesso ao Login. Sem a Sidebar. |
-| `/login` | Login | Campos de e-mail e senha; simula o acesso à área interna. |
+| `/login` | Login | Campos de e-mail e senha para quem já tem conta; simula o acesso à área interna. |
+| `/cadastro` | Cadastro | Primeiro acesso: nome, e-mail, papel, senha e confirmação. A conta aguarda aprovação de um Administrador (a primeira conta do sistema vira Administrador e entra direto). |
 | `/dashboard` | Dashboard | KPIs, gráficos (faturamento por segmento, evolução das contratações, distribuição por nível A/B/C com curva ABC, top 5 serviços), painel de Insights Inteligentes, filtros por segmento, nível e período, e exportação CSV/PDF. |
 | `/upload` | Upload | Importação em etapas (analisar, revisar, confirmar e concluir) de planilha `.xlsx`/`.csv`, validação conforme o dicionário de dados (campos obrigatórios, duplicidade, UF), aviso de planilha já importada e histórico com responsável, data/hora, arquivo e hash. |
 | `/relatorios` | Relatórios | Base de clientes detalhada, com busca por empresa, filtro por período e paginação. |
+| `/usuarios` | Usuários | Só Administrador: aprova ou recusa cadastros e define o papel de cada pessoa. |
 
-A **Sidebar** da área interna tem links para Dashboard, Upload e Relatórios e a
-opção de sair. O menu vira hambúrguer no celular. Os dados vêm da planilha
+A **Sidebar** da área interna mostra só as telas que o papel do usuário
+pode usar (Dashboard, Upload, Relatórios, Usuários), o nome e o papel de
+quem está logado e a opção de sair. O menu vira hambúrguer no celular. Os dados vêm da planilha
 enviada no Upload e ficam guardados no navegador (`localStorage`), até existir
 o back-end. O estado da aplicação (sessão, base de clientes e importação) fica
 em stores Pinia, e o acesso aos dados passa por uma camada de serviços

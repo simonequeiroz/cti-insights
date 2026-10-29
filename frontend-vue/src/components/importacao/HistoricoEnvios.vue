@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '../../stores/authStore'
 import { useUploadStore } from '../../stores/uploadStore'
 import { formatarDataHora, formatarNumero } from '../../utils/datas'
 import TabelaProblemas from '../TabelaProblemas.vue'
 
 // Envios anteriores. Fica recolhido pra não competir com o assistente.
 const upload = useUploadStore()
+const auth = useAuthStore()
 const aberto = ref(false)
 const detalhesAbertos = ref(new Set())
 
@@ -59,7 +61,7 @@ const statusInfo = item => {
         Nenhuma planilha enviada ainda.
       </p>
 
-      <div v-else class="overflow-x-auto">
+      <div v-else class="relative overflow-x-auto">
         <table class="w-full min-w-[760px] text-left text-xs">
           <caption class="sr-only">Planilhas enviadas, da mais recente para a mais antiga</caption>
 
@@ -122,7 +124,10 @@ const statusInfo = item => {
                       </svg>
                     </button>
 
+                    <!-- O histórico é o registro de auditoria: só o
+                         Administrador remove itens -->
                     <button
+                      v-if="auth.pode('removerHistorico')"
                       type="button"
                       class="text-gray-400 transition hover:text-red-500"
                       aria-label="Remover do histórico"
