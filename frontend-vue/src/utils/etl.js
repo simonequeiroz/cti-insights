@@ -20,6 +20,7 @@ const MAPA_SEGMENTOS = {
   'INDUSTRIA': 'Indústria',
   'COM': 'Comércio',
   'COMERCIO': 'Comércio',
+  'SERVICO': 'Serviços',
   'SERVICOS': 'Serviços',
   'SAUDE': 'Saúde',
   'EDUCACAO': 'Educação',
@@ -49,75 +50,191 @@ const padronizarSeTodoMaiusculoOuMinusculo = valor => {
   return temLetra && (todoMaiusculo || todoMinusculo) ? capitalizarPalavras(valor) : valor
 }
 
+// Confere se a data existe no calendário (31/02 não existe).
+const dataExiste = (ano, mes, dia) => {
+  const data = new Date(Date.UTC(Number(ano), Number(mes) - 1, Number(dia)))
+
+  return data.getUTCFullYear() === Number(ano)
+    && data.getUTCMonth() === Number(mes) - 1
+    && data.getUTCDate() === Number(dia)
+}
+
 // Aceita "aaaa-mm-dd" (ISO) ou "dd/mm/aaaa" e normaliza pra "aaaa-mm-dd".
+// Data que não existe no calendário devolve null e vira erro na validação.
 const parseDataContratacao = valor => {
   const limpo = String(valor ?? '').trim()
 
-  if (!limpo) {
-    return null
+  const iso = limpo.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+
+  if (iso) {
+    const [, ano, mes, dia] = iso
+    return dataExiste(ano, mes, dia) ? limpo : null
   }
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(limpo)) {
-    return limpo
-  }
+  const brasileira = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
 
-  const match = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-
-  if (match) {
-    const [, dia, mes, ano] = match
-    return `${ano}-${mes}-${dia}`
+  if (brasileira) {
+    const [, dia, mes, ano] = brasileira
+    return dataExiste(ano, mes, dia) ? `${ano}-${mes}-${dia}` : null
   }
 
   return null
 }
 
+// Descobre o papel de cada separador em um número escrito como texto:
+//   "1.850,50" e "1,850.50" → o último separador é o decimal
+//   "2500,50"               → vírgula sozinha é decimal
+//   "1.850.000" e "1,850,000" → separador repetido é de milhar
+//   "1.850"                 → ponto + 3 dígitos é milhar (padrão brasileiro)
+//   "1850000.50"            → nos demais casos, ponto é decimal
+const identificarSeparadores = texto => {
+  const pontos = texto.split('.').length - 1
+  const virgulas = texto.split(',').length - 1
+
+  if (pontos && virgulas) {
+    return texto.lastIndexOf(',') > texto.lastIndexOf('.')
+      ? { milhar: '.', decimal: ',' }
+      : { milhar: ',', decimal: '.' }
+  }
+
+  if (virgulas) {
+    return virgulas > 1 ? { milhar: ',', decimal: '' } : { milhar: '', decimal: ',' }
+  }
+
+  if (pontos > 1 || /^\d{1,3}\.\d{3}$/.test(texto)) {
+    return { milhar: '.', decimal: '' }
+  }
+
+  return { milhar: '', decimal: '.' }
+}
+
 // Número direto quando o Excel já entrega numérico; texto tipo
-// "R$ 1.850.000,00" vira 1850000.
+// "R$ 1.850.000,00" vira 1850000. O que não for um número ("abc", "1.2.3")
+// devolve null e vira erro na validação.
 const parseFaturamento = valor => {
   if (valor === undefined || valor === null || valor === '') {
     return null
   }
 
   if (typeof valor === 'number') {
-    return valor
+    return Number.isFinite(valor) ? valor : null
   }
 
-  const limpo = String(valor)
-    .replace(/[^\d,.-]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.')
+  const limpo = String(valor).replace(/R\$/gi, '').replace(/\s/g, '')
 
-  const numero = Number(limpo)
-  return Number.isNaN(numero) ? null : numero
+  if (!/^-?[\d.,]*\d[\d.,]*$/.test(limpo)) {
+    return null
+  }
+
+  const negativo = limpo.startsWith('-')
+  const absoluto = negativo ? limpo.slice(1) : limpo
+  const { milhar, decimal } = identificarSeparadores(absoluto)
+
+  const partes = decimal ? absoluto.split(decimal) : [absoluto]
+
+  if (partes.length > 2) {
+    return null
+  }
+
+  const [inteiro, fracao = ''] = partes
+
+  if (milhar && inteiro.includes(milhar)) {
+    const grupos = inteiro.split(milhar)
+    const gruposValidos = /^\d{1,3}$/.test(grupos[0]) && grupos.slice(1).every(grupo => /^\d{3}$/.test(grupo))
+
+    if (!gruposValidos) {
+      return null
+    }
+  }
+
+  const numero = Number(`${milhar ? inteiro.split(milhar).join('') : inteiro}.${fracao || '0'}`)
+
+  if (Number.isNaN(numero)) {
+    return null
+  }
+
+  return negativo ? -numero : numero
 }
 
-// Excel em português-BR exporta CSV com ";". Detecta pelo cabeçalho.
-const detectarDelimitador = primeiraLinha => {
+// O Excel em português costuma salvar CSV em Windows-1252, não em UTF-8.
+// O decodificador estrito acusa erro nesse caso, e aí usamos o Windows-1252.
+const decodificarCsv = buffer => {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer)
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer)
+  }
+}
+
+// Excel em português-BR exporta CSV com ";". Detecta pelo cabeçalho,
+// ignorando o que está entre aspas.
+const detectarDelimitador = texto => {
+  const primeiraLinha = texto.split(/\r?\n/, 1)[0].replace(/"[^"]*"/g, '')
   const qtdPontoVirgula = (primeiraLinha.match(/;/g) || []).length
   const qtdVirgula = (primeiraLinha.match(/,/g) || []).length
   return qtdPontoVirgula > qtdVirgula ? ';' : ','
 }
 
-const linhasCsvParaObjetos = texto => {
-  const linhas = texto
-    .trim()
-    .split('\n')
-    .map(linha => linha.trim())
-    .filter(Boolean)
+// Separa o CSV em linhas e campos. Entre aspas, o delimitador e a quebra de
+// linha fazem parte do valor ("Empresa, Ltda"), e "" representa uma aspa.
+const separarCsv = (texto, delimitador) => {
+  const linhas = []
+  let linha = []
+  let campo = ''
+  let entreAspas = false
 
-  if (linhas.length === 0) {
+  const fecharCampo = () => {
+    linha.push(campo.trim())
+    campo = ''
+  }
+
+  const fecharLinha = () => {
+    fecharCampo()
+    linhas.push(linha)
+    linha = []
+  }
+
+  for (let i = 0; i < texto.length; i++) {
+    const caractere = texto[i]
+
+    if (entreAspas) {
+      if (caractere !== '"') {
+        campo += caractere
+      } else if (texto[i + 1] === '"') {
+        campo += '"'
+        i++
+      } else {
+        entreAspas = false
+      }
+    } else if (caractere === '"' && !campo.trim()) {
+      campo = ''
+      entreAspas = true
+    } else if (caractere === delimitador) {
+      fecharCampo()
+    } else if (caractere === '\n') {
+      fecharLinha()
+    } else if (caractere !== '\r') {
+      campo += caractere
+    }
+  }
+
+  fecharLinha()
+
+  return linhas.filter(valores => valores.some(Boolean))
+}
+
+const linhasCsvParaObjetos = texto => {
+  const [cabecalhos, ...linhas] = separarCsv(texto, detectarDelimitador(texto))
+
+  if (!cabecalhos) {
     return []
   }
 
-  const delimitador = detectarDelimitador(linhas[0])
-  const cabecalhos = linhas[0].split(delimitador).map(h => h.trim())
-
-  return linhas.slice(1).map(linha => {
-    const valores = linha.split(delimitador)
+  return linhas.map(valores => {
     const objeto = {}
 
     cabecalhos.forEach((cabecalho, indice) => {
-      objeto[cabecalho] = valores[indice]?.trim() ?? ''
+      objeto[cabecalho] = valores[indice] ?? ''
     })
 
     return objeto
@@ -163,7 +280,7 @@ export const lerArquivo = async arquivo => {
     })
   }
 
-  return linhasCsvParaObjetos(await arquivo.text())
+  return linhasCsvParaObjetos(decodificarCsv(await arquivo.arrayBuffer()))
 }
 
 // ---------------------------------------------------------------------------
