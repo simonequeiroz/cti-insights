@@ -10,15 +10,18 @@ import { useClientesStore } from './clientesStore'
 import {
   baixarCsv,
   calcularHash,
+  colunasAusentes,
   formatarTamanho,
   gerarCsvLinhasComErro,
   lerArquivo,
   nomeArquivoErros,
+  segmentosNaoReconhecidos,
   TAMANHO_MAXIMO_BYTES,
   TAMANHO_MAXIMO_MB,
   tratarLinha,
   validarClientes
 } from '../utils/etl'
+import { estaAtivo, hojeIso } from '../utils/situacaoContrato'
 
 // ---------------------------------------------------------------------------
 // REGRA DE NEGÓCIO (decidir em grupo)
@@ -48,6 +51,15 @@ export const useUploadStore = defineStore('upload', {
 
   getters: {
     totalErros: state => state.erros.length,
+
+    // Linhas válidas da análise atual (o que será importado)
+    totalClientes: state => state.analise?.validos.length ?? 0,
+
+    clientesNivelA: state => {
+      return (state.analise?.validos ?? []).filter(cliente => cliente.nivel_cliente === 'A').length
+    },
+
+    temDados: state => Boolean(state.analise?.validos.length),
 
     // Registro do histórico que gerou a base atual
     origemBaseAtual: state => {
@@ -133,6 +145,14 @@ export const useUploadStore = defineStore('upload', {
           return null
         }
 
+        const faltando = colunasAusentes(originais)
+
+        if (faltando.length) {
+          const descricao = faltando.length === 1 ? 'esta coluna obrigatória' : 'estas colunas obrigatórias'
+          this.registrarFalha(`Não encontramos ${descricao}: ${faltando.join(', ')}. Confira o cabeçalho da planilha ou use o modelo.`)
+          return null
+        }
+
         // Mesma planilha (mesmo conteúdo) já importada antes?
         const hashArquivo = await calcularHash(this.arquivo)
         const anterior = hashArquivo
@@ -150,6 +170,14 @@ export const useUploadStore = defineStore('upload', {
         const codigosNovos = new Set(validos.map(c => c.codigo_cliente))
         const clientesNovos = [...codigosNovos].filter(c => !codigosAnteriores.has(c)).length
 
+        // Cliente da base que veio com erro continua com os dados da
+        // importação anterior até ser corrigido. Quem não veio na planilha
+        // não é apagado: fica inativo, e volta a ativo se aparecer de novo.
+        const codigosComErro = new Set(validacao.linhasComErro.map(item => tratados[item.indice].codigo_cliente))
+        const foraDosValidos = baseAtual.filter(c => !codigosNovos.has(c.codigo_cliente))
+        const mantidos = foraDosValidos.filter(c => codigosComErro.has(c.codigo_cliente))
+        const ausentes = foraDosValidos.filter(c => !codigosComErro.has(c.codigo_cliente))
+
         this.analise = {
           nomeArquivo: this.arquivo.name,
           tamanho: this.arquivo.size,
@@ -160,7 +188,10 @@ export const useUploadStore = defineStore('upload', {
           totalProblemas: validacao.totalProblemas,
           clientesNovos,
           clientesAtualizados: codigosNovos.size - clientesNovos,
-          clientesRemovidos: [...codigosAnteriores].filter(c => !codigosNovos.has(c)).length,
+          inativados: ausentes.filter(estaAtivo),
+          jaInativos: ausentes.filter(c => !estaAtivo(c)),
+          mantidos,
+          segmentosNaoReconhecidos: segmentosNaoReconhecidos(validos),
           baseAnterior: baseAtual.length,
           hashArquivo,
           importacaoAnterior: anterior
@@ -201,7 +232,14 @@ export const useUploadStore = defineStore('upload', {
       const ignoradas = analise.linhasComErro.length
 
       try {
-        await useClientesStore().substituirBase(analise.validos)
+        const saiuEm = hojeIso()
+
+        await useClientesStore().substituirBase([
+          ...analise.validos,
+          ...analise.mantidos,
+          ...analise.inativados.map(cliente => ({ ...cliente, saiu_da_planilha_em: saiuEm })),
+          ...analise.jaInativos
+        ])
 
         const item = {
           id: Date.now(),
@@ -217,8 +255,11 @@ export const useUploadStore = defineStore('upload', {
           linhasIgnoradas: ignoradas,
           clientesNovos: analise.clientesNovos,
           clientesAtualizados: analise.clientesAtualizados,
-          clientesRemovidos: analise.clientesRemovidos,
-          mensagem: ignoradas ? `${ignoradas} linha(s) com erro não foram importadas.` : '',
+          clientesInativados: analise.inativados.length,
+          clientesMantidos: analise.mantidos.length,
+          mensagem: ignoradas
+            ? (ignoradas === 1 ? '1 linha com erro não foi importada.' : `${ignoradas} linhas com erro não foram importadas.`)
+            : '',
           problemas: analise.problemas,
           totalProblemas: analise.totalProblemas,
           // Usado pelo botão de download do histórico (baixarOriginal)

@@ -26,7 +26,7 @@ const todosItensMenu = [
   },
   {
     caminho: '/upload',
-    rotulo: 'Upload',
+    rotulo: 'Importar',
     icone: 'M12 16V4m0 0L8 8m4-4 4 4M5 20h14',
     permissao: 'importarPlanilha'
   },
@@ -46,6 +46,21 @@ const todosItensMenu = [
 const itensMenu = computed(() => {
   return todosItensMenu.filter(item => !item.permissao || auth.pode(item.permissao))
 })
+
+// Número mostrado sobre o ícone do item (0 = sem aviso)
+const avisosDoItem = item => {
+  return item.caminho === '/usuarios' ? auth.cadastrosPendentes : 0
+}
+
+const rotuloDoItem = item => {
+  const avisos = avisosDoItem(item)
+
+  if (!avisos) {
+    return item.rotulo
+  }
+
+  return `${item.rotulo}: ${avisos} ${avisos === 1 ? 'cadastro aguardando' : 'cadastros aguardando'} aprovação`
+}
 
 // A guarda de rota manda para cá (?semPermissao=/upload) quem tenta abrir
 // uma tela que o papel não pode usar. Mostra o aviso e limpa o endereço.
@@ -84,8 +99,21 @@ const aoPressionarTecla = evento => {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', aoPressionarTecla))
-onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
+// A Sidebar é montada a cada troca de tela, então o contador se atualiza ao
+// navegar; o intervalo cobre quem fica parado na mesma tela.
+const INTERVALO_PENDENTES_MS = 30000
+let temporizadorPendentes = null
+
+onMounted(() => {
+  window.addEventListener('keydown', aoPressionarTecla)
+  auth.atualizarCadastrosPendentes()
+  temporizadorPendentes = setInterval(auth.atualizarCadastrosPendentes, INTERVALO_PENDENTES_MS)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', aoPressionarTecla)
+  clearInterval(temporizadorPendentes)
+})
 
 const sair = async () => {
   await auth.sair()
@@ -117,9 +145,16 @@ const sair = async () => {
           @click="alternarMenu"
           :aria-expanded="menuAberto"
           aria-controls="menu-principal"
-          :aria-label="menuAberto ? 'Fechar menu' : 'Abrir menu'"
-          class="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 sm:hidden"
+          :aria-label="menuAberto ? 'Fechar menu' : (auth.cadastrosPendentes ? 'Abrir menu (há cadastros aguardando aprovação)' : 'Abrir menu')"
+          class="relative flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 sm:hidden"
         >
+          <!-- No mobile o link Usuários fica escondido com o menu fechado -->
+          <span
+            v-if="auth.cadastrosPendentes && !menuAberto"
+            aria-hidden="true"
+            class="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white"
+          ></span>
+
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-6 w-6"
@@ -161,14 +196,20 @@ const sair = async () => {
             v-for="item in itensMenu"
             :key="item.caminho"
             :to="item.caminho"
-            :title="item.rotulo"
-            :aria-label="item.rotulo"
+            :title="rotuloDoItem(item)"
+            :aria-label="rotuloDoItem(item)"
             class="flex items-center gap-3 sm:justify-center md:justify-start"
           >
             <span
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
+              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
               :class="linkAtivo(item.caminho) ? 'bg-[#006EB7]' : 'bg-gray-100'"
             >
+              <span
+                v-if="avisosDoItem(item)"
+                aria-hidden="true"
+                class="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white"
+              >{{ avisosDoItem(item) > 99 ? '99+' : avisosDoItem(item) }}</span>
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-[17px] w-[17px]"

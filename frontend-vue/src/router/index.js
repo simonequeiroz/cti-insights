@@ -77,7 +77,7 @@ router.beforeEach(to => {
     return '/dashboard'
   }
 
-  // Tela que o papel do usuário não pode usar (ex.: Analista abrindo
+  // Tela que o papel do usuário não pode usar (ex.: Gestor abrindo
   // /upload pelo endereço): volta ao Dashboard, que mostra um aviso.
   // Regras em utils/papeis.js.
   if (to.meta.permissao && !auth.pode(to.meta.permissao)) {

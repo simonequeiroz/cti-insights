@@ -2,14 +2,21 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
 import { useUploadStore } from '../../stores/uploadStore'
-import { formatarDataHora, formatarNumero } from '../../utils/datas'
+import { contar, formatarDataHora, formatarNumero } from '../../utils/datas'
 import TabelaProblemas from '../TabelaProblemas.vue'
 
-// Envios anteriores. Fica recolhido pra não competir com o assistente.
+// Histórico de importações: começa aberto, como no protótipo da tela.
 const upload = useUploadStore()
 const auth = useAuthStore()
-const aberto = ref(false)
+const aberto = ref(true)
 const detalhesAbertos = ref(new Set())
+
+// O histórico é o registro de auditoria: remover pede confirmação
+const remover = item => {
+  if (window.confirm(`Remover "${item.nomeArquivo}" do histórico? Esta ação não pode ser desfeita.`)) {
+    upload.removerDoHistorico(item.id)
+  }
+}
 
 const alternarDetalhes = id => {
   const abertos = new Set(detalhesAbertos.value)
@@ -24,7 +31,7 @@ const statusInfo = item => {
 
   if (item.status === 'NORMALIZADO') {
     return item.linhasIgnoradas
-      ? { texto: `✓ ${item.reimportacao ? 'Reimportado' : 'Importado'} (${item.linhasIgnoradas} ignoradas)`, classe: 'bg-amber-50 text-amber-700' }
+      ? { texto: `✓ ${item.reimportacao ? 'Reimportado' : 'Importado'} (${contar(item.linhasIgnoradas, 'ignorada', 'ignoradas')})`, classe: 'bg-amber-50 text-amber-700' }
       : { texto: `✓ ${item.reimportacao ? 'Reimportado' : 'Importado'}`, classe: 'bg-green-50 text-green-600' }
   }
 
@@ -45,7 +52,7 @@ const statusInfo = item => {
         aria-controls="historico-conteudo"
         @click="aberto = !aberto"
       >
-        <span class="text-base font-bold text-[#292A2F]">Envios anteriores</span>
+        <span class="text-base font-bold text-[#292A2F]">Histórico de importações</span>
         <span class="text-xs text-gray-500">
           {{ upload.historico.length }} {{ upload.historico.length === 1 ? 'arquivo' : 'arquivos' }}
           <span aria-hidden="true">{{ aberto ? '▴' : '▾' }}</span>
@@ -132,7 +139,7 @@ const statusInfo = item => {
                       class="text-gray-400 transition hover:text-red-500"
                       aria-label="Remover do histórico"
                       title="Remover do histórico"
-                      @click="upload.removerDoHistorico(item.id)"
+                      @click="remover(item)"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />

@@ -12,3 +12,8 @@ export const formatarDataHora = iso => {
 export const formatarNumero = valor => {
   return valor === null || valor === undefined ? '--' : Number(valor).toLocaleString('pt-BR')
 }
+
+// Número com a palavra certa: "1 cliente", "2 clientes"
+export const contar = (quantidade, singular, plural) => {
+  return `${formatarNumero(quantidade)} ${quantidade === 1 ? singular : plural}`
+}

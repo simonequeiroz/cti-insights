@@ -63,9 +63,12 @@ export const usuarioAtual = () => {
   return localStorage.getItem(CHAVE_USUARIO) || ''
 }
 
-// ANALISTA, GESTOR ou ADMINISTRADOR (veja utils/papeis.js)
+// Contas do modo mock criadas quando o papel ainda se chamava Analista
+const papelVigente = papel => (papel === 'ANALISTA' ? 'CONSULTOR' : papel)
+
+// CONSULTOR, GESTOR ou ADMINISTRADOR (veja utils/papeis.js)
 export const papelUsuario = () => {
-  return localStorage.getItem(CHAVE_PAPEL) || ''
+  return papelVigente(localStorage.getItem(CHAVE_PAPEL) || '')
 }
 
 const salvarSessao = usuario => {
@@ -127,7 +130,11 @@ export const login = async (email, senha) => {
 
 // ---------- Cadastro (primeiro acesso) e aprovação ----------
 
-const lerContas = () => lerJson(CHAVE_CONTAS, [])
+const lerContas = () => lerJson(CHAVE_CONTAS, []).map(conta => ({
+  ...conta,
+  papel: papelVigente(conta.papel),
+  papelSolicitado: papelVigente(conta.papelSolicitado)
+}))
 const salvarContas = contas => localStorage.setItem(CHAVE_CONTAS, JSON.stringify(contas))
 
 // O que sai do serviço nunca leva a senha

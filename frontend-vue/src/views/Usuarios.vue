@@ -51,6 +51,7 @@ const avaliar = async (usuario, status) => {
   try {
     const atualizado = await avaliarUsuario(usuario.id, { status, papel }, auth.responsavel)
     usuarios.value = usuarios.value.map(item => (item.id === atualizado.id ? atualizado : item))
+    auth.atualizarCadastrosPendentes()
 
     aviso.value = status === STATUS_CONTA.APROVADO
       ? { mensagem: `${usuario.nome} foi aprovado(a) como ${rotuloPapel(papel)}.`, tipo: 'sucesso' }

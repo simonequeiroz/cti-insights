@@ -1,17 +1,39 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useClientesStore } from '../../stores/clientesStore'
 import { useUploadStore } from '../../stores/uploadStore'
+import { contar, formatarDataHora } from '../../utils/datas'
 import { formatarTamanho, TAMANHO_MAXIMO_MB } from '../../utils/etl'
 import { baixarModelo } from '../../utils/modeloPlanilha'
 
 // Etapa 1: escolher o arquivo e pedir a análise. Nada é salvo aqui.
 const emit = defineEmits(['analisado'])
 const upload = useUploadStore()
+const clientes = useClientesStore()
 
 const fileInput = ref(null)
 const mostrarColunas = ref(false)
 
-const podeAnalisar = computed(() => Boolean(upload.arquivo) && !upload.erros.length && !upload.carregando)
+const podeAnalisar = computed(() => Boolean(upload.arquivo) && !upload.totalErros && !upload.carregando)
+
+// Nome amigável, nome exato no cabeçalho e observação (dicionário de dados)
+const COLUNAS_OBRIGATORIAS = [
+  ['Código do cliente', 'codigo_cliente', 'sem repetir'],
+  ['Nome do cliente', 'nome_cliente', ''],
+  ['Consultor', 'consultor', ''],
+  ['Segmento', 'segmento', ''],
+  ['Nível', 'nivel_cliente', 'A, B ou C'],
+  ['Faturamento anual', 'faturamento_anual', 'número, sem valor negativo'],
+  ['Serviços contratados', 'servicos_contratados', 'se forem vários, separe com ";"'],
+  ['Data de contratação', 'data_contratacao', 'dd/mm/aaaa']
+]
+
+const COLUNAS_OPCIONAIS = [
+  ['Cidade', 'cidade', ''],
+  ['UF', 'uf', '2 letras, ex.: SP'],
+  ['Situação do contrato', 'status_contrato', 'Ativo ou Inativo; envie também os inativos'],
+  ['Término do contrato', 'data_fim_contrato', 'dd/mm/aaaa; vazio se o contrato continua']
+]
 
 const abrirSeletor = () => {
   if (!upload.carregando) fileInput.value.click()
@@ -68,23 +90,38 @@ const aoSoltar = event => {
         </p>
       </div>
 
-      <button
-        type="button"
-        class="inline-flex shrink-0 items-center gap-2 rounded-md border border-[#006EB7] px-4 py-2 text-xs font-semibold text-[#006EB7] transition hover:bg-blue-50"
-        @click="baixarModelo"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-        </svg>
-        Baixar modelo
-      </button>
+      <div class="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
+        <p class="text-xs text-gray-500">Primeira vez? Use nosso modelo.</p>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-md border border-[#006EB7] px-4 py-2 text-sm font-semibold text-[#006EB7] transition hover:bg-blue-50"
+          @click="baixarModelo"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Baixar modelo
+        </button>
+      </div>
     </header>
+
+    <!-- Base atual: quem importa precisa saber o que será substituído -->
+    <p
+      v-if="clientes.temDados"
+      class="mb-5 rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-[#292A2F]"
+    >
+      <span class="font-semibold">Base atual: {{ contar(clientes.total, 'cliente', 'clientes') }}</span><template v-if="upload.origemBaseAtual">,
+        importada em {{ formatarDataHora(upload.origemBaseAtual.dataHora) }}<template v-if="upload.origemBaseAtual.enviadoPor?.nome">
+          por {{ upload.origemBaseAtual.enviadoPor.nome }}</template></template>.
+      Clientes que não vierem na planilha ficam inativos, então envie sempre a carteira completa.
+    </p>
 
     <div
       role="region"
       aria-label="Área para arrastar e soltar a planilha"
-      class="flex min-h-[240px] flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-8 text-center transition"
+      class="flex min-h-[240px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-8 text-center transition"
       :class="arrastando ? 'border-[#006EB7] bg-blue-50/60' : 'border-gray-300 hover:border-[#006EB7] hover:bg-blue-50/30'"
+      @click="abrirSeletor"
       @dragenter.prevent="aoEntrar"
       @dragover.prevent
       @dragleave.prevent="aoSair"
@@ -106,8 +143,8 @@ const aoSoltar = event => {
       <button
         type="button"
         :disabled="upload.carregando"
-        class="mt-5 rounded-md bg-[#FF8F00] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:enabled:bg-[#E68100] disabled:cursor-not-allowed disabled:opacity-50"
-        @click="abrirSeletor"
+        class="mt-5 rounded-md bg-[#FF8F00] px-6 py-3 text-sm font-semibold text-[#292A2F] shadow-sm transition hover:enabled:bg-[#E68100] disabled:cursor-not-allowed disabled:opacity-50"
+        @click.stop="abrirSeletor"
       >
         {{ upload.arquivo ? 'Trocar arquivo' : 'Selecionar arquivo' }}
       </button>
@@ -119,6 +156,7 @@ const aoSoltar = event => {
         class="hidden"
         tabindex="-1"
         aria-hidden="true"
+        @click.stop
         @change="aoSelecionarArquivo"
       />
     </div>
@@ -145,20 +183,20 @@ const aoSoltar = event => {
       <button
         type="button"
         :disabled="!podeAnalisar"
-        class="inline-flex items-center justify-center gap-2 rounded-md bg-[#006EB7] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:enabled:bg-[#03558c] disabled:cursor-not-allowed disabled:opacity-50"
+        class="inline-flex items-center justify-center gap-2 rounded-md bg-[#006EB7] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:enabled:bg-[#03558c] disabled:cursor-not-allowed disabled:opacity-50"
         @click="analisar"
       >
         <svg v-if="upload.carregando" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="3" />
           <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
         </svg>
-        {{ upload.carregando ? 'Analisando...' : 'Analisar planilha' }}
+        {{ upload.carregando ? 'Verificando...' : 'Verificar planilha' }}
       </button>
     </div>
 
     <!-- Erros: formato, tamanho, arquivo ilegível ou vazio -->
     <div
-      v-if="upload.erros.length"
+      v-if="upload.totalErros"
       role="alert"
       class="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
     >
@@ -177,16 +215,25 @@ const aoSoltar = event => {
         {{ mostrarColunas ? 'Ocultar colunas ▴' : 'Quais colunas a planilha precisa ter? ▾' }}
       </button>
 
-      <dl
+      <div
         v-if="mostrarColunas"
         id="colunas-esperadas"
-        class="mt-3 space-y-1 rounded-md bg-gray-50 p-3 text-xs text-gray-600"
+        class="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600"
       >
-        <dt class="font-semibold text-gray-700">Obrigatórias</dt>
-        <dd class="font-['IBM_Plex_Mono']">codigo_cliente (sem repetir), nome_cliente, consultor, segmento, nivel_cliente (A, B ou C), faturamento_anual, servicos_contratados, data_contratacao</dd>
-        <dt class="pt-1 font-semibold text-gray-700">Opcionais</dt>
-        <dd class="font-['IBM_Plex_Mono']">cidade, uf (2 letras)</dd>
-      </dl>
+        <p>O cabeçalho precisa usar exatamente o nome entre parênteses.</p>
+
+        <template
+          v-for="grupo in [{ titulo: 'Obrigatórias', colunas: COLUNAS_OBRIGATORIAS }, { titulo: 'Opcionais', colunas: COLUNAS_OPCIONAIS }]"
+          :key="grupo.titulo"
+        >
+          <p class="mt-3 font-semibold text-gray-700">{{ grupo.titulo }}</p>
+          <ul class="mt-1 space-y-1">
+            <li v-for="[nome, coluna, observacao] in grupo.colunas" :key="coluna">
+              {{ nome }} (<code class="font-['IBM_Plex_Mono']">{{ coluna }}</code>)<span v-if="observacao"> · {{ observacao }}</span>
+            </li>
+          </ul>
+        </template>
+      </div>
     </div>
   </section>
 </template>

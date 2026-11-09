@@ -5,6 +5,8 @@
 // Separado do store para ficar fácil de testar e, no futuro, de comparar
 // com o motor em Python/Pandas.
 
+import { hojeIso, SITUACAO } from './situacaoContrato'
+
 // Unifica grafias diferentes do mesmo segmento (o problema original do
 // projeto: "IND.", "Industria", "INDUSTRIA" viravam 3 valores distintos).
 // A chave remove acento e pontuação antes de comparar, então "Saúde",
@@ -20,6 +22,7 @@ const MAPA_SEGMENTOS = {
   'INDUSTRIA': 'Indústria',
   'COM': 'Comércio',
   'COMERCIO': 'Comércio',
+  'SERVICO': 'Serviços',
   'SERVICOS': 'Serviços',
   'SAUDE': 'Saúde',
   'EDUCACAO': 'Educação',
@@ -30,8 +33,22 @@ const MAPA_SEGMENTOS = {
   'LOGISTICA': 'Logística'
 }
 
+const SEGMENTOS_CONHECIDOS = new Set(Object.values(MAPA_SEGMENTOS))
+
+const MAPA_SITUACAO = {
+  'ATIVO': SITUACAO.ATIVO,
+  'ATIVA': SITUACAO.ATIVO,
+  'INATIVO': SITUACAO.INATIVO,
+  'INATIVA': SITUACAO.INATIVO,
+  'CANCELADO': SITUACAO.INATIVO,
+  'CANCELADA': SITUACAO.INATIVO,
+  'ENCERRADO': SITUACAO.INATIVO,
+  'ENCERRADA': SITUACAO.INATIVO
+}
+
 // Segmento fora do mapa cai pra "Primeira Maiúscula" até alguém adicionar
-// a entrada certa no mapa.
+// a entrada certa no mapa. Pode ser um segmento novo ou erro de digitação
+// ("INDISTIRA"), então a tela de revisão pede conferência.
 const capitalizarPalavras = valor => {
   return valor
     .toLowerCase()
@@ -49,75 +66,191 @@ const padronizarSeTodoMaiusculoOuMinusculo = valor => {
   return temLetra && (todoMaiusculo || todoMinusculo) ? capitalizarPalavras(valor) : valor
 }
 
+// Confere se a data existe no calendário (31/02 não existe).
+const dataExiste = (ano, mes, dia) => {
+  const data = new Date(Date.UTC(Number(ano), Number(mes) - 1, Number(dia)))
+
+  return data.getUTCFullYear() === Number(ano)
+    && data.getUTCMonth() === Number(mes) - 1
+    && data.getUTCDate() === Number(dia)
+}
+
 // Aceita "aaaa-mm-dd" (ISO) ou "dd/mm/aaaa" e normaliza pra "aaaa-mm-dd".
+// Data que não existe no calendário devolve null e vira erro na validação.
 const parseDataContratacao = valor => {
   const limpo = String(valor ?? '').trim()
 
-  if (!limpo) {
-    return null
+  const iso = limpo.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+
+  if (iso) {
+    const [, ano, mes, dia] = iso
+    return dataExiste(ano, mes, dia) ? limpo : null
   }
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(limpo)) {
-    return limpo
-  }
+  const brasileira = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
 
-  const match = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-
-  if (match) {
-    const [, dia, mes, ano] = match
-    return `${ano}-${mes}-${dia}`
+  if (brasileira) {
+    const [, dia, mes, ano] = brasileira
+    return dataExiste(ano, mes, dia) ? `${ano}-${mes}-${dia}` : null
   }
 
   return null
 }
 
+// Descobre o papel de cada separador em um número escrito como texto:
+//   "1.850,50" e "1,850.50" → o último separador é o decimal
+//   "2500,50"               → vírgula sozinha é decimal
+//   "1.850.000" e "1,850,000" → separador repetido é de milhar
+//   "1.850"                 → ponto + 3 dígitos é milhar (padrão brasileiro)
+//   "1850000.50"            → nos demais casos, ponto é decimal
+const identificarSeparadores = texto => {
+  const pontos = texto.split('.').length - 1
+  const virgulas = texto.split(',').length - 1
+
+  if (pontos && virgulas) {
+    return texto.lastIndexOf(',') > texto.lastIndexOf('.')
+      ? { milhar: '.', decimal: ',' }
+      : { milhar: ',', decimal: '.' }
+  }
+
+  if (virgulas) {
+    return virgulas > 1 ? { milhar: ',', decimal: '' } : { milhar: '', decimal: ',' }
+  }
+
+  if (pontos > 1 || /^\d{1,3}\.\d{3}$/.test(texto)) {
+    return { milhar: '.', decimal: '' }
+  }
+
+  return { milhar: '', decimal: '.' }
+}
+
 // Número direto quando o Excel já entrega numérico; texto tipo
-// "R$ 1.850.000,00" vira 1850000.
+// "R$ 1.850.000,00" vira 1850000. O que não for um número ("abc", "1.2.3")
+// devolve null e vira erro na validação.
 const parseFaturamento = valor => {
   if (valor === undefined || valor === null || valor === '') {
     return null
   }
 
   if (typeof valor === 'number') {
-    return valor
+    return Number.isFinite(valor) ? valor : null
   }
 
-  const limpo = String(valor)
-    .replace(/[^\d,.-]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.')
+  const limpo = String(valor).replace(/R\$/gi, '').replace(/\s/g, '')
 
-  const numero = Number(limpo)
-  return Number.isNaN(numero) ? null : numero
+  if (!/^-?[\d.,]*\d[\d.,]*$/.test(limpo)) {
+    return null
+  }
+
+  const negativo = limpo.startsWith('-')
+  const absoluto = negativo ? limpo.slice(1) : limpo
+  const { milhar, decimal } = identificarSeparadores(absoluto)
+
+  const partes = decimal ? absoluto.split(decimal) : [absoluto]
+
+  if (partes.length > 2) {
+    return null
+  }
+
+  const [inteiro, fracao = ''] = partes
+
+  if (milhar && inteiro.includes(milhar)) {
+    const grupos = inteiro.split(milhar)
+    const gruposValidos = /^\d{1,3}$/.test(grupos[0]) && grupos.slice(1).every(grupo => /^\d{3}$/.test(grupo))
+
+    if (!gruposValidos) {
+      return null
+    }
+  }
+
+  const numero = Number(`${milhar ? inteiro.split(milhar).join('') : inteiro}.${fracao || '0'}`)
+
+  if (Number.isNaN(numero)) {
+    return null
+  }
+
+  return negativo ? -numero : numero
 }
 
-// Excel em português-BR exporta CSV com ";". Detecta pelo cabeçalho.
-const detectarDelimitador = primeiraLinha => {
+// O Excel em português costuma salvar CSV em Windows-1252, não em UTF-8.
+// O decodificador estrito acusa erro nesse caso, e aí usamos o Windows-1252.
+const decodificarCsv = buffer => {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer)
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer)
+  }
+}
+
+// Excel em português-BR exporta CSV com ";". Detecta pelo cabeçalho,
+// ignorando o que está entre aspas.
+const detectarDelimitador = texto => {
+  const primeiraLinha = texto.split(/\r?\n/, 1)[0].replace(/"[^"]*"/g, '')
   const qtdPontoVirgula = (primeiraLinha.match(/;/g) || []).length
   const qtdVirgula = (primeiraLinha.match(/,/g) || []).length
   return qtdPontoVirgula > qtdVirgula ? ';' : ','
 }
 
-const linhasCsvParaObjetos = texto => {
-  const linhas = texto
-    .trim()
-    .split('\n')
-    .map(linha => linha.trim())
-    .filter(Boolean)
+// Separa o CSV em linhas e campos. Entre aspas, o delimitador e a quebra de
+// linha fazem parte do valor ("Empresa, Ltda"), e "" representa uma aspa.
+const separarCsv = (texto, delimitador) => {
+  const linhas = []
+  let linha = []
+  let campo = ''
+  let entreAspas = false
 
-  if (linhas.length === 0) {
+  const fecharCampo = () => {
+    linha.push(campo.trim())
+    campo = ''
+  }
+
+  const fecharLinha = () => {
+    fecharCampo()
+    linhas.push(linha)
+    linha = []
+  }
+
+  for (let i = 0; i < texto.length; i++) {
+    const caractere = texto[i]
+
+    if (entreAspas) {
+      if (caractere !== '"') {
+        campo += caractere
+      } else if (texto[i + 1] === '"') {
+        campo += '"'
+        i++
+      } else {
+        entreAspas = false
+      }
+    } else if (caractere === '"' && !campo.trim()) {
+      campo = ''
+      entreAspas = true
+    } else if (caractere === delimitador) {
+      fecharCampo()
+    } else if (caractere === '\n') {
+      fecharLinha()
+    } else if (caractere !== '\r') {
+      campo += caractere
+    }
+  }
+
+  fecharLinha()
+
+  return linhas.filter(valores => valores.some(Boolean))
+}
+
+const linhasCsvParaObjetos = texto => {
+  const [cabecalhos, ...linhas] = separarCsv(texto, detectarDelimitador(texto))
+
+  if (!cabecalhos) {
     return []
   }
 
-  const delimitador = detectarDelimitador(linhas[0])
-  const cabecalhos = linhas[0].split(delimitador).map(h => h.trim())
-
-  return linhas.slice(1).map(linha => {
-    const valores = linha.split(delimitador)
+  return linhas.map(valores => {
     const objeto = {}
 
     cabecalhos.forEach((cabecalho, indice) => {
-      objeto[cabecalho] = valores[indice]?.trim() ?? ''
+      objeto[cabecalho] = valores[indice] ?? ''
     })
 
     return objeto
@@ -163,13 +296,39 @@ export const lerArquivo = async arquivo => {
     })
   }
 
-  return linhasCsvParaObjetos(await arquivo.text())
+  return linhasCsvParaObjetos(decodificarCsv(await arquivo.arrayBuffer()))
 }
 
 // ---------------------------------------------------------------------------
 // Validação
 // ---------------------------------------------------------------------------
 const NIVEIS_VALIDOS = ['A', 'B', 'C']
+
+const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/
+
+const situacaoInvalida = cliente => {
+  const { status_contrato: status, data_fim_contrato: dataFim } = cliente
+
+  if (!status) {
+    return false
+  }
+
+  if (status !== SITUACAO.ATIVO && status !== SITUACAO.INATIVO) {
+    return true
+  }
+
+  return status === SITUACAO.ATIVO && DATA_ISO.test(dataFim || '') && dataFim < hojeIso()
+}
+
+const dataFimInvalida = cliente => {
+  const { data_fim_contrato: dataFim, data_contratacao: dataInicio } = cliente
+
+  if (!dataFim) {
+    return false
+  }
+
+  return !DATA_ISO.test(dataFim) || Boolean(dataInicio && dataFim < dataInicio)
+}
 
 // Regras do dicionário de dados (aba "dicionario_dados" da planilha da aula).
 // "alias" é o nome alternativo aceito no cabeçalho.
@@ -183,8 +342,30 @@ const CAMPOS_VALIDADOS = [
   { rotulo: 'data de contratação', coluna: 'data_contratacao', dica: 'use dd/mm/aaaa ou aaaa-mm-dd', invalido: c => !c.data_contratacao },
   { rotulo: 'serviço', coluna: 'servicos_contratados', alias: 'servico', invalido: c => !c.servicos.length },
   // Opcional: só é erro se vier preenchida com algo que não é sigla de UF
-  { rotulo: 'UF', coluna: 'uf', dica: 'use a sigla com 2 letras, ex.: SP', invalido: c => Boolean(c.uf) && !/^[A-Z]{2}$/.test(c.uf) }
+  { rotulo: 'UF', coluna: 'uf', opcional: true, dica: 'use a sigla com 2 letras, ex.: SP', invalido: c => Boolean(c.uf) && !/^[A-Z]{2}$/.test(c.uf) },
+  { rotulo: 'situação do contrato', coluna: 'status_contrato', opcional: true, dica: 'use Ativo ou Inativo, de acordo com a data de término', invalido: situacaoInvalida },
+  { rotulo: 'término do contrato', coluna: 'data_fim_contrato', opcional: true, dica: 'use uma data válida, igual ou posterior à contratação', invalido: dataFimInvalida }
 ]
+
+// Colunas obrigatórias que não existem no cabeçalho. Sem esta checagem, um
+// cabeçalho diferente viraria um erro "vazio" por campo em todas as linhas.
+export const colunasAusentes = linhas => {
+  const cabecalho = Object.keys(linhas[0] || {})
+
+  return CAMPOS_VALIDADOS
+    .filter(campo => !campo.opcional && !cabecalho.includes(campo.coluna) && !cabecalho.includes(campo.alias))
+    .map(campo => campo.coluna)
+}
+
+export const segmentosNaoReconhecidos = clientes => {
+  const contagem = new Map()
+
+  clientes
+    .filter(cliente => !SEGMENTOS_CONHECIDOS.has(cliente.segmento))
+    .forEach(cliente => contagem.set(cliente.segmento, (contagem.get(cliente.segmento) || 0) + 1))
+
+  return [...contagem].map(([valor, quantidade]) => ({ valor, quantidade }))
+}
 
 // Limite de problemas detalhados guardados (armazenamento local é limitado);
 // a contagem total continua exata.
@@ -339,6 +520,12 @@ export const tratarLinha = linha => {
   const faturamentoOriginal = linha.faturamento_anual ?? linha.faturamento
   const faturamentoTratado = parseFaturamento(faturamentoOriginal)
 
+  // Valor não reconhecido fica como veio, e a validação aponta o erro
+  const statusOriginal = String(linha.status_contrato ?? '').trim()
+  const statusTratado = MAPA_SITUACAO[chaveSegmento(statusOriginal)] || statusOriginal
+  const dataFimOriginal = String(linha.data_fim_contrato ?? '').trim()
+  const dataFimTratada = parseDataContratacao(dataFimOriginal) || dataFimOriginal
+
   const etlOriginal = {}
 
   if (segmentoOriginal !== segmentoTratado) etlOriginal.segmento = segmentoOriginal
@@ -347,6 +534,7 @@ export const tratarLinha = linha => {
   if (cidadeOriginal !== cidadeTratada) etlOriginal.cidade = cidadeOriginal
   if (nivelOriginal !== nivelTratado) etlOriginal.nivel_cliente = nivelOriginal
   if (dataTratada && dataOriginal !== dataTratada) etlOriginal.data_contratacao = dataOriginal
+  if (statusOriginal !== statusTratado) etlOriginal.status_contrato = statusOriginal
 
   if (typeof faturamentoOriginal === 'string' && faturamentoTratado !== null && faturamentoOriginal.trim() !== String(faturamentoTratado)) {
     etlOriginal.faturamento = faturamentoOriginal.trim()
@@ -363,6 +551,8 @@ export const tratarLinha = linha => {
     nivel_cliente: nivelTratado,
     faturamento: faturamentoTratado,
     data_contratacao: dataTratada,
+    status_contrato: statusTratado || null,
+    data_fim_contrato: dataFimTratada || null,
     servico: listaServicos.length ? listaServicos.join(', ') : null,
     servicos: listaServicos,
     etl_original: etlOriginal

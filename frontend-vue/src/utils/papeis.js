@@ -3,26 +3,26 @@
 // No front isso só esconde/bloqueia telas; quem garante de verdade é o
 // back-end, que deve aplicar as mesmas regras em cada endpoint.
 //
-// Níveis: cada papel pode tudo o que o anterior pode, e mais um pouco.
-//   Analista      → consulta e exporta (Dashboard, Relatórios)
-//   Gestor        → + importa planilhas (é quem responde pela base)
-//   Administrador → + aprova cadastros e apaga dados/histórico
+// Todos consultam o Dashboard e os Relatórios e exportam os dados. Além disso:
+//   Consultor     → importa a planilha consolidada da carteira
+//   Gestor        → só acompanha os resultados (perfil estratégico)
+//   Administrador → importa, aprova cadastros e apaga dados/histórico
 
 export const PAPEIS = [
   {
-    valor: 'ANALISTA',
-    rotulo: 'Analista',
-    descricao: 'Consulta o Dashboard e os Relatórios e exporta os dados.'
+    valor: 'CONSULTOR',
+    rotulo: 'Consultor',
+    descricao: 'Importa as planilhas de clientes e acompanha o Dashboard e os Relatórios.'
   },
   {
     valor: 'GESTOR',
     rotulo: 'Gestor',
-    descricao: 'Tudo do Analista, e também importa as planilhas de clientes.'
+    descricao: 'Acompanha o Dashboard e os Relatórios e exporta os dados.'
   },
   {
     valor: 'ADMINISTRADOR',
     rotulo: 'Administrador',
-    descricao: 'Acesso total: aprova cadastros e pode apagar dados e histórico.'
+    descricao: 'Acesso total: importa planilhas, aprova cadastros e pode apagar dados e histórico.'
   }
 ]
 
@@ -30,7 +30,7 @@ export const rotuloPapel = valor => PAPEIS.find(papel => papel.valor === valor)?
 
 // Ação → papéis que podem fazê-la
 const PERMISSOES = {
-  importarPlanilha: ['GESTOR', 'ADMINISTRADOR'],
+  importarPlanilha: ['CONSULTOR', 'ADMINISTRADOR'],
   removerHistorico: ['ADMINISTRADOR'],
   limparDados: ['ADMINISTRADOR'],
   gerenciarUsuarios: ['ADMINISTRADOR']

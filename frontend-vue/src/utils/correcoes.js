@@ -6,7 +6,8 @@ const CAMPOS_CORRIGIDOS = {
   consultor: 'Consultor',
   nivel_cliente: 'Nível',
   nome_cliente: 'Nome',
-  cidade: 'Cidade'
+  cidade: 'Cidade',
+  status_contrato: 'Situação'
 }
 
 export const resumirCorrecoes = clientes => {

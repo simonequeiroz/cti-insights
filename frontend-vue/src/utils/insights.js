@@ -1,3 +1,6 @@
+import { contar } from './datas'
+import { estaAtivo } from './situacaoContrato'
+
 // Primeiros insights mostrados logo após a importação.
 const maisFrequente = valores => {
   const contagem = new Map()
@@ -11,7 +14,8 @@ const maisFrequente = valores => {
   return melhor
 }
 
-export const gerarInsights = clientes => {
+export const gerarInsights = base => {
+  const clientes = base.filter(estaAtivo)
   const total = clientes.length
 
   if (!total) {
@@ -25,7 +29,7 @@ export const gerarInsights = clientes => {
 
   return [
     { rotulo: 'Clientes nível A', valor: nivelA.toLocaleString('pt-BR'), detalhe: `${porcentagem(nivelA)} da base` },
-    segmento && { rotulo: 'Maior segmento', valor: segmento.valor, detalhe: `${segmento.quantidade} clientes (${porcentagem(segmento.quantidade)})` },
-    servico && { rotulo: 'Serviço mais contratado', valor: servico.valor, detalhe: `${servico.quantidade} clientes` }
+    segmento && { rotulo: 'Maior segmento', valor: segmento.valor, detalhe: `${contar(segmento.quantidade, 'cliente', 'clientes')} (${porcentagem(segmento.quantidade)})` },
+    servico && { rotulo: 'Serviço mais contratado', valor: servico.valor, detalhe: contar(servico.quantidade, 'cliente', 'clientes') }
   ].filter(Boolean)
 }
