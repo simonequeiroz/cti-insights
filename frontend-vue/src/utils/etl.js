@@ -5,6 +5,8 @@
 // Separado do store para ficar fácil de testar e, no futuro, de comparar
 // com o motor em Python/Pandas.
 
+import { hojeIso, SITUACAO } from './situacaoContrato'
+
 // Unifica grafias diferentes do mesmo segmento (o problema original do
 // projeto: "IND.", "Industria", "INDUSTRIA" viravam 3 valores distintos).
 // A chave remove acento e pontuação antes de comparar, então "Saúde",
@@ -31,8 +33,22 @@ const MAPA_SEGMENTOS = {
   'LOGISTICA': 'Logística'
 }
 
+const SEGMENTOS_CONHECIDOS = new Set(Object.values(MAPA_SEGMENTOS))
+
+const MAPA_SITUACAO = {
+  'ATIVO': SITUACAO.ATIVO,
+  'ATIVA': SITUACAO.ATIVO,
+  'INATIVO': SITUACAO.INATIVO,
+  'INATIVA': SITUACAO.INATIVO,
+  'CANCELADO': SITUACAO.INATIVO,
+  'CANCELADA': SITUACAO.INATIVO,
+  'ENCERRADO': SITUACAO.INATIVO,
+  'ENCERRADA': SITUACAO.INATIVO
+}
+
 // Segmento fora do mapa cai pra "Primeira Maiúscula" até alguém adicionar
-// a entrada certa no mapa.
+// a entrada certa no mapa. Pode ser um segmento novo ou erro de digitação
+// ("INDISTIRA"), então a tela de revisão pede conferência.
 const capitalizarPalavras = valor => {
   return valor
     .toLowerCase()
@@ -288,6 +304,32 @@ export const lerArquivo = async arquivo => {
 // ---------------------------------------------------------------------------
 const NIVEIS_VALIDOS = ['A', 'B', 'C']
 
+const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/
+
+const situacaoInvalida = cliente => {
+  const { status_contrato: status, data_fim_contrato: dataFim } = cliente
+
+  if (!status) {
+    return false
+  }
+
+  if (status !== SITUACAO.ATIVO && status !== SITUACAO.INATIVO) {
+    return true
+  }
+
+  return status === SITUACAO.ATIVO && DATA_ISO.test(dataFim || '') && dataFim < hojeIso()
+}
+
+const dataFimInvalida = cliente => {
+  const { data_fim_contrato: dataFim, data_contratacao: dataInicio } = cliente
+
+  if (!dataFim) {
+    return false
+  }
+
+  return !DATA_ISO.test(dataFim) || Boolean(dataInicio && dataFim < dataInicio)
+}
+
 // Regras do dicionário de dados (aba "dicionario_dados" da planilha da aula).
 // "alias" é o nome alternativo aceito no cabeçalho.
 const CAMPOS_VALIDADOS = [
@@ -300,8 +342,30 @@ const CAMPOS_VALIDADOS = [
   { rotulo: 'data de contratação', coluna: 'data_contratacao', dica: 'use dd/mm/aaaa ou aaaa-mm-dd', invalido: c => !c.data_contratacao },
   { rotulo: 'serviço', coluna: 'servicos_contratados', alias: 'servico', invalido: c => !c.servicos.length },
   // Opcional: só é erro se vier preenchida com algo que não é sigla de UF
-  { rotulo: 'UF', coluna: 'uf', dica: 'use a sigla com 2 letras, ex.: SP', invalido: c => Boolean(c.uf) && !/^[A-Z]{2}$/.test(c.uf) }
+  { rotulo: 'UF', coluna: 'uf', opcional: true, dica: 'use a sigla com 2 letras, ex.: SP', invalido: c => Boolean(c.uf) && !/^[A-Z]{2}$/.test(c.uf) },
+  { rotulo: 'situação do contrato', coluna: 'status_contrato', opcional: true, dica: 'use Ativo ou Inativo, de acordo com a data de término', invalido: situacaoInvalida },
+  { rotulo: 'término do contrato', coluna: 'data_fim_contrato', opcional: true, dica: 'use uma data válida, igual ou posterior à contratação', invalido: dataFimInvalida }
 ]
+
+// Colunas obrigatórias que não existem no cabeçalho. Sem esta checagem, um
+// cabeçalho diferente viraria um erro "vazio" por campo em todas as linhas.
+export const colunasAusentes = linhas => {
+  const cabecalho = Object.keys(linhas[0] || {})
+
+  return CAMPOS_VALIDADOS
+    .filter(campo => !campo.opcional && !cabecalho.includes(campo.coluna) && !cabecalho.includes(campo.alias))
+    .map(campo => campo.coluna)
+}
+
+export const segmentosNaoReconhecidos = clientes => {
+  const contagem = new Map()
+
+  clientes
+    .filter(cliente => !SEGMENTOS_CONHECIDOS.has(cliente.segmento))
+    .forEach(cliente => contagem.set(cliente.segmento, (contagem.get(cliente.segmento) || 0) + 1))
+
+  return [...contagem].map(([valor, quantidade]) => ({ valor, quantidade }))
+}
 
 // Limite de problemas detalhados guardados (armazenamento local é limitado);
 // a contagem total continua exata.
@@ -456,6 +520,12 @@ export const tratarLinha = linha => {
   const faturamentoOriginal = linha.faturamento_anual ?? linha.faturamento
   const faturamentoTratado = parseFaturamento(faturamentoOriginal)
 
+  // Valor não reconhecido fica como veio, e a validação aponta o erro
+  const statusOriginal = String(linha.status_contrato ?? '').trim()
+  const statusTratado = MAPA_SITUACAO[chaveSegmento(statusOriginal)] || statusOriginal
+  const dataFimOriginal = String(linha.data_fim_contrato ?? '').trim()
+  const dataFimTratada = parseDataContratacao(dataFimOriginal) || dataFimOriginal
+
   const etlOriginal = {}
 
   if (segmentoOriginal !== segmentoTratado) etlOriginal.segmento = segmentoOriginal
@@ -464,6 +534,7 @@ export const tratarLinha = linha => {
   if (cidadeOriginal !== cidadeTratada) etlOriginal.cidade = cidadeOriginal
   if (nivelOriginal !== nivelTratado) etlOriginal.nivel_cliente = nivelOriginal
   if (dataTratada && dataOriginal !== dataTratada) etlOriginal.data_contratacao = dataOriginal
+  if (statusOriginal !== statusTratado) etlOriginal.status_contrato = statusOriginal
 
   if (typeof faturamentoOriginal === 'string' && faturamentoTratado !== null && faturamentoOriginal.trim() !== String(faturamentoTratado)) {
     etlOriginal.faturamento = faturamentoOriginal.trim()
@@ -480,6 +551,8 @@ export const tratarLinha = linha => {
     nivel_cliente: nivelTratado,
     faturamento: faturamentoTratado,
     data_contratacao: dataTratada,
+    status_contrato: statusTratado || null,
+    data_fim_contrato: dataFimTratada || null,
     servico: listaServicos.length ? listaServicos.join(', ') : null,
     servicos: listaServicos,
     etl_original: etlOriginal

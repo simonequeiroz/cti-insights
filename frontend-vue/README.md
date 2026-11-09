@@ -55,10 +55,10 @@ salvas só neste navegador.
 
 O que cada papel pode fazer (regras em `src/utils/papeis.js`):
 
-| Ação | Analista | Gestor | Administrador |
+| Ação | Consultor | Gestor | Administrador |
 |---|:---:|:---:|:---:|
 | Dashboard, Relatórios e exportar CSV/PDF | ✅ | ✅ | ✅ |
-| Upload (importar planilha) e histórico | ❌ | ✅ | ✅ |
+| Importar planilha e ver histórico | ✅ | ❌ | ✅ |
 | Remover item do histórico e limpar dados locais | ❌ | ❌ | ✅ |
 | Aprovar cadastros (`/usuarios`) | ❌ | ❌ | ✅ |
 
@@ -73,7 +73,7 @@ botão de limpar dados em **Relatórios** (Administrador).
 | `/` | Página inicial (landing) | Pública |
 | `/login` | Login | Pública |
 | `/cadastro` | Cadastro (primeiro acesso) | Pública |
-| `/upload` | Upload e histórico de processamento | Gestor e Administrador |
+| `/upload` | Importar: envio da planilha em etapas e histórico de importações | Consultor e Administrador |
 | `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, filtros por segmento, nível e período, exportação CSV/PDF) | Requer login |
 | `/relatorios` | Base de clientes detalhada, com busca por empresa e filtro por período | Requer login |
 | `/usuarios` | Aprovação de cadastros e papel de cada usuário | Administrador |
@@ -90,7 +90,8 @@ src/
 ├── stores/
 │   └── uploadStore.js   # leitura, limpeza e validação da planilha; histórico
 ├── utils/
-│   ├── papeis.js        # papéis (Analista, Gestor, Administrador) e permissões
+│   ├── papeis.js        # papéis (Consultor, Gestor, Administrador) e permissões
+│   ├── upsell.js        # regras de oportunidade de upsell do Dashboard
 │   └── periodo.js       # filtro por período de contratação (Dashboard e Relatórios)
 ├── views/            # uma por rota: Home, Login, Cadastro, UploadView, Dashboard, Relatorios, Usuarios
 └── components/       # Sidebar e blocos da página inicial (Hero, Metrics, ...)
@@ -98,15 +99,22 @@ src/
 
 ## Como os dados fluem hoje
 
-1. No **Upload**, o arquivo é lido no navegador (`uploadStore.js`).
+1. Na tela **Importar** (rota `/upload`), o arquivo é lido no navegador
+   (`utils/etl.js`, chamado pelo `uploadStore.js`). Se o arquivo não abrir,
+   estiver vazio ou não tiver uma coluna obrigatória, ele é recusado
+   (`ERRO_SCHEMA`), o motivo fica no histórico e a base atual não muda.
 2. As linhas são **normalizadas** (espaços, maiúsculas, segmentos
    equivalentes como "IND." e "Indústria", faturamento em texto → número,
-   datas `dd/mm/aaaa` → `aaaa-mm-dd`).
-3. A planilha é **validada**: todo campo obrigatório (lista abaixo) precisa
-   estar preenchido em **todas** as linhas. Se alguma falhar, o arquivo
-   inteiro é recusado (`ERRO_SCHEMA`), a mensagem no histórico diz quais
-   campos e quais linhas corrigir, e a última base válida é mantida.
-4. O resultado é salvo pelo serviço (`services/api.js`, hoje no `localStorage`); Dashboard e Relatórios leem dele.
+   datas `dd/mm/aaaa` → `aaaa-mm-dd`). Segmento fora da lista conhecida
+   entra como veio, com um aviso para conferência na revisão.
+3. Cada linha é **validada** pelo dicionário de dados. Linhas com erro não
+   entram e podem ser baixadas para correção; as demais seguem para a
+   revisão. A regra está em `PERMITIR_IMPORTACAO_PARCIAL` (`uploadStore.js`).
+4. Ao confirmar, a base é atualizada pelo serviço (`services/api.js`, hoje
+   no `localStorage`). Quem não veio na planilha **fica inativo**, em vez de
+   ser apagado, e volta a ativo se aparecer em outra importação; quem já
+   estava na base e veio com erro continua com os dados anteriores.
+   Dashboard e Relatórios leem dessa base.
 
 Chaves usadas no `localStorage`:
 
@@ -117,23 +125,27 @@ Chaves usadas no `localStorage`:
 | `ctiAuth` | `"true"` quando há sessão simulada |
 | `ctiUsuario` | E-mail digitado no login |
 | `ctiNome` | Nome da conta logada (exibido na Sidebar) |
-| `ctiPapel` | Papel da conta logada (`ANALISTA`, `GESTOR` ou `ADMINISTRADOR`) |
+| `ctiPapel` | Papel da conta logada (`CONSULTOR`, `GESTOR` ou `ADMINISTRADOR`) |
 | `ctiContas` | Contas criadas no cadastro (nome, e-mail, SHA-256 da senha, papel e situação da aprovação) |
 
 ### Formato esperado da planilha
 
-O **nome da coluna no cabeçalho precisa ser exatamente o da tabela** (minúsculas, com `_`). Colunas obrigatórias: se estiverem vazias ou inválidas em qualquer linha, o arquivo é recusado.
+O **nome da coluna no cabeçalho precisa ser exatamente o da tabela** (minúsculas, com `_`). Em arquivos Excel, é usada a aba `Clientes` ou `upload_clientes`; sem elas, a primeira aba.
 
 | Coluna | Obrigatória | Observação |
 |---|---|---|
 | `consultor` | Sim | Texto |
-| `codigo_cliente` | Sim | Texto |
+| `codigo_cliente` | Sim | Texto; não pode repetir (vale a primeira ocorrência) |
 | `nome_cliente` | Sim | Texto |
 | `segmento` | Sim | Grafias diferentes são unificadas |
 | `nivel_cliente` | Sim | `A`, `B` ou `C` |
-| `data_contratacao` | Sim | `aaaa-mm-dd` ou `dd/mm/aaaa`; data inválida também recusa o arquivo |
+| `data_contratacao` | Sim | `aaaa-mm-dd` ou `dd/mm/aaaa` |
 | `servicos_contratados` (ou `servico`) | Sim | Vários serviços separados por `;` |
-| `faturamento_anual` (ou `faturamento`) | Não | Número ou texto como `R$ 1.850.000,00`; vazio conta como 0 |
+| `faturamento_anual` (ou `faturamento`) | Sim | Número ou texto como `R$ 1.850.000,00`; sem valor negativo |
+| `cidade` | Não | Texto |
+| `uf` | Não | Sigla com 2 letras |
+| `status_contrato` | Não | `Ativo` ou `Inativo` (`Cancelado` e `Encerrado` viram `Inativo`) |
+| `data_fim_contrato` | Não | Término ou cancelamento; vazio se o contrato continua |
 
 Estados do histórico de upload: `PROCESSANDO`, `NORMALIZADO`, `ERRO_SCHEMA`.
 Um registro que ficou em `PROCESSANDO` porque a página foi fechada é marcado
@@ -147,6 +159,41 @@ filtro ativo, clientes sem data ficam de fora. O faturamento exibido é o
 **faturamento anual** de cada cliente contratado no período, não a receita
 gerada nele. O filtro roda no navegador (`src/utils/periodo.js`).
 
+### Oportunidades de upsell
+
+Calculadas em `src/utils/upsell.js`, comparando cada cliente com os demais do
+mesmo segmento (segmentos com pelo menos 3 clientes):
+
+1. **Poucos serviços para o porte:** faturamento acima da mediana do segmento
+   e pelo menos 0,25 serviço abaixo da média dele.
+2. **Serviço que falta:** o cliente não tem um serviço presente em pelo menos
+   60% do segmento.
+3. **Segmento com potencial** (hipótese H03): a participação nos serviços
+   contratados supera a participação no faturamento em 5 pontos ou mais.
+
+Só clientes ativos entram nessas regras.
+
+### Contratos ativos e inativos
+
+A situação vem de `status_contrato` e `data_fim_contrato`
+(`src/utils/situacaoContrato.js`). A planilha deve trazer ativos e inativos
+no mesmo arquivo:
+
+- não veio numa importação posterior: **Inativo**, com o campo
+  `saiu_da_planilha_em`. Essa é a data da importação, não a do cancelamento
+  real, e a tela a identifica como "Saiu da planilha em";
+- término em data passada: **Inativo**, mesmo que o status tenha sido
+  preenchido antes de a data chegar; na importação, `Ativo` com término
+  passado é erro;
+- sem término vencido: vale o status; sem status, término futuro é **Ativo**;
+- sem nenhuma das duas colunas: **Não informado**, contado como ativo, para
+  planilhas sem esse dado continuarem funcionando.
+
+Faturamento, clientes, serviços, ticket médio, gráficos de receita e nível, e
+upsell usam só os ativos. A evolução das contratações, a tabela de clientes e
+o CSV usam a carteira inteira. A situação é por cliente: cada linha da planilha
+tem um único status, mesmo com vários serviços.
+
 ### Testando o Upload
 
 - Arquivos de exemplo com erros (campo obrigatório vazio, sem linhas etc.)
@@ -156,6 +203,20 @@ gerada nele. O filtro roda no navegador (`src/utils/periodo.js`).
   `localStorage.setItem('ctiDelayUpload', 3000)` (espera 3 s por upload) e,
   para desligar, `localStorage.removeItem('ctiDelayUpload')`. No build de
   produção essa espera não existe.
+
+### Correspondência com a aula de Upload (Vue 3 + Pinia)
+
+| Na aula | Neste projeto |
+|---|---|
+| `processarPlanilha()` | `analisarPlanilha()` no `uploadStore.js` |
+| `tratarLinha()` no store | `tratarLinha()` em `utils/etl.js`, chamada pelo store |
+| `dadosOriginais` / `dadosTratados` | `analise` (`validos` e `linhasComErro`) |
+| Getters `totalClientes`, `totalErros`, `clientesNivelA`, `temDados` | Mesmos nomes, no `uploadStore.js` |
+| Formulário em `UploadView.vue` | `UploadView.vue` conduz as etapas em `components/importacao/` |
+| `services/api.js` com Axios no futuro | Já existe em modo simulado, com `fetch`; o Axios entra com o back-end, na função `http` |
+
+**Próxima etapa:** Vue → Pinia → Axios → Spring Boot → PostgreSQL no Azure.
+O Vue não acessa o banco diretamente; quem grava é o Spring Boot.
 
 ## Integração com as outras squads
 

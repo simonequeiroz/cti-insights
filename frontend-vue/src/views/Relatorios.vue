@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { useUploadStore } from '../stores/uploadStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
+import { descreverTermino, ESTILO_SITUACAO, situacaoContrato, temSituacaoInformada } from '../utils/situacaoContrato'
 
 const auth = useAuthStore()
 
@@ -85,32 +86,7 @@ const formatarData = valor => {
   return `${dia}/${mes}/${ano}`
 }
 
-// Regra de negócio pra "Status", já que não guardamos cancelamento de
-// contrato: um contrato é considerado Ativo se foi assinado dentro dos
-// últimos 12 meses a partir de hoje. É uma aproximação declarada — não um
-// dado real de cancelamento — por isso fica visível na legenda da tabela,
-// não escondida como se fosse fato.
-const MESES_PARA_CONSIDERAR_ATIVO = 12
-
-const calcularStatus = dataContratacaoIso => {
-  if (!dataContratacaoIso) {
-    return { texto: 'Sem data', classe: 'bg-gray-100 text-gray-500' }
-  }
-
-  const [ano, mes, dia] = dataContratacaoIso.split('-').map(Number)
-  const dataContrato = new Date(ano, mes - 1, dia)
-  const hoje = new Date()
-
-  const diffMeses =
-    (hoje.getFullYear() - dataContrato.getFullYear()) * 12 +
-    (hoje.getMonth() - dataContrato.getMonth())
-
-  if (diffMeses <= MESES_PARA_CONSIDERAR_ATIVO) {
-    return { texto: 'Ativo', classe: 'bg-green-50 text-green-600' }
-  }
-
-  return { texto: 'Inativo', classe: 'bg-red-50 text-red-500' }
-}
+const situacaoInformada = computed(() => temSituacaoInformada(clientes.value))
 
 // Zera só o localStorage DESTE navegador (clientes importados + histórico
 // de upload) — não existe banco de dados ainda, então não há nada "no
@@ -242,8 +218,11 @@ const limparDados = async () => {
               {{ clientesFiltrados.length }} de {{ clientes.length }} clientes.
             </p>
 
-            <p class="mt-1 text-xs text-gray-500">
-              Status: "Ativo" = contrato assinado nos últimos {{ MESES_PARA_CONSIDERAR_ATIVO }} meses.
+            <p
+              v-if="!situacaoInformada"
+              class="mt-1 text-xs text-gray-500"
+            >
+              A planilha importada não informa a situação dos contratos.
             </p>
 
           </div>
@@ -284,6 +263,10 @@ const limparDados = async () => {
 
                   <th class="p-4 font-semibold text-gray-500">
                     Data da contratação
+                  </th>
+
+                  <th class="p-4 font-semibold text-gray-500">
+                    Término
                   </th>
 
                   <th class="p-4 font-semibold text-gray-500">
@@ -334,12 +317,16 @@ const limparDados = async () => {
                     {{ formatarData(cliente.data_contratacao) }}
                   </td>
 
+                  <td class="p-4 text-gray-500">
+                    {{ descreverTermino(cliente) || '—' }}
+                  </td>
+
                   <td class="p-4">
                     <span
-                      class="rounded-full px-3 py-1 text-xs font-semibold"
-                      :class="calcularStatus(cliente.data_contratacao).classe"
+                      class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
+                      :class="ESTILO_SITUACAO[situacaoContrato(cliente)]"
                     >
-                      {{ calcularStatus(cliente.data_contratacao).texto }}
+                      {{ situacaoContrato(cliente) }}
                     </span>
                   </td>
                 </tr>
@@ -395,8 +382,8 @@ const limparDados = async () => {
             {{ clientes.length
               ? 'Tente buscar por outro nome ou ajustar o período.'
               : auth.pode('importarPlanilha')
-                ? 'Importe uma base na tela de Upload.'
-                : 'Peça a um Gestor para importar a base de clientes.' }}
+                ? 'Importe uma base na tela Importar.'
+                : 'Peça a um Consultor para importar a base de clientes.' }}
           </p>
 
           <RouterLink
@@ -404,7 +391,7 @@ const limparDados = async () => {
             to="/upload"
             class="mt-6 inline-block rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
           >
-            Ir para o Upload
+            Importar planilha
           </RouterLink>
 
         </div>

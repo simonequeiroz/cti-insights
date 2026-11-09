@@ -1,9 +1,10 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { ESTILO_NIVEL, temRegistroEtl } from '../utils/resumoEtl'
+import { ESTILO_SITUACAO, situacaoContrato, temSituacaoInformada } from '../utils/situacaoContrato'
 
-// Tabela paginada da base tratada. Células que o ETL alterou ficam
-// sublinhadas; passar o mouse mostra o valor como veio na planilha.
+// Tabela paginada da base tratada. Células que o tratamento alterou ficam
+// sublinhadas, com o valor original logo abaixo (visível também no celular).
 const props = defineProps({
   clientes: { type: Array, required: true }
 })
@@ -15,6 +16,7 @@ const paginaAtual = ref(1)
 const soCorrigidas = ref(false)
 
 const temRegistro = computed(() => temRegistroEtl(props.clientes))
+const situacaoInformada = computed(() => temSituacaoInformada(props.clientes))
 
 const foiCorrigida = cliente => {
   return CAMPOS_CORRIGIVEIS.some(campo => cliente.etl_original?.[campo] !== undefined)
@@ -40,9 +42,6 @@ watch([() => props.clientes, soCorrigidas], () => {
 
 const corrigido = (cliente, campo) => cliente.etl_original?.[campo] !== undefined
 
-const valorOriginal = (cliente, campo) => {
-  return corrigido(cliente, campo) ? `Na planilha: "${cliente.etl_original[campo]}"` : undefined
-}
 
 const formatarMoeda = valor => {
   if (valor === null || valor === undefined) return '—'
@@ -68,7 +67,7 @@ const formatarData = iso => {
           class="mt-0.5 text-xs text-gray-500"
         >
           <span class="underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4">Sublinhado</span>
-          = corrigido pelo ETL (passe o mouse para ver o original).
+          = corrigido pelo sistema; o valor original aparece logo abaixo.
         </p>
       </div>
 
@@ -107,6 +106,7 @@ const formatarData = iso => {
             <th class="px-4 py-3 text-right font-semibold text-gray-500">Faturamento</th>
             <th class="px-4 py-3 font-semibold text-gray-500">Contratação</th>
             <th class="px-4 py-3 font-semibold text-gray-500">Serviços</th>
+            <th v-if="situacaoInformada" class="px-4 py-3 font-semibold text-gray-500">Situação</th>
           </tr>
         </thead>
 
@@ -127,19 +127,25 @@ const formatarData = iso => {
             <td class="px-4 py-3 text-gray-600">
               <span
                 :class="{ 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'consultor') }"
-                :title="valorOriginal(cliente, 'consultor')"
               >
                 {{ cliente.consultor || '—' }}
               </span>
+              <span
+                v-if="corrigido(cliente, 'consultor')"
+                class="mt-0.5 block text-[11px] text-gray-500"
+              >era: {{ cliente.etl_original.consultor }}</span>
             </td>
 
             <td class="px-4 py-3 text-gray-600">
               <span
                 :class="{ 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'segmento') }"
-                :title="valorOriginal(cliente, 'segmento')"
               >
                 {{ cliente.segmento || '—' }}
               </span>
+              <span
+                v-if="corrigido(cliente, 'segmento')"
+                class="mt-0.5 block text-[11px] text-gray-500"
+              >era: {{ cliente.etl_original.segmento }}</span>
             </td>
 
             <td class="px-4 py-3">
@@ -149,10 +155,13 @@ const formatarData = iso => {
                   ESTILO_NIVEL[cliente.nivel_cliente]?.selo || 'bg-gray-100 text-gray-600',
                   { 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-2': corrigido(cliente, 'nivel_cliente') }
                 ]"
-                :title="valorOriginal(cliente, 'nivel_cliente')"
               >
                 {{ cliente.nivel_cliente || '—' }}
               </span>
+              <span
+                v-if="corrigido(cliente, 'nivel_cliente')"
+                class="mt-0.5 block text-[11px] text-gray-500"
+              >era: {{ cliente.etl_original.nivel_cliente }}</span>
             </td>
 
             <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">
@@ -178,6 +187,15 @@ const formatarData = iso => {
                 >—</span>
               </div>
             </td>
+
+            <td v-if="situacaoInformada" class="px-4 py-3">
+              <span
+                class="whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                :class="ESTILO_SITUACAO[situacaoContrato(cliente)]"
+              >
+                {{ situacaoContrato(cliente) }}
+              </span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -188,7 +206,7 @@ const formatarData = iso => {
       class="flex items-center justify-between border-t border-gray-200 px-5 py-3"
     >
       <p class="text-xs text-gray-500">
-        Página {{ paginaAtual }} de {{ totalPaginas }} · {{ clientesFiltrados.length }} cliente(s)
+        Página {{ paginaAtual }} de {{ totalPaginas }} · {{ clientesFiltrados.length }} {{ clientesFiltrados.length === 1 ? 'cliente' : 'clientes' }}
       </p>
 
       <div class="flex gap-2">

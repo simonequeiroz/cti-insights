@@ -50,11 +50,11 @@ campos novos abaixo são sugestão, a confirmar:
    `snake_case` (planilha). O front adapta o formato em `src/services/api.js`,
    então o back-end pode manter `camelCase`; só é preciso combinar os nomes.
    O `database/schema.sql` ainda está vazio.
-4. **Papel do usuário (decidido no front):** `ANALISTA`, `GESTOR` ou
+4. **Papel do usuário (decidido no front):** `CONSULTOR`, `GESTOR` ou
    `ADMINISTRADOR`, escolhido no cadastro e aprovado por um Administrador.
-   Regras em `src/utils/papeis.js`: Analista consulta e exporta; Gestor também
-   importa planilhas; Administrador também aprova cadastros e apaga
-   dados/histórico. O back-end precisa aplicar as **mesmas regras em cada
+   Regras em `src/utils/papeis.js`: todos consultam e exportam; Consultor
+   também importa planilhas; Gestor só acompanha os resultados; Administrador
+   importa, aprova cadastros e apaga dados/histórico. O back-end precisa aplicar as **mesmas regras em cada
    endpoint** (o front só esconde telas e botões). Falta incluir uma classe
    `Usuario` (id, nome, email, senha, papel, status) no diagrama de classes.
 5. **Insights:** o diagrama tem `Insight` por cliente, mas o front hoje
@@ -66,9 +66,10 @@ campos novos abaixo são sugestão, a confirmar:
    `data_contratacao`. Se houver vários, `GET /clientes` deve incluir a
    lista de contratos; "Evolução das contratações" passaria a contar
    contratos, e não clientes.
-7. **Status do contrato:** o diagrama tem `Contrato.status` e `dataFim`. O
-   front hoje **infere** "Ativo/Inativo" (assinado nos últimos 12 meses); com
-   o status real vindo da API, essa inferência sai.
+7. **Status do contrato:** o diagrama tem `Contrato.status` e `dataFim`. A
+   planilha traz isso nas colunas opcionais `status_contrato` e
+   `data_fim_contrato`, uma situação por cliente. Com uma linha por contrato,
+   a situação passaria a ser de cada serviço.
 8. **Faturamento por serviço:** com Contrato N—N Serviço e um único
    `valor`, o gráfico "Top 5 Serviços por Faturamento" hoje divide o valor
    igualmente entre os serviços. Definir se isso é aceitável ou se há
@@ -151,7 +152,7 @@ de quem aprovou/recusou.
 Aprova ou recusa um cadastro; o Administrador pode trocar o papel pedido.
 
 ```json
-{ "status": "APROVADO", "papel": "ANALISTA" }
+{ "status": "APROVADO", "papel": "CONSULTOR" }
 ```
 
 `status`: `APROVADO` ou `REJEITADO` (um recusado pode ser aprovado depois).
@@ -174,6 +175,8 @@ Devolve a base de clientes válida mais recente. Resposta `200`:
     "nivel_cliente": "A",
     "faturamento": 1850000.0,
     "data_contratacao": "2025-03-15",
+    "status_contrato": "Ativo",
+    "data_fim_contrato": null,
     "servico": "Internet Dedicada, Firewall",
     "servicos": ["Internet Dedicada", "Firewall"]
   }
@@ -194,6 +197,9 @@ cliente; se a API devolver outra estrutura, a conversão é feita em
 | `nivel_cliente` | `"A"`, `"B"` ou `"C"` | |
 | `faturamento` | número ou `null` | Em reais, sem formatação |
 | `data_contratacao` | `aaaa-mm-dd` ou `null` | |
+| `status_contrato` | `"Ativo"`, `"Inativo"` ou `null` | Contrato.status |
+| `data_fim_contrato` | `aaaa-mm-dd` ou `null` | Contrato.dataFim |
+| `saiu_da_planilha_em` | `aaaa-mm-dd` ou ausente | Data da importação em que o cliente não veio; o back-end deve inativar em vez de apagar |
 | `servico` | texto ou `null` | Serviços juntos, separados por vírgula (para exibir) |
 | `servicos` | lista de texto | Os mesmos serviços, um por item (para contar) |
 

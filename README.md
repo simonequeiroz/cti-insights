@@ -41,7 +41,12 @@ repositório (`git checkout sprint-2`), criada em 02/10/2026.
 | | Spring Boot | 4.1.1 |
 | | Maven (via Maven Wrapper `mvnw`) | 3.9.16 |
 | Dados | Python / Pandas (em preparação) | – |
-| Banco | PostgreSQL (previsto, ainda não integrado) | – |
+| Banco | PostgreSQL no Azure (previsto, ainda não integrado) | – |
+
+**Próxima etapa:** Back-End e Azure ainda não estão integrados. A arquitetura
+definida é Vue 3 → Pinia → Axios → Spring Boot → PostgreSQL no Azure, e o Vue
+não acessa o banco diretamente. O Azure substitui o Neon citado na entrega da
+Sprint 1.
 
 ## Estrutura do repositório
 
@@ -72,7 +77,7 @@ Outros comandos: `npm run build` (versão de produção), `npm run lint`
 
 **Como entrar:** não há autenticação real; as contas ficam salvas no próprio
 navegador. Use **Criar conta** na tela de Login (`/cadastro`) e escolha o
-papel (Analista, Gestor ou Administrador). A **primeira conta** vira
+papel (Consultor, Gestor ou Administrador). A **primeira conta** vira
 Administrador e já entra; as outras aguardam a aprovação de um
 Administrador na tela **Usuários**. Detalhes e permissões de cada papel em
 [frontend-vue/README.md](frontend-vue/README.md).
@@ -97,7 +102,7 @@ Credenciais nunca vão para o repositório: use um arquivo `.env` local
 
 ## Telas entregues
 
-Fluxo: **Home pública → Login → área interna (Dashboard / Upload / Relatórios)**.
+Fluxo: **Home pública → Login → área interna (Dashboard / Importar / Relatórios)**.
 
 | Rota | Tela | O que faz |
 |---|---|---|
@@ -105,14 +110,14 @@ Fluxo: **Home pública → Login → área interna (Dashboard / Upload / Relató
 | `/login` | Login | Campos de e-mail e senha para quem já tem conta; simula o acesso à área interna. |
 | `/cadastro` | Cadastro | Primeiro acesso: nome, e-mail, papel, senha e confirmação. A conta aguarda aprovação de um Administrador (a primeira conta do sistema vira Administrador e entra direto). |
 | `/dashboard` | Dashboard | KPIs, gráficos (faturamento por segmento, evolução das contratações, distribuição por nível A/B/C com curva ABC, top 5 serviços), painel de Insights Inteligentes, filtros por segmento, nível e período, e exportação CSV/PDF. |
-| `/upload` | Upload | Importação em etapas (analisar, revisar, confirmar e concluir) de planilha `.xlsx`/`.csv`, validação conforme o dicionário de dados (campos obrigatórios, duplicidade, UF), aviso de planilha já importada e histórico com responsável, data/hora, arquivo e hash. |
+| `/upload` | Importar | Importação em etapas (enviar, revisar, confirmar e concluir) de planilha `.xlsx`/`.xls`/`.csv`, validação conforme o dicionário de dados (colunas e campos obrigatórios, duplicidade, UF), aviso de planilha já importada, de segmento não reconhecido e de clientes que ficam inativos, e histórico com responsável, data/hora e arquivo. |
 | `/relatorios` | Relatórios | Base de clientes detalhada, com busca por empresa, filtro por período e paginação. |
 | `/usuarios` | Usuários | Só Administrador: aprova ou recusa cadastros e define o papel de cada pessoa. |
 
 A **Sidebar** da área interna mostra só as telas que o papel do usuário
-pode usar (Dashboard, Upload, Relatórios, Usuários), o nome e o papel de
+pode usar (Dashboard, Importar, Relatórios, Usuários), o nome e o papel de
 quem está logado e a opção de sair. O menu vira hambúrguer no celular. Os dados vêm da planilha
-enviada no Upload e ficam guardados no navegador (`localStorage`), até existir
+enviada em Importar e ficam guardados no navegador (`localStorage`), até existir
 o back-end. O estado da aplicação (sessão, base de clientes e importação) fica
 em stores Pinia, e o acesso aos dados passa por uma camada de serviços
 (`src/services/api.js`) pronta para trocar o modo simulado pela API.
