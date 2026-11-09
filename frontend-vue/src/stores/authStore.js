@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { cadastrar, estaAutenticado, login, logout, nomeUsuario, papelUsuario, usuarioAtual } from '../services/api'
+import { cadastrar, estaAutenticado, listarUsuarios, login, logout, nomeUsuario, papelUsuario, usuarioAtual } from '../services/api'
 import { podeFazer, rotuloPapel, STATUS_CONTA } from '../utils/papeis'
 
 // Sessão do usuário. O services/api.js continua sendo quem guarda a sessão
@@ -13,7 +13,9 @@ export const useAuthStore = defineStore('auth', {
     autenticado: estaAutenticado(),
     email: usuarioAtual(),
     nome: nomeUsuario(),
-    papel: papelUsuario()
+    papel: papelUsuario(),
+    // Contador do link "Usuários" na Sidebar (só o Administrador vê)
+    cadastrosPendentes: 0
   }),
 
   getters: {
@@ -28,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
       return partes[0].slice(0, 2).toUpperCase()
     },
 
-    // "Analista", "Gestor" ou "Administrador" (Sidebar)
+    // "Consultor", "Gestor" ou "Administrador" (Sidebar)
     rotuloPapel: state => rotuloPapel(state.papel),
 
     // Uso: auth.pode('importarPlanilha') — regras em utils/papeis.js
@@ -66,6 +68,22 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         // Mesmo se a API falhar, a sessão local já foi apagada pelo serviço
         this.recarregarSessao()
+      }
+    },
+
+    // Só quem aprova cadastros consulta a lista (a API responde 403 aos
+    // demais). Se a consulta falhar, mantém o último número conhecido.
+    async atualizarCadastrosPendentes() {
+      if (!this.pode('gerenciarUsuarios')) {
+        this.cadastrosPendentes = 0
+        return
+      }
+
+      try {
+        const usuarios = await listarUsuarios()
+        this.cadastrosPendentes = usuarios.filter(usuario => usuario.status === STATUS_CONTA.PENDENTE).length
+      } catch {
+        // O contador é só um aviso: não interrompe a tela
       }
     },
 
