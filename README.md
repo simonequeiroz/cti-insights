@@ -41,11 +41,11 @@ repositório (`git checkout sprint-2`), criada em 02/10/2026.
 | | Spring Boot | 4.1.1 |
 | | Maven (via Maven Wrapper `mvnw`) | 3.9.16 |
 | Dados | Python / Pandas (em preparação) | – |
-| Banco | PostgreSQL no Azure (previsto, ainda não integrado) | – |
+| Banco | PostgreSQL no Neon (previsto, ainda não integrado) | – |
 
-**Próxima etapa:** Back-End e Azure ainda não estão integrados. A arquitetura
-definida é Vue 3 → Pinia → Axios → Spring Boot → PostgreSQL no Azure, e o Vue
-não acessa o banco diretamente. O Azure substitui o Neon citado na entrega da
+**Próxima etapa:** Back-End e banco ainda não estão integrados. A arquitetura
+definida é Vue 3 → Pinia → Axios → Spring Boot → PostgreSQL no Neon, e o Vue
+não acessa o banco diretamente. O Neon é o banco citado na entrega da
 Sprint 1.
 
 ## Estrutura do repositório
