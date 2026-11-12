@@ -215,7 +215,7 @@ tem um único status, mesmo com vários serviços.
 | Formulário em `UploadView.vue` | `UploadView.vue` conduz as etapas em `components/importacao/` |
 | `services/api.js` com Axios no futuro | Já existe em modo simulado, com `fetch`; o Axios entra com o back-end, na função `http` |
 
-**Próxima etapa:** Vue → Pinia → Axios → Spring Boot → PostgreSQL no Azure.
+**Próxima etapa:** Vue → Pinia → Axios → Spring Boot → PostgreSQL no Neon.
 O Vue não acessa o banco diretamente; quem grava é o Spring Boot.
 
 ## Integração com as outras squads
