@@ -79,7 +79,7 @@ planilha, e os envios anteriores continuam guardados no histórico.
 | Banco no Neon | Falta: guia pronto (`database/README.md`), `schema.sql` com o Ryan |
 | 8–9. Dashboard lendo do back-end | Falta: hoje o Dashboard calcula tudo no navegador |
 | Login | Simulado no navegador; falta o login no Spring |
-| Ativo/inativo | Existe no front e precisa sair (fora do escopo) |
+| Ativo/inativo | **Retirado** do front; cada planilha substitui a carteira |
 
 ## 6. O que pode ser apontado como erro na apresentação
 
@@ -87,7 +87,7 @@ planilha, e os envios anteriores continuam guardados no histórico.
    Python. O front só desenha.
 2. **Dados guardados no navegador** (`localStorage`). Pelo fluxo, os dados
    passam pelo Spring e ficam no banco.
-3. **Ativo/inativo**, que está fora do escopo.
+3. **Login de demonstração:** o link "Entrar com a conta de demonstração" só existe no modo simulado e some quando o back-end for ligado.
 4. **Login sem back-end.** As permissões precisam valer no Spring, não só
    escondendo botões no front.
 
@@ -97,6 +97,6 @@ planilha, e os envios anteriores continuam guardados no histórico.
 2. Python: gravar no modelo do banco e calcular o upsell (feito).
 3. Java: login, `POST /api/uploads` (DTO + Service), `PythonEtlService`,
    `GET /api/dashboard`, `GET /api/uploads` e `GET /api/clientes`.
-4. Front: retirar o ativo/inativo, enviar ao Spring com Axios e desenhar o
+4. Front: enviar ao Spring com Axios e desenhar o
    Dashboard com o que o back-end devolve.
 5. Ensaio da apresentação, seguindo os passos 1 a 9 da seção 2.
