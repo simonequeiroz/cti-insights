@@ -136,7 +136,7 @@ def parse_data(v) -> date | None:                                               
 @dataclass                                                                          # dataclass: classe só para carregar o resultado
 class ResultadoTransformacao:                                                       # resultado do tratamento
     tratado: pd.DataFrame                                                           # clientes tratados (tabela)
-    rejeitadas: pd.DataFrame                                                        # linhas recusadas (tabela)
+    rejeitadas: pd.DataFrame                                                        # linhas recusadas: linha, as 10 colunas originais e o motivo
     padronizacoes: dict[str, int] = field(default_factory=dict)                     # quantas padronizações foram feitas
     segmentos_originais: list[dict] = field(default_factory=list)                   # segmentos que foram corrigidos
     avisos: list[str] = field(default_factory=list)                                 # avisos de qualidade
@@ -149,9 +149,12 @@ def tratar(bruto: pd.DataFrame) -> ResultadoTransformacao:                      
     for c in COLUNAS:                                                               # para cada coluna esperada
         if c not in df.columns:                                                     # se não veio na tabela
             df[c] = None                                                            # cria vazia
-    if "linha" not in df.columns:                                                   # se não há número da linha
-        df["linha"] = df.index + 2  # cabeçalho é a linha 1 da planilha
+    if "linha" not in df.columns and "numero_linha" in df.columns:                  # o backend mandou "numeroLinha" (vira numero_linha)?
+        df["linha"] = df["numero_linha"]                                            # usa o número real da linha na planilha
+    if "linha" not in df.columns:                                                   # ainda sem número da linha?
+        df["linha"] = df.index + 2  # cabeçalho é a linha 1 da planilha (só vale se vieram TODAS as linhas, em ordem)
     df = df[["linha"] + COLUNAS].astype(object)                                     # deixa só as colunas que usamos
+    originais = df[COLUNAS].copy()                                                  # cópia SEM tratamento: vai para a mini planilha das recusadas
 
     # ---- limpeza (str.strip) ----
     brutos = {c: df[c].copy() for c in COLUNAS}                                     # guarda os valores originais (para contar mudanças)
@@ -193,7 +196,7 @@ def tratar(bruto: pd.DataFrame) -> ResultadoTransformacao:                      
         motivos[i].append("codigo_cliente: duplicado")                              # anota o motivo
 
     recusada = pd.Series([bool(m) for m in motivos], index=df.index)                # linhas recusadas = as que têm algum motivo
-    rejeitadas = df.loc[recusada, ["linha", "codigo_cliente", "nome_cliente"]].copy()  # tabela das recusadas
+    rejeitadas = pd.concat([df.loc[recusada, ["linha"]], originais.loc[recusada]], axis=1)  # recusadas com os valores ORIGINAIS (como o usuário digitou)
     rejeitadas["motivo"] = [" | ".join(motivos[i]) for i in df.index[recusada]]     # coluna com os motivos
 
     # ---- quantos valores mudaram na padronização (para o relatório de qualidade) ----

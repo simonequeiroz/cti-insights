@@ -40,10 +40,53 @@ def marcar_erro(engine: Engine, lote_id: int, mensagem: str) -> None:           
                      {"id": lote_id, "m": mensagem[:480]})                          # mensagem limitada a 480 caracteres
 
 
+# --------------------------------------------------------- linhas recusadas (mini planilha)
+def _valor_json(v):                                                                 # _valor_json: deixa um valor da planilha pronto para JSON
+    if v is None:                                                                   # vazio
+        return None                                                                 # continua vazio
+    try:                                                                            # NaN do pandas?
+        if pd.isna(v):                                                              # isna detecta NaN/NaT
+            return None                                                             # vira vazio
+    except (TypeError, ValueError):                                                 # listas etc. não passam no isna
+        pass                                                                        # segue
+    if hasattr(v, "isoformat"):                                                     # data ou data/hora
+        return v.isoformat()[:10]                                                   # só aaaa-mm-dd
+    if isinstance(v, (int, float, str, bool)):                                      # tipos que o JSON aceita
+        return v                                                                    # devolve igual
+    return str(v)                                                                   # qualquer outra coisa vira texto
+
+
+def _gravar_rejeitadas(conn: Connection, lote_id: int, rejeitadas: pd.DataFrame) -> None:  # _gravar_rejeitadas: guarda as linhas recusadas do lote
+    conn.execute(text("DELETE FROM linha_rejeitada WHERE lote_id = :l"), {"l": lote_id})  # reprocessar substitui as antigas
+    for r in rejeitadas.to_dict("records"):                                         # para cada linha recusada
+        dados = {c: _valor_json(v) for c, v in r.items() if c not in ("linha", "motivo")}  # valores originais (como o usuário digitou)
+        conn.execute(text("""
+            INSERT INTO linha_rejeitada (lote_id, linha, dados, motivo)
+            VALUES (:l, :n, CAST(:d AS JSONB), :m)
+        """), {"l": lote_id, "n": int(r["linha"]) if _valor_json(r["linha"]) is not None else None,
+               "d": json.dumps(dados, ensure_ascii=False), "m": r["motivo"][:1000]})  # grava linha, dados e motivo
+
+
+def gravar_so_rejeitadas(engine: Engine, lote_id: int, rejeitadas: pd.DataFrame) -> None:  # usado quando NENHUMA linha foi aceita
+    with engine.begin() as conn:                                                    # transação
+        _gravar_rejeitadas(conn, lote_id, rejeitadas)                               # guarda as recusadas (o usuário baixa e corrige)
+
+
+def buscar_rejeitadas(engine: Engine, lote_id: int) -> list[dict]:                  # buscar_rejeitadas: lê as recusadas para montar a mini planilha
+    with engine.connect() as conn:                                                  # só leitura
+        linhas = conn.execute(text(
+            "SELECT linha, dados, motivo FROM linha_rejeitada WHERE lote_id = :l ORDER BY linha"),
+            {"l": lote_id}).mappings().all()                                        # uma linha por recusada
+    return [{"linha": l["linha"], **l["dados"], "motivo": l["motivo"]} for l in linhas]  # junta tudo num dicionário só
+
+
 # ------------------------------------------------------------------------ carga
-def gravar_resultado(engine: Engine, lote_id: int, tratado: pd.DataFrame, payload: dict, rejeitadas_etl: int) -> None:  # gravar_resultado: grava clientes, contratos e o JSON
+def gravar_resultado(engine: Engine, lote_id: int, tratado: pd.DataFrame, payload: dict,
+                     rejeitadas: pd.DataFrame) -> None:                             # gravar_resultado: grava clientes, contratos, recusadas e o JSON
     """Grava tudo em uma única transação: ou o lote inteiro é processado, ou nada muda."""
+    rejeitadas_etl = len(rejeitadas)                                                # quantas linhas o ETL recusou
     with engine.begin() as conn:                                                    # uma transação só: ou grava tudo ou nada
+        _gravar_rejeitadas(conn, lote_id, rejeitadas)                               # guarda as recusadas para a mini planilha
         # reprocessar o mesmo lote substitui o resultado anterior
         conn.execute(text("DELETE FROM cliente WHERE lote_id = :l"), {"l": lote_id})   # contratos saem em cascata
         conn.execute(text("DELETE FROM estatistica_lote WHERE lote_id = :l"), {"l": lote_id})  # apaga as estatísticas antigas
@@ -75,12 +118,12 @@ def gravar_resultado(engine: Engine, lote_id: int, tratado: pd.DataFrame, payloa
                 """), {"c": cliente_id, "s": id_de("servico", nome_servico[:120], servicos),
                        "d": r.data_contratacao.date()})                             # data da contratação
 
-        conn.execute(text("INSERT INTO estatistica_lote (lote_id, gerado_em, resultado) VALUES (:l, :g, :r)"),  # grava o JSON com média, mediana e gráficos
+        conn.execute(text("INSERT INTO estatistica_lote (lote_id, gerado_em, resultado) VALUES (:l, :g, CAST(:r AS JSONB))"),  # grava o JSON com média, mediana e gráficos
                      {"l": lote_id, "g": agora_utc(), "r": json.dumps(payload, ensure_ascii=False)})  # o JSON vai como texto
 
         mensagem = f"ETL concluído: {len(tratado)} clientes tratados"               # monta a mensagem final
         if rejeitadas_etl:                                                          # se o ETL recusou alguma linha
-            mensagem += f", {rejeitadas_etl} linhas recusadas na limpeza"           # acrescenta quantas
+            mensagem += f", {rejeitadas_etl} linhas recusadas (baixe a planilha de correção)"           # acrescenta quantas
         conn.execute(text("UPDATE upload_lote SET status = 'PROCESSADO', mensagem = :m WHERE id = :id"),  # marca o lote como PROCESSADO
                      {"id": lote_id, "m": mensagem + "."})                          # com a mensagem de resumo
     log.info("Lote %s gravado: %s clientes, %s consultores, %s serviços",           # escreve no terminal o resumo
