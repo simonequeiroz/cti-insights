@@ -99,6 +99,40 @@ export const nomeUsuario = () => {
   return localStorage.getItem(CHAVE_NOME) || nomeAPartirDoEmail(usuarioAtual())
 }
 
+// Conta de demonstração (só no modo simulado), para apresentação e testes:
+// sempre existe, aprovada e como Administrador. A tela de login mostra os
+// dados. Com o back-end ligado (VITE_USE_MOCK=false) ela não existe.
+export const CONTA_DEMO = USAR_MOCK
+  ? { nome: 'Administrador Demo', email: 'admin@ctiinsights.com', senha: 'cti12345' }
+  : null
+
+// Cria a conta de demonstração, ou a restaura se tiver sido apagada,
+// recusada ou trocada de papel na tela Usuários.
+const garantirContaDemo = async () => {
+  const contas = lerContas()
+  const senha = await resumoSenha(CONTA_DEMO.senha)
+  const atual = contas.find(item => item.email === CONTA_DEMO.email)
+
+  if (atual && atual.senha === senha && atual.papel === 'ADMINISTRADOR' && atual.status === STATUS_CONTA.APROVADO) {
+    return
+  }
+
+  const demo = {
+    id: atual?.id ?? 1,
+    nome: CONTA_DEMO.nome,
+    email: CONTA_DEMO.email,
+    senha,
+    papel: 'ADMINISTRADOR',
+    papelSolicitado: 'ADMINISTRADOR',
+    status: STATUS_CONTA.APROVADO,
+    criadoEm: atual?.criadoEm ?? new Date().toISOString(),
+    avaliadoEm: null,
+    avaliadoPor: null
+  }
+
+  salvarContas([...contas.filter(item => item.email !== CONTA_DEMO.email), demo])
+}
+
 // API: POST /auth/login  { email, senha } -> { email, nome?, papel }
 // (403 com { codigo: "PENDENTE" | "REJEITADO" } se o cadastro não foi aprovado)
 export const login = async (email, senha) => {
@@ -112,7 +146,9 @@ export const login = async (email, senha) => {
   }
 
   // Mock: só entra quem se cadastrou neste navegador (tela /cadastro)
-  // e já foi aprovado por um Administrador (tela /usuarios)
+  // e já foi aprovado por um Administrador (tela /usuarios), além da
+  // conta de demonstração
+  await garantirContaDemo()
   const conta = lerContas().find(item => item.email === normalizarEmail(email))
 
   if (!conta || conta.senha !== await resumoSenha(senha)) {

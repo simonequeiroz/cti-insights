@@ -110,7 +110,7 @@ Fluxo: **Home pública → Login → área interna (Dashboard / Importar / Relat
 | `/login` | Login | Campos de e-mail e senha para quem já tem conta; simula o acesso à área interna. |
 | `/cadastro` | Cadastro | Primeiro acesso: nome, e-mail, papel, senha e confirmação. A conta aguarda aprovação de um Administrador (a primeira conta do sistema vira Administrador e entra direto). |
 | `/dashboard` | Dashboard | KPIs, gráficos (faturamento por segmento, evolução das contratações, distribuição por nível A/B/C com curva ABC, top 5 serviços), painel de Insights Inteligentes, filtros por segmento, nível e período, e exportação CSV/PDF. |
-| `/upload` | Importar | Importação em etapas (enviar, revisar, confirmar e concluir) de planilha `.xlsx`/`.xls`/`.csv`, validação conforme o dicionário de dados (colunas e campos obrigatórios, duplicidade, UF), aviso de planilha já importada, de segmento não reconhecido e de clientes que ficam inativos, e histórico com responsável, data/hora e arquivo. |
+| `/upload` | Importar | Importação em etapas (enviar, revisar, confirmar e concluir) de planilha `.xlsx`/`.xls`/`.csv`, validação conforme o dicionário de dados (colunas e campos obrigatórios, duplicidade, UF), aviso de planilha já importada, de segmento não reconhecido e de clientes que saem da carteira (cada planilha substitui a anterior), e histórico com responsável, data/hora e arquivo. |
 | `/relatorios` | Relatórios | Base de clientes detalhada, com busca por empresa, filtro por período e paginação. |
 | `/usuarios` | Usuários | Só Administrador: aprova ou recusa cadastros e define o papel de cada pessoa. |
 

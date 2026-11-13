@@ -1,5 +1,4 @@
 import { contar } from './datas'
-import { estaAtivo } from './situacaoContrato'
 
 // Primeiros insights mostrados logo após a importação.
 const maisFrequente = valores => {
@@ -14,8 +13,7 @@ const maisFrequente = valores => {
   return melhor
 }
 
-export const gerarInsights = base => {
-  const clientes = base.filter(estaAtivo)
+export const gerarInsights = clientes => {
   const total = clientes.length
 
   if (!total) {

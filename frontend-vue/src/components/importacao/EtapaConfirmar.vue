@@ -14,8 +14,8 @@ const ignoradas = computed(() => analise.value.linhasComErro.length)
 
 const impacto = computed(() => [
   { rotulo: 'Novos clientes', valor: `+${formatarNumero(analise.value.clientesNovos)}`, classe: 'text-green-700' },
-  { rotulo: 'Mantidos ou atualizados', valor: formatarNumero(analise.value.clientesAtualizados), classe: 'text-[#292A2F]' },
-  { rotulo: 'Ficam inativos', valor: formatarNumero(analise.value.inativados.length), classe: analise.value.inativados.length ? 'text-[#A85700]' : 'text-[#292A2F]' }
+  { rotulo: 'Já estavam na carteira', valor: formatarNumero(analise.value.clientesAtualizados), classe: 'text-[#292A2F]' },
+  { rotulo: 'Saem da carteira', valor: formatarNumero(analise.value.foraDaPlanilha.length), classe: analise.value.foraDaPlanilha.length ? 'text-[#A85700]' : 'text-[#292A2F]' }
 ])
 
 const MAX_NOMES = 10
@@ -25,8 +25,7 @@ const listarNomes = nomes => {
   return nomes.slice(0, MAX_NOMES).join(', ') + (restantes > 0 ? ` e mais ${restantes}` : '')
 }
 
-const nomesMantidos = computed(() => listarNomes(analise.value.mantidos.map(cliente => cliente.nome_cliente)))
-const nomesInativados = computed(() => listarNomes(analise.value.inativados.map(cliente => cliente.nome_cliente)))
+const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlanilha.map(cliente => cliente.nome_cliente)))
 </script>
 
 <template>
@@ -40,10 +39,10 @@ const nomesInativados = computed(() => listarNomes(analise.value.inativados.map(
       </h2>
       <p class="mt-1 text-sm text-gray-500">
         <template v-if="analise.baseAnterior">
-          A base atual ({{ contar(analise.baseAnterior, 'cliente', 'clientes') }}) será atualizada com esta planilha.
+          Esta planilha substitui a carteira atual ({{ contar(analise.baseAnterior, 'cliente', 'clientes') }}).
         </template>
         <template v-else>
-          Esta será a primeira base do sistema.
+          Esta será a primeira carteira do sistema.
         </template>
       </p>
     </header>
@@ -61,28 +60,18 @@ const nomesInativados = computed(() => listarNomes(analise.value.inativados.map(
 
     <!-- O aviso mais importante vem primeiro -->
     <div
-      v-if="analise.inativados.length"
+      v-if="analise.foraDaPlanilha.length"
       role="alert"
       class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
     >
       <p class="font-semibold">
-        {{ analise.inativados.length === 1 ? '1 cliente será marcado como inativo:' : `${formatarNumero(analise.inativados.length)} clientes serão marcados como inativos:` }}
+        {{ analise.foraDaPlanilha.length === 1 ? '1 cliente da carteira atual não está nesta planilha:' : `${formatarNumero(analise.foraDaPlanilha.length)} clientes da carteira atual não estão nesta planilha:` }}
       </p>
-      <p class="mt-1">{{ nomesInativados }}.</p>
+      <p class="mt-1">{{ nomesForaDaPlanilha }}.</p>
       <p class="mt-1">
-        {{ analise.inativados.length === 1 ? 'Ele não está nesta planilha e deixa' : 'Eles não estão nesta planilha e deixam' }}
-        de contar no faturamento, mas continua{{ analise.inativados.length === 1 ? '' : 'm' }} na base.
-        Se {{ analise.inativados.length === 1 ? 'aparecer' : 'aparecerem' }} em uma próxima importação, volta{{ analise.inativados.length === 1 ? '' : 'm' }} a ficar ativo{{ analise.inativados.length === 1 ? '' : 's' }}.
+        {{ analise.foraDaPlanilha.length === 1 ? 'Ele sai' : 'Eles saem' }} da carteira ao confirmar. Se a planilha está incompleta, volte e envie a carteira completa.
       </p>
     </div>
-
-    <p
-      v-if="analise.mantidos.length"
-      class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
-    >
-      <span class="font-semibold">{{ nomesMantidos }}</span>
-      {{ analise.mantidos.length === 1 ? 'veio com erro nesta planilha e continua na base com os dados da importação anterior.' : 'vieram com erro nesta planilha e continuam na base com os dados da importação anterior.' }}
-    </p>
 
     <p
       v-if="analise.importacaoAnterior"

@@ -1,7 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { ESTILO_NIVEL, temRegistroEtl } from '../utils/resumoEtl'
-import { ESTILO_SITUACAO, situacaoContrato, temSituacaoInformada } from '../utils/situacaoContrato'
 
 // Tabela paginada da base tratada. Células que o tratamento alterou ficam
 // sublinhadas, com o valor original logo abaixo (visível também no celular).
@@ -16,7 +15,6 @@ const paginaAtual = ref(1)
 const soCorrigidas = ref(false)
 
 const temRegistro = computed(() => temRegistroEtl(props.clientes))
-const situacaoInformada = computed(() => temSituacaoInformada(props.clientes))
 
 const foiCorrigida = cliente => {
   return CAMPOS_CORRIGIVEIS.some(campo => cliente.etl_original?.[campo] !== undefined)
@@ -106,7 +104,6 @@ const formatarData = iso => {
             <th class="px-4 py-3 text-right font-semibold text-gray-500">Faturamento</th>
             <th class="px-4 py-3 font-semibold text-gray-500">Contratação</th>
             <th class="px-4 py-3 font-semibold text-gray-500">Serviços</th>
-            <th v-if="situacaoInformada" class="px-4 py-3 font-semibold text-gray-500">Situação</th>
           </tr>
         </thead>
 
@@ -186,15 +183,6 @@ const formatarData = iso => {
                   class="text-gray-400"
                 >—</span>
               </div>
-            </td>
-
-            <td v-if="situacaoInformada" class="px-4 py-3">
-              <span
-                class="whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                :class="ESTILO_SITUACAO[situacaoContrato(cliente)]"
-              >
-                {{ situacaoContrato(cliente) }}
-              </span>
             </td>
           </tr>
         </tbody>

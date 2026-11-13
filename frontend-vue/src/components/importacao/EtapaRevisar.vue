@@ -4,7 +4,6 @@ import { PERMITIR_IMPORTACAO_PARCIAL, useUploadStore } from '../../stores/upload
 import { formatarTamanho } from '../../utils/etl'
 import { resumirCorrecoes } from '../../utils/correcoes'
 import { contar, formatarDataHora, formatarNumero } from '../../utils/datas'
-import { estaAtivo, temSituacaoInformada } from '../../utils/situacaoContrato'
 import TabelaProblemas from '../TabelaProblemas.vue'
 import PreviaClientes from '../PreviaClientes.vue'
 
@@ -15,9 +14,6 @@ const upload = useUploadStore()
 const analise = computed(() => upload.analise)
 const correcoes = computed(() => resumirCorrecoes(analise.value.validos))
 const totalComErro = computed(() => analise.value.linhasComErro.length)
-
-const situacaoInformada = computed(() => temSituacaoInformada(analise.value.validos))
-const totalInativos = computed(() => analise.value.validos.filter(cliente => !estaAtivo(cliente)).length)
 
 const MAX_CORRECOES = 6
 const verTodasCorrecoes = ref(false)
@@ -98,13 +94,6 @@ const trocarArquivo = () => {
         Se for erro de digitação, corrija a planilha e envie de novo.
       </p>
     </div>
-
-    <p
-      v-if="upload.temDados && !situacaoInformada"
-      class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-[#292A2F]"
-    >
-      Esta planilha não informa a situação dos contratos, então todos os clientes serão considerados ativos.
-    </p>
 
     <!-- Números da análise -->
     <dl class="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -187,8 +176,7 @@ const trocarArquivo = () => {
     <div v-if="upload.temDados">
       <h3 class="text-sm font-bold text-[#292A2F]">Prévia do que será importado</h3>
       <p class="mb-3 mt-1 text-xs text-gray-500">
-        Total: {{ contar(upload.totalClientes, 'cliente', 'clientes') }} · Nível A: {{ formatarNumero(upload.clientesNivelA) }}<template v-if="situacaoInformada">
-          · Ativos: {{ formatarNumero(upload.totalClientes - totalInativos) }} · Inativos: {{ formatarNumero(totalInativos) }}</template>
+        Total: {{ contar(upload.totalClientes, 'cliente', 'clientes') }} · Nível A: {{ formatarNumero(upload.clientesNivelA) }}
       </p>
       <PreviaClientes :clientes="analise.validos" />
     </div>

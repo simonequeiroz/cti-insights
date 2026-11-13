@@ -4,6 +4,7 @@ Recebe do backend (Spring Boot) as linhas **já validadas** e faz o ETL:
 - **limpeza.py** padroniza (`ana souza` → `Ana Souza`, `IND.` → `Indústria`, texto → número e data)
 - **analise.py** calcula (média, mediana, desvio padrão, quartis, totais por segmento, nível, consultor, serviço e mês, e correlação)
 - **insights.py** escreve as frases
+- **upsell.py** encontra os clientes com oportunidade de contratar mais serviços e o segmento com potencial
 - **banco.py** grava no PostgreSQL do Neon (cliente, consultor, serviço, contrato, o resultado das contas em `estatistica` e as frases em `insight`) e atualiza o status do envio em `telemetria`
 
 O Python **não devolve dados** ao backend: o `POST /etl` responde só `{"ok": true, "telemetriaId": ...}`. O backend lê o resultado no banco.
@@ -30,6 +31,7 @@ main.py             coordena: confere o envio, limpa, calcula e grava
 limpeza.py          limpa e padroniza
 analise.py          faz as contas
 insights.py         escreve as frases
+upsell.py           encontra as oportunidades de upsell
 banco.py            único arquivo que fala com o banco
 config.py           lê o .env
 testar_conexao.py   confere a conexão com o banco

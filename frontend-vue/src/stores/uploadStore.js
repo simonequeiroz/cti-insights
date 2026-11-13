@@ -21,7 +21,6 @@ import {
   tratarLinha,
   validarClientes
 } from '../utils/etl'
-import { estaAtivo, hojeIso } from '../utils/situacaoContrato'
 
 // ---------------------------------------------------------------------------
 // REGRA DE NEGÓCIO (decidir em grupo)
@@ -164,19 +163,14 @@ export const useUploadStore = defineStore('upload', {
         const indicesComErro = new Set(validacao.linhasComErro.map(item => item.indice))
         const validos = tratados.filter((_, indice) => !indicesComErro.has(indice))
 
-        // Comparação com a base atual (pelo código do cliente)
+        // Comparação com a carteira atual (pelo código do cliente). Cada
+        // planilha enviada é a carteira completa: ao confirmar, ela substitui
+        // a anterior, e quem não veio nela deixa de aparecer.
         const baseAtual = useClientesStore().lista
         const codigosAnteriores = new Set(baseAtual.map(c => c.codigo_cliente))
         const codigosNovos = new Set(validos.map(c => c.codigo_cliente))
         const clientesNovos = [...codigosNovos].filter(c => !codigosAnteriores.has(c)).length
-
-        // Cliente da base que veio com erro continua com os dados da
-        // importação anterior até ser corrigido. Quem não veio na planilha
-        // não é apagado: fica inativo, e volta a ativo se aparecer de novo.
-        const codigosComErro = new Set(validacao.linhasComErro.map(item => tratados[item.indice].codigo_cliente))
-        const foraDosValidos = baseAtual.filter(c => !codigosNovos.has(c.codigo_cliente))
-        const mantidos = foraDosValidos.filter(c => codigosComErro.has(c.codigo_cliente))
-        const ausentes = foraDosValidos.filter(c => !codigosComErro.has(c.codigo_cliente))
+        const foraDaPlanilha = baseAtual.filter(c => !codigosNovos.has(c.codigo_cliente))
 
         this.analise = {
           nomeArquivo: this.arquivo.name,
@@ -188,9 +182,7 @@ export const useUploadStore = defineStore('upload', {
           totalProblemas: validacao.totalProblemas,
           clientesNovos,
           clientesAtualizados: codigosNovos.size - clientesNovos,
-          inativados: ausentes.filter(estaAtivo),
-          jaInativos: ausentes.filter(c => !estaAtivo(c)),
-          mantidos,
+          foraDaPlanilha,
           segmentosNaoReconhecidos: segmentosNaoReconhecidos(validos),
           baseAnterior: baseAtual.length,
           hashArquivo,
@@ -221,7 +213,8 @@ export const useUploadStore = defineStore('upload', {
       baixarCsv(gerarCsvLinhasComErro(this.analise.linhasComErro), nomeArquivoErros(this.analise.nomeArquivo))
     },
 
-    // Etapa 3 — CONFIRMAR: agora sim substitui a base e registra no histórico.
+    // Etapa 3 — CONFIRMAR: agora sim substitui a carteira pelas linhas
+    // válidas desta planilha e registra no histórico.
     async confirmarImportacao() {
       if (this.carregando || !this.podeConfirmar) {
         return null
@@ -232,14 +225,7 @@ export const useUploadStore = defineStore('upload', {
       const ignoradas = analise.linhasComErro.length
 
       try {
-        const saiuEm = hojeIso()
-
-        await useClientesStore().substituirBase([
-          ...analise.validos,
-          ...analise.mantidos,
-          ...analise.inativados.map(cliente => ({ ...cliente, saiu_da_planilha_em: saiuEm })),
-          ...analise.jaInativos
-        ])
+        await useClientesStore().substituirBase(analise.validos)
 
         const item = {
           id: Date.now(),
@@ -255,8 +241,7 @@ export const useUploadStore = defineStore('upload', {
           linhasIgnoradas: ignoradas,
           clientesNovos: analise.clientesNovos,
           clientesAtualizados: analise.clientesAtualizados,
-          clientesInativados: analise.inativados.length,
-          clientesMantidos: analise.mantidos.length,
+          clientesForaDaPlanilha: analise.foraDaPlanilha.length,
           mensagem: ignoradas
             ? (ignoradas === 1 ? '1 linha com erro não foi importada.' : `${ignoradas} linhas com erro não foram importadas.`)
             : '',

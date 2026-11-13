@@ -9,9 +9,7 @@ export const COLUNAS_MODELO = [
   'servicos_contratados',
   'faturamento_anual',
   'cidade',
-  'uf',
-  'status_contrato',
-  'data_fim_contrato'
+  'uf'
 ]
 
 export const baixarModelo = async () => {
@@ -33,10 +31,9 @@ export const baixarModelo = async () => {
     ['faturamento_anual', 'Sim', 'Valor em reais, só números (sem negativo)', 1850000],
     ['cidade', 'Não', 'Cidade do cliente', 'Campinas'],
     ['uf', 'Não', 'Sigla do estado com 2 letras', 'SP'],
-    ['status_contrato', 'Não', 'Ativo ou Inativo. Envie também os clientes inativos.', 'Ativo'],
-    ['data_fim_contrato', 'Não', 'Data de término ou cancelamento, dd/mm/aaaa. Deixe vazio se o contrato continua.', '31/12/2026'],
     [],
     ['Atenção', '', 'Cada codigo_cliente só pode aparecer uma vez. Linhas repetidas não são importadas.', ''],
+    ['', '', 'Envie sempre a carteira completa: cada planilha enviada substitui a anterior.', ''],
     [],
     ['Preencha os clientes na aba "Clientes", uma linha por cliente, sem mudar o cabeçalho.']
   ])
