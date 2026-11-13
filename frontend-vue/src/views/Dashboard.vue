@@ -5,7 +5,6 @@ import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { contar } from '../utils/datas'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
-import { descreverTermino, ESTILO_SITUACAO, estaAtivo, situacaoContrato, temSituacaoInformada } from '../utils/situacaoContrato'
 import { analisarUpsell } from '../utils/upsell'
 import {
   Chart,
@@ -76,41 +75,6 @@ const clientesFiltrados = computed(() => {
   })
 })
 
-// Indicadores, gráficos de receita e upsell usam só os ativos. A evolução
-// das contratações e a tabela continuam com a carteira inteira.
-const clientesAtivos = computed(() => clientesFiltrados.value.filter(estaAtivo))
-const clientesInativos = computed(() => clientesFiltrados.value.filter(cliente => !estaAtivo(cliente)))
-const situacaoInformada = computed(() => temSituacaoInformada(clientes.value))
-
-const faturamentoInativos = computed(() => {
-  return clientesInativos.value.reduce((total, cliente) => total + (cliente.faturamento || 0), 0)
-})
-
-const percentualInativos = computed(() => {
-  return clientesFiltrados.value.length
-    ? Math.round((clientesInativos.value.length / clientesFiltrados.value.length) * 100)
-    : 0
-})
-
-const MAX_RECONQUISTA = 5
-
-const clientesReconquista = computed(() => {
-  return [...clientesInativos.value]
-    .sort((a, b) => (b.faturamento || 0) - (a.faturamento || 0))
-    .slice(0, MAX_RECONQUISTA)
-})
-
-const segmentoMaisInativos = computed(() => {
-  const contagem = new Map()
-
-  clientesInativos.value.forEach(cliente => {
-    contagem.set(cliente.segmento, (contagem.get(cliente.segmento) || 0) + 1)
-  })
-
-  const [segmento, quantidade] = [...contagem].sort((a, b) => b[1] - a[1])[0] || []
-  return segmento ? { segmento, quantidade } : null
-})
-
 // Paginação da tabela "Clientes" (a base pode ter centenas de linhas)
 const ITENS_POR_PAGINA = 10
 const paginaAtual = ref(1)
@@ -138,14 +102,14 @@ const proximaPagina = () => {
 }
 
 const totalClientes = computed(() => {
-  return clientesAtivos.value.length
+  return clientesFiltrados.value.length
 })
 
 // Total de serviços contratados na base filtrada: cada cliente pode ter
 // vários serviços na mesma linha (lista "servicos"). Bases salvas antes
 // dessa lista existir só têm o texto "servico", contado como 1.
 const totalServicos = computed(() => {
-  return clientesAtivos.value.reduce(
+  return clientesFiltrados.value.reduce(
     (total, cliente) => total + (cliente.servicos?.length ?? (cliente.servico ? 1 : 0)),
     0
   )
@@ -155,7 +119,7 @@ const totalServicos = computed(() => {
 // trata consultor/segmento/nivel_cliente) — clientes sem essa coluna
 // preenchida entram como 0, em vez de quebrar a soma com NaN.
 const faturamentoTotal = computed(() => {
-  return clientesAtivos.value.reduce(
+  return clientesFiltrados.value.reduce(
     (total, cliente) => total + (cliente.faturamento || 0),
     0
   )
@@ -274,7 +238,7 @@ const graficoLinhaOptions = {
 
 const faturamentoPorSegmento = computed(() => {
   return segmentos.value.map(segmento => {
-    return clientesAtivos.value
+    return clientesFiltrados.value
       .filter(cliente => cliente.segmento === segmento)
       .reduce(
         (total, cliente) => total + (cliente.faturamento || 0),
@@ -369,7 +333,7 @@ const distribuicaoPorNivel = computed(() => {
   const niveis = ['A', 'B', 'C']
 
   return niveis.map(nivel => {
-    return clientesAtivos.value.filter(
+    return clientesFiltrados.value.filter(
       cliente => cliente.nivel_cliente === nivel
     ).length
   })
@@ -389,7 +353,7 @@ const faturamentoAcumuladoPorNivel = computed(() => {
   let acumulado = 0
 
   return niveis.map(nivel => {
-    acumulado += clientesAtivos.value
+    acumulado += clientesFiltrados.value
       .filter(cliente => cliente.nivel_cliente === nivel)
       .reduce((total, cliente) => total + (cliente.faturamento || 0), 0)
 
@@ -491,7 +455,7 @@ const graficoNivelOptions = {
 const top5Servicos = computed(() => {
   const faturamentoPorServico = {}
 
-  clientesAtivos.value.forEach(cliente => {
+  clientesFiltrados.value.forEach(cliente => {
     const lista = cliente.servicos?.length ? cliente.servicos : (cliente.servico ? [cliente.servico] : [])
 
     if (lista.length === 0) {
@@ -518,7 +482,7 @@ const top5Servicos = computed(() => {
   }))
 })
 
-const upsell = computed(() => analisarUpsell(clientes.value.filter(estaAtivo), clientesAtivos.value))
+const upsell = computed(() => analisarUpsell(clientes.value, clientesFiltrados.value))
 
 const MAX_OPORTUNIDADES = 10
 
@@ -531,7 +495,7 @@ const percentualFaturamentoNivelA = computed(() => {
     return 0
   }
 
-  const faturamentoNivelA = clientesAtivos.value
+  const faturamentoNivelA = clientesFiltrados.value
     .filter(cliente => cliente.nivel_cliente === 'A')
     .reduce((total, cliente) => total + (cliente.faturamento || 0), 0)
 
@@ -660,7 +624,7 @@ const exportarPDF = () => {
 // em UTF-8 corretamente.
 const exportarCSV = () => {
   const cabecalho = [
-    'Código', 'Cliente', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Data da contratação', 'Serviço', 'Situação', 'Término'
+    'Código', 'Cliente', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Data da contratação', 'Serviço'
   ]
 
   const escapar = valor => `"${String(valor ?? '').replace(/"/g, '""')}"`
@@ -678,9 +642,7 @@ const exportarCSV = () => {
     formatarNumeroCsv(cliente.faturamento),
     cliente.nivel_cliente,
     formatarData(cliente.data_contratacao),
-    cliente.servico || '',
-    situacaoContrato(cliente),
-    descreverTermino(cliente)
+    cliente.servico || ''
   ].map(escapar).join(';'))
 
   const csv = [cabecalho.map(escapar).join(';'), ...linhas].join('\n')
@@ -910,13 +872,6 @@ const exportarCSV = () => {
 
       <!-- KPIs -->
 
-      <p
-        v-if="!situacaoInformada"
-        class="text-xs text-gray-500"
-      >
-        A planilha importada não informa a situação dos contratos, então todos os clientes foram considerados ativos.
-      </p>
-
       <div
         class="grid grid-cols-1 gap-5 @sm:grid-cols-2 @xl:grid-cols-4"
       >
@@ -928,7 +883,7 @@ const exportarCSV = () => {
         >
 
           <p class="text-xs text-gray-500">
-            {{ situacaoInformada ? 'Faturamento dos ativos' : 'Faturamento Total' }}
+            Faturamento Total
           </p>
 
           <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
@@ -945,7 +900,7 @@ const exportarCSV = () => {
         >
 
           <p class="text-xs text-gray-500">
-            {{ situacaoInformada ? 'Clientes ativos' : 'Clientes na base' }}
+            Clientes na base
           </p>
 
           <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
@@ -962,7 +917,7 @@ const exportarCSV = () => {
         >
 
           <p class="text-xs text-gray-500">
-            {{ situacaoInformada ? 'Serviços ativos' : 'Serviços Contratados' }}
+            Serviços Contratados
           </p>
 
           <p
@@ -1183,90 +1138,6 @@ const exportarCSV = () => {
       </div>
 
 
-      <!-- CONTRATOS ATIVOS E INATIVOS -->
-
-      <div
-        v-if="situacaoInformada"
-        class="rounded-lg border border-gray-200 bg-white p-6"
-      >
-
-        <h2 class="text-lg font-bold text-[#292A2F]">
-          Contratos ativos e inativos
-        </h2>
-
-        <dl class="mt-5 grid grid-cols-1 gap-3 @2xl:grid-cols-3">
-
-          <div class="rounded-lg bg-green-50 px-4 py-3">
-            <dt class="text-xs text-green-700">Ativos</dt>
-            <dd class="mt-1 text-2xl font-bold text-green-700">{{ clientesAtivos.length }}</dd>
-          </div>
-
-          <div class="rounded-lg bg-red-50 px-4 py-3">
-            <dt class="text-xs text-red-600">Inativos ({{ percentualInativos }}% da seleção)</dt>
-            <dd class="mt-1 text-2xl font-bold text-red-600">{{ clientesInativos.length }}</dd>
-          </div>
-
-          <div class="rounded-lg bg-gray-50 px-4 py-3">
-            <dt class="text-xs text-gray-500">Faturamento dos inativos</dt>
-            <dd class="mt-1 text-2xl font-bold text-[#292A2F]">{{ formatarMoedaInteira(faturamentoInativos) }}</dd>
-          </div>
-
-        </dl>
-
-        <p
-          v-if="segmentoMaisInativos"
-          class="mt-3 text-sm text-gray-500"
-        >
-          Segmento com mais inativos:
-          <span class="font-semibold text-[#292A2F]">{{ segmentoMaisInativos.segmento }}</span>
-          ({{ contar(segmentoMaisInativos.quantidade, 'cliente', 'clientes') }}).
-        </p>
-
-        <template v-if="clientesReconquista.length">
-
-          <h3 class="mt-5 text-sm font-bold text-[#292A2F]">
-            Maiores clientes para reconquistar
-          </h3>
-
-          <div class="mt-3 overflow-x-auto">
-
-            <table class="w-full min-w-[640px] text-left text-sm">
-
-              <caption class="sr-only">Clientes inativos, do maior para o menor faturamento</caption>
-
-              <thead class="bg-gray-50 text-xs text-gray-500">
-                <tr>
-                  <th scope="col" class="px-4 py-3 font-semibold">Cliente</th>
-                  <th scope="col" class="px-4 py-3 font-semibold">Consultor</th>
-                  <th scope="col" class="px-4 py-3 font-semibold">Segmento</th>
-                  <th scope="col" class="px-4 py-3 text-right font-semibold">Faturamento</th>
-                  <th scope="col" class="px-4 py-3 font-semibold">Término</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  v-for="cliente in clientesReconquista"
-                  :key="cliente.codigo_cliente"
-                  class="border-t border-gray-100"
-                >
-                  <th scope="row" class="px-4 py-3 font-medium text-[#292A2F]">{{ cliente.nome_cliente }}</th>
-                  <td class="px-4 py-3 text-gray-600">{{ cliente.consultor }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ cliente.segmento }}</td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ formatarMoedaInteira(cliente.faturamento || 0) }}</td>
-                  <td class="whitespace-nowrap px-4 py-3 text-gray-600">{{ descreverTermino(cliente) || '—' }}</td>
-                </tr>
-              </tbody>
-
-            </table>
-
-          </div>
-
-        </template>
-
-      </div>
-
-
       <!-- INSIGHTS INTELIGENTES -->
 
       <div class="rounded-lg border border-gray-200 bg-white p-6">
@@ -1429,13 +1300,6 @@ const exportarCSV = () => {
                   Serviço
                 </th>
 
-                <th
-                  v-if="situacaoInformada"
-                  class="p-4 text-left font-semibold text-gray-500"
-                >
-                  Situação
-                </th>
-
               </tr>
 
             </thead>
@@ -1473,18 +1337,6 @@ const exportarCSV = () => {
 
                 <td class="p-4 text-gray-500">
                   {{ cliente.servico || '—' }}
-                </td>
-
-                <td
-                  v-if="situacaoInformada"
-                  class="p-4"
-                >
-                  <span
-                    class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
-                    :class="ESTILO_SITUACAO[situacaoContrato(cliente)]"
-                  >
-                    {{ situacaoContrato(cliente) }}
-                  </span>
                 </td>
 
               </tr>

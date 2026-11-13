@@ -30,9 +30,7 @@ const COLUNAS_OBRIGATORIAS = [
 
 const COLUNAS_OPCIONAIS = [
   ['Cidade', 'cidade', ''],
-  ['UF', 'uf', '2 letras, ex.: SP'],
-  ['Situação do contrato', 'status_contrato', 'Ativo ou Inativo; envie também os inativos'],
-  ['Término do contrato', 'data_fim_contrato', 'dd/mm/aaaa; vazio se o contrato continua']
+  ['UF', 'uf', '2 letras, ex.: SP']
 ]
 
 const abrirSeletor = () => {
@@ -113,7 +111,7 @@ const aoSoltar = event => {
       <span class="font-semibold">Base atual: {{ contar(clientes.total, 'cliente', 'clientes') }}</span><template v-if="upload.origemBaseAtual">,
         importada em {{ formatarDataHora(upload.origemBaseAtual.dataHora) }}<template v-if="upload.origemBaseAtual.enviadoPor?.nome">
           por {{ upload.origemBaseAtual.enviadoPor.nome }}</template></template>.
-      Clientes que não vierem na planilha ficam inativos, então envie sempre a carteira completa.
+      Cada planilha enviada substitui a carteira anterior, então envie sempre a carteira completa.
     </p>
 
     <div

@@ -31,11 +31,8 @@ const insights = computed(() => gerarInsights(clientes.lista))
           <template v-if="registro.linhasIgnoradas">
             {{ registro.linhasIgnoradas === 1 ? '1 linha com erro ficou de fora.' : `${formatarNumero(registro.linhasIgnoradas)} linhas com erro ficaram de fora.` }}
           </template>
-          <template v-if="registro.clientesInativados">
-            {{ registro.clientesInativados === 1 ? '1 cliente que não veio na planilha ficou inativo.' : `${formatarNumero(registro.clientesInativados)} clientes que não vieram na planilha ficaram inativos.` }}
-          </template>
-          <template v-if="registro.clientesMantidos">
-            {{ registro.clientesMantidos === 1 ? '1 cliente com erro manteve os dados anteriores.' : `${formatarNumero(registro.clientesMantidos)} clientes com erro mantiveram os dados anteriores.` }}
+          <template v-if="registro.clientesForaDaPlanilha">
+            {{ registro.clientesForaDaPlanilha === 1 ? '1 cliente da carteira anterior não estava na planilha e saiu da carteira.' : `${formatarNumero(registro.clientesForaDaPlanilha)} clientes da carteira anterior não estavam na planilha e saíram da carteira.` }}
           </template>
         </p>
       </div>

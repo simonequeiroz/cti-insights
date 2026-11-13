@@ -110,11 +110,12 @@ src/
 3. Cada linha é **validada** pelo dicionário de dados. Linhas com erro não
    entram e podem ser baixadas para correção; as demais seguem para a
    revisão. A regra está em `PERMITIR_IMPORTACAO_PARCIAL` (`uploadStore.js`).
-4. Ao confirmar, a base é atualizada pelo serviço (`services/api.js`, hoje
-   no `localStorage`). Quem não veio na planilha **fica inativo**, em vez de
-   ser apagado, e volta a ativo se aparecer em outra importação; quem já
-   estava na base e veio com erro continua com os dados anteriores.
-   Dashboard e Relatórios leem dessa base.
+4. Ao confirmar, as linhas válidas **substituem a carteira anterior**
+   (`services/api.js`, hoje no `localStorage`): cada planilha enviada é a
+   carteira completa naquele momento. Antes de confirmar, a tela avisa quais
+   clientes da carteira atual não estão na planilha nova. Dashboard e
+   Relatórios leem dessa carteira. O sistema não trata clientes ativos ou
+   inativos.
 
 Chaves usadas no `localStorage`:
 
@@ -144,8 +145,6 @@ O **nome da coluna no cabeçalho precisa ser exatamente o da tabela** (minúscul
 | `faturamento_anual` (ou `faturamento`) | Sim | Número ou texto como `R$ 1.850.000,00`; sem valor negativo |
 | `cidade` | Não | Texto |
 | `uf` | Não | Sigla com 2 letras |
-| `status_contrato` | Não | `Ativo` ou `Inativo` (`Cancelado` e `Encerrado` viram `Inativo`) |
-| `data_fim_contrato` | Não | Término ou cancelamento; vazio se o contrato continua |
 
 Estados do histórico de upload: `PROCESSANDO`, `NORMALIZADO`, `ERRO_SCHEMA`.
 Um registro que ficou em `PROCESSANDO` porque a página foi fechada é marcado
@@ -161,7 +160,9 @@ gerada nele. O filtro roda no navegador (`src/utils/periodo.js`).
 
 ### Oportunidades de upsell
 
-Calculadas em `src/utils/upsell.js`, comparando cada cliente com os demais do
+Calculadas em `src/utils/upsell.js` (as mesmas regras estão no Python, em
+`analytics-python/upsell.py`, que passa a ser a fonte quando o back-end
+estiver ligado), comparando cada cliente com os demais do
 mesmo segmento (segmentos com pelo menos 3 clientes):
 
 1. **Poucos serviços para o porte:** faturamento acima da mediana do segmento
@@ -170,29 +171,6 @@ mesmo segmento (segmentos com pelo menos 3 clientes):
    60% do segmento.
 3. **Segmento com potencial** (hipótese H03): a participação nos serviços
    contratados supera a participação no faturamento em 5 pontos ou mais.
-
-Só clientes ativos entram nessas regras.
-
-### Contratos ativos e inativos
-
-A situação vem de `status_contrato` e `data_fim_contrato`
-(`src/utils/situacaoContrato.js`). A planilha deve trazer ativos e inativos
-no mesmo arquivo:
-
-- não veio numa importação posterior: **Inativo**, com o campo
-  `saiu_da_planilha_em`. Essa é a data da importação, não a do cancelamento
-  real, e a tela a identifica como "Saiu da planilha em";
-- término em data passada: **Inativo**, mesmo que o status tenha sido
-  preenchido antes de a data chegar; na importação, `Ativo` com término
-  passado é erro;
-- sem término vencido: vale o status; sem status, término futuro é **Ativo**;
-- sem nenhuma das duas colunas: **Não informado**, contado como ativo, para
-  planilhas sem esse dado continuarem funcionando.
-
-Faturamento, clientes, serviços, ticket médio, gráficos de receita e nível, e
-upsell usam só os ativos. A evolução das contratações, a tabela de clientes e
-o CSV usam a carteira inteira. A situação é por cliente: cada linha da planilha
-tem um único status, mesmo com vários serviços.
 
 ### Testando o Upload
 

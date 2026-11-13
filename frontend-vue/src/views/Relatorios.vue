@@ -5,7 +5,6 @@ import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { useUploadStore } from '../stores/uploadStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
-import { descreverTermino, ESTILO_SITUACAO, situacaoContrato, temSituacaoInformada } from '../utils/situacaoContrato'
 
 const auth = useAuthStore()
 
@@ -85,8 +84,6 @@ const formatarData = valor => {
   const [ano, mes, dia] = valor.split('-')
   return `${dia}/${mes}/${ano}`
 }
-
-const situacaoInformada = computed(() => temSituacaoInformada(clientes.value))
 
 // Zera só o localStorage DESTE navegador (clientes importados + histórico
 // de upload) — não existe banco de dados ainda, então não há nada "no
@@ -218,13 +215,6 @@ const limparDados = async () => {
               {{ clientesFiltrados.length }} de {{ clientes.length }} clientes.
             </p>
 
-            <p
-              v-if="!situacaoInformada"
-              class="mt-1 text-xs text-gray-500"
-            >
-              A planilha importada não informa a situação dos contratos.
-            </p>
-
           </div>
 
           <div class="overflow-x-auto">
@@ -263,14 +253,6 @@ const limparDados = async () => {
 
                   <th class="p-4 font-semibold text-gray-500">
                     Data da contratação
-                  </th>
-
-                  <th class="p-4 font-semibold text-gray-500">
-                    Término
-                  </th>
-
-                  <th class="p-4 font-semibold text-gray-500">
-                    Status
                   </th>
                 </tr>
               </thead>
@@ -315,19 +297,6 @@ const limparDados = async () => {
 
                   <td class="p-4 text-gray-500">
                     {{ formatarData(cliente.data_contratacao) }}
-                  </td>
-
-                  <td class="p-4 text-gray-500">
-                    {{ descreverTermino(cliente) || '—' }}
-                  </td>
-
-                  <td class="p-4">
-                    <span
-                      class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
-                      :class="ESTILO_SITUACAO[situacaoContrato(cliente)]"
-                    >
-                      {{ situacaoContrato(cliente) }}
-                    </span>
                   </td>
                 </tr>
               </tbody>
