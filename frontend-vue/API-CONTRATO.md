@@ -6,8 +6,12 @@
 > contra um back-end real. Se o back-end precisar de outro formato, o
 > ajuste é feito em um único arquivo do front: `src/services/api.js`.
 
-Base da API: `VITE_API_URL` (padrão `/api`). Formato: JSON, exceto o envio
-de planilha. Datas de calendário: `aaaa-mm-dd`. Data e hora: ISO 8601.
+Base da API: `VITE_API_URL` (padrão `/api`), ou seja, `GET /clientes` é
+`GET /api/clientes`. Formato: JSON. Datas de calendário: `aaaa-mm-dd`. Data e
+hora: ISO 8601.
+
+O caminho completo dos dados (front → Spring → Python → banco → front) e o que
+cada parte faz estão em `docs/FLUXO-DO-SISTEMA.md`.
 
 ## Decisões do grupo sobre o diagrama de classes
 
@@ -22,6 +26,14 @@ campos novos abaixo são sugestão, a confirmar:
 | 2 | Acrescentar um campo numérico de faturamento (sugestão: `faturamentoAnual: BigDecimal`), mantendo `faixaFaturamentoAnual` se quiserem | O Dashboard soma faturamento, calcula ticket médio e faturamento por segmento; com faixa em texto isso não é possível |
 | 3 | **Telemetria** deixa de se ligar a **Cliente** (sugestão: liga-se ao **Consultor** que enviou o arquivo, ou fica sem ligação) | Cada registro é um arquivo enviado, que contém muitos clientes |
 | 4 | Acrescentar `linhasLidas: Integer` em **Telemetria** | A tabela do Upload exibe as linhas lidas |
+| 5 | Acrescentar a classe **Usuario** (nome, email, senhaHash, papel, papelSolicitado, status, criadoEm, avaliadoEm, avaliadoPor); **Telemetria** liga-se ao Usuario que enviou o arquivo | Login e papéis; o Consultor só tem nome e email |
+| 6 | Acrescentar a classe **Estatistica** (telemetria, geradoEm, resultado em JSON) | Guarda o que o ETL em Python calcula para cada envio: média, mediana, desvio padrão e os dados dos gráficos |
+| 7 | **Insight** ganha a ligação com a **Telemetria**; `cliente` fica opcional | O ETL grava uma frase por linha, ligada ao envio; frases gerais não têm cliente |
+| 8 | Manter `faixaFaturamentoAnual` em **Cliente**, opcional | Pedido do professor; a planilha não traz esse dado |
+| 9 | **Cliente** liga-se à **Telemetria** do envio em que veio | Cada planilha enviada é a carteira completa naquele momento; o sistema mostra o envio mais recente |
+| 10 | Sem clientes ativos ou inativos: `Contrato.status` e `dataFim` ficam opcionais e sem regra | Orientação da professora: o foco é faturamento, serviços, tipo de cliente e upsell |
+
+As tabelas que correspondem a essas classes estão em `database/README.md`.
 
 ### Mapeamento planilha → modelo
 
@@ -36,41 +48,33 @@ campos novos abaixo são sugestão, a confirmar:
 | `data_contratacao` | Contrato.dataInicio |
 | `servicos_contratados` | Servico.nome (vários, separados por `;`) |
 
+## Pontos decididos
+
+1. **Quem valida e limpa a planilha:** o front (Pinia) lê e valida e envia
+   ao Spring só as linhas válidas, em JSON (`POST /uploads`). O Spring valida
+   de novo (DTO + Service) e chama o Python, que padroniza e calcula. O arquivo
+   não é enviado ao back-end.
+2. **Usuário:** classe nova `Usuario`, separada do Consultor (decisão 5).
+3. **Insights e estatísticas:** calculados pelo Python e entregues em
+   `GET /dashboard`. As regras de upsell, hoje em `src/utils/upsell.js`, passam
+   para o Python.
+4. **Um contrato por cliente**, como a planilha traz.
+5. **Sem ativo/inativo** (decisão 10).
+
 ## Pontos em aberto (decidir em conjunto)
 
-1. **Quem valida e limpa a planilha?** Hoje o front normaliza (segmentos,
-   faturamento, datas) e valida (sem linhas, ou linha sem nome e sem
-   código). O ideal é o Python/Pandas fazer isso e o front só exibir o
-   resultado. Isso define se o `POST /uploads` abaixo recebe o arquivo
-   bruto (recomendado) ou os clientes já tratados.
-2. **Autenticação:** sessão por cookie ou token (JWT)? O diagrama não tem
-   entidade de usuário/senha (o Consultor só tem `nome` e `email`); definir
-   se o login usa o Consultor ou uma entidade nova.
-3. **Nomes de campos:** o diagrama usa `camelCase` (Java) e o front usa
+1. **Autenticação:** token (JWT) ou sessão por cookie.
+2. **Nomes de campos:** o diagrama usa `camelCase` (Java) e o front usa
    `snake_case` (planilha). O front adapta o formato em `src/services/api.js`,
    então o back-end pode manter `camelCase`; só é preciso combinar os nomes.
-   O `database/schema.sql` ainda está vazio.
-4. **Papel do usuário (decidido no front):** `CONSULTOR`, `GESTOR` ou
+3. **Papel do usuário (decidido no front):** `CONSULTOR`, `GESTOR` ou
    `ADMINISTRADOR`, escolhido no cadastro e aprovado por um Administrador.
    Regras em `src/utils/papeis.js`: todos consultam e exportam; Consultor
    também importa planilhas; Gestor só acompanha os resultados; Administrador
-   importa, aprova cadastros e apaga dados/histórico. O back-end precisa aplicar as **mesmas regras em cada
-   endpoint** (o front só esconde telas e botões). Falta incluir uma classe
-   `Usuario` (id, nome, email, senha, papel, status) no diagrama de classes.
-5. **Insights:** o diagrama tem `Insight` por cliente, mas o front hoje
-   calcula insights **agregados** (ex.: "60% do faturamento está na Classe
-   A"). Definir se o back-end/Python vai gerar os insights (`GET /insights`)
-   e em que formato.
-6. **Vários contratos por cliente:** o diagrama permite (Cliente 1—N
-   Contrato), mas o front assume uma linha por cliente com uma única
-   `data_contratacao`. Se houver vários, `GET /clientes` deve incluir a
-   lista de contratos; "Evolução das contratações" passaria a contar
-   contratos, e não clientes.
-7. **Status do contrato:** o diagrama tem `Contrato.status` e `dataFim`. A
-   planilha traz isso nas colunas opcionais `status_contrato` e
-   `data_fim_contrato`, uma situação por cliente. Com uma linha por contrato,
-   a situação passaria a ser de cada serviço.
-8. **Faturamento por serviço:** com Contrato N—N Serviço e um único
+   importa, aprova cadastros e apaga dados/histórico. O back-end precisa
+   aplicar as **mesmas regras em cada endpoint** (o front só esconde telas e
+   botões).
+4. **Faturamento por serviço:** com Contrato N—N Serviço e um único
    `valor`, o gráfico "Top 5 Serviços por Faturamento" hoje divide o valor
    igualmente entre os serviços. Definir se isso é aceitável ou se há
    valor por serviço.
@@ -163,7 +167,8 @@ Resposta `200` com o usuário atualizado; o back-end preenche `avaliadoEm` e
 
 ### `GET /clientes`
 
-Devolve a base de clientes válida mais recente. Resposta `200`:
+Devolve os clientes do envio mais recente com status `NORMALIZADO` (tela
+Relatórios). Resposta `200`:
 
 ```json
 [
@@ -175,8 +180,6 @@ Devolve a base de clientes válida mais recente. Resposta `200`:
     "nivel_cliente": "A",
     "faturamento": 1850000.0,
     "data_contratacao": "2025-03-15",
-    "status_contrato": "Ativo",
-    "data_fim_contrato": null,
     "servico": "Internet Dedicada, Firewall",
     "servicos": ["Internet Dedicada", "Firewall"]
   }
@@ -197,9 +200,6 @@ cliente; se a API devolver outra estrutura, a conversão é feita em
 | `nivel_cliente` | `"A"`, `"B"` ou `"C"` | |
 | `faturamento` | número ou `null` | Em reais, sem formatação |
 | `data_contratacao` | `aaaa-mm-dd` ou `null` | |
-| `status_contrato` | `"Ativo"`, `"Inativo"` ou `null` | Contrato.status |
-| `data_fim_contrato` | `aaaa-mm-dd` ou `null` | Contrato.dataFim |
-| `saiu_da_planilha_em` | `aaaa-mm-dd` ou ausente | Data da importação em que o cliente não veio; o back-end deve inativar em vez de apagar |
 | `servico` | texto ou `null` | Serviços juntos, separados por vírgula (para exibir) |
 | `servicos` | lista de texto | Os mesmos serviços, um por item (para contar) |
 
@@ -231,34 +231,30 @@ campo `linhasLidas`, acrescentado por decisão do grupo).
 
 | Campo | Valores / observações |
 |---|---|
-| `status` | `PROCESSANDO`, `NORMALIZADO` ou `ERRO_SCHEMA` |
+| `status` | `PROCESSANDO`, `NORMALIZADO`, `ERRO_SCHEMA` (planilha recusada) ou `ERRO_ETL` (planilha aceita, mas o ETL em Python falhou) |
 | `linhasLidas` | número, ou `null` enquanto `PROCESSANDO` |
-| `mensagem` | Motivo do erro quando `ERRO_SCHEMA`; vazio caso contrário |
+| `mensagem` | Motivo do erro quando `ERRO_SCHEMA` ou `ERRO_ETL`; vazio caso contrário |
 
-Regra de negócio importante: um upload com `ERRO_SCHEMA` **não deve
-substituir** a última base válida servida por `GET /clientes`.
+Regra de negócio importante: um envio com erro (`ERRO_SCHEMA` ou
+`ERRO_ETL`) **não muda** o que o sistema mostra. Dashboard e Relatórios usam
+sempre o envio mais recente com status `NORMALIZADO`.
 
-### Regras de validação da planilha (hoje aplicadas no front)
+### Regras de validação da planilha
 
-Hoje o front recusa o arquivo **inteiro** (`ERRO_SCHEMA`) se, em **qualquer
-linha**, um destes campos estiver vazio ou inválido:
+Aplicadas no front (Pinia), antes do envio, e de novo no Spring (DTO +
+Service). Linhas com erro não são enviadas; as demais seguem. O arquivo inteiro
+é recusado (`ERRO_SCHEMA`) só quando não abre, está vazio ou não tem uma coluna
+obrigatória.
 
 | Campo | Regra |
 |---|---|
-| `codigo_cliente`, `nome_cliente`, `consultor`, `segmento` | Preenchidos |
+| `codigo_cliente` | Preenchido; não pode repetir no mesmo arquivo (vale a primeira ocorrência) |
+| `nome_cliente`, `consultor`, `segmento` | Preenchidos |
 | `nivel_cliente` | `A`, `B` ou `C` |
+| `faturamento_anual` | Número, sem valor negativo (aceita texto como `R$ 1.850.000,00`) |
 | `data_contratacao` | Data válida (`aaaa-mm-dd` ou `dd/mm/aaaa`) |
-| `servicos_contratados` | Pelo menos um serviço |
-
-`faturamento_anual` é opcional (vazio conta como 0). A `mensagem` do registro
-diz quais campos falharam e em quais linhas da planilha (o cabeçalho é a
-linha 1), por exemplo: *"3 de 4 linha(s) com campo obrigatório vazio ou
-inválido: consultor (1), nível (A, B ou C) (1). Linhas: 3, 4, 5."*
-
-Ao migrar a validação para o back-end/Python (ponto em aberto nº 1), estas
-são as regras a preservar, ou a alterar em comum acordo. **Ainda não decidido:**
-recusar o arquivo todo (como hoje) ou importar as linhas boas e listar as
-ruins.
+| `servicos_contratados` | Pelo menos um serviço (vários separados por `;`) |
+| `cidade`, `uf` | Opcionais; `uf` com 2 letras |
 
 ### Filtro por período
 
@@ -268,16 +264,76 @@ crescer, o filtro pode virar parâmetro da API (por exemplo,
 `GET /clientes?de=aaaa-mm-dd&ate=aaaa-mm-dd`); isso é uma sugestão, não uma
 exigência.
 
-### `POST /uploads` (a definir)
+### `POST /uploads`
 
-Envio da planilha (`multipart/form-data`, campo `arquivo`, `.xlsx`/`.xls`/
-`.csv`). Deve criar o registro do histórico com `PROCESSANDO` e atualizá-lo
-para `NORMALIZADO` ou `ERRO_SCHEMA` ao terminar. Quando o processamento for
-assíncrono no back-end, o front consultará `GET /uploads` até o status
-mudar (ou usará outro mecanismo combinado).
+Envio das linhas **já validadas pelo front**, em JSON:
 
-> **Ainda não implementado no front:** hoje o front lê e trata a planilha
-> localmente. Ligar este endpoint depende do ponto em aberto nº 1.
+```json
+{
+  "nomeArquivo": "clientes.xlsx",
+  "linhasLidas": 38,
+  "linhas": [
+    {
+      "codigo_cliente": "CTI001",
+      "nome_cliente": "Metalúrgica Horizonte",
+      "consultor": "Ana Souza",
+      "segmento": "Indústria",
+      "nivel_cliente": "A",
+      "faturamento_anual": 1850000,
+      "servicos_contratados": "Internet Dedicada;Firewall",
+      "data_contratacao": "2025-01-15",
+      "cidade": "Campinas",
+      "uf": "SP"
+    }
+  ]
+}
+```
+
+O Spring valida de novo, grava o envio em **Telemetria** com status
+`PROCESSANDO` e responde `201` com o envio (mesmo formato de um item de
+`GET /uploads`). Depois chama o Python (`POST /etl`, abaixo). Se a validação
+do Spring recusar o envio, responde `400` com a `mensagem`.
+
+O front consulta `GET /uploads` (ou `GET /dashboard`) a cada poucos segundos
+até o status mudar para `NORMALIZADO` ou `ERRO_ETL`.
+
+### `GET /dashboard`
+
+Resultado calculado pelo Python para o envio mais recente com status
+`NORMALIZADO`. Resposta `200`:
+
+```json
+{
+  "envio": { "id": 7, "nomeArquivo": "clientes.xlsx", "status": "NORMALIZADO", "linhasLidas": 38 },
+  "geradoEm": "2026-11-12T19:10:00Z",
+  "estatisticas": {
+    "resumo": { "totalClientes": 32, "faturamentoTotal": 72360000, "media": 2261250, "mediana": 1470000 },
+    "porSegmento": [], "porNivel": [], "porConsultor": [], "porServico": [], "porMes": [],
+    "correlacao": {}, "topClientes": [], "qualidade": {}
+  },
+  "insights": ["O segmento Comércio concentra a maior carteira: ..."]
+}
+```
+
+`estatisticas` é exatamente o JSON gravado pelo Python em
+`estatistica.resultado`; `insights` são as frases da tabela `insight`. Sem
+nenhum envio processado, responde `404`. O bloco de **upsell** entra em
+`estatisticas` quando as regras forem levadas para o Python.
+
+## Spring → Python (uso interno)
+
+### `POST /etl` (API do Python, `analytics-python/api.py`)
+
+Chamado pelo Spring depois de gravar o envio. O front não usa esta rota.
+
+```json
+{ "telemetriaId": 7, "recebidas": 38, "linhas": [ { "codigo_cliente": "CTI001" } ] }
+```
+
+Cabeçalho `X-ETL-Key` com a chave combinada (`ETL_API_KEY` no Python).
+Resposta `200` `{ "ok": true, "telemetriaId": 7 }`. Em caso de falha, o Python
+marca o envio como `ERRO_ETL` e responde `500`; se o Python estiver desligado,
+o Spring marca `ERRO_ETL`.
 
 ## Códigos de erro
 
