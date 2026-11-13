@@ -22,6 +22,12 @@ campos novos abaixo são sugestão, a confirmar:
 | 2 | Acrescentar um campo numérico de faturamento (sugestão: `faturamentoAnual: BigDecimal`), mantendo `faixaFaturamentoAnual` se quiserem | O Dashboard soma faturamento, calcula ticket médio e faturamento por segmento; com faixa em texto isso não é possível |
 | 3 | **Telemetria** deixa de se ligar a **Cliente** (sugestão: liga-se ao **Consultor** que enviou o arquivo, ou fica sem ligação) | Cada registro é um arquivo enviado, que contém muitos clientes |
 | 4 | Acrescentar `linhasLidas: Integer` em **Telemetria** | A tabela do Upload exibe as linhas lidas |
+| 5 | Acrescentar a classe **Usuario** (nome, email, senhaHash, papel, papelSolicitado, status, criadoEm, avaliadoEm, avaliadoPor); **Telemetria** liga-se ao Usuario que enviou o arquivo | Login e papéis; o Consultor só tem nome e email |
+| 6 | Acrescentar a classe **Estatistica** (telemetria, geradoEm, resultado em JSON) | Guarda o que o ETL em Python calcula para cada envio: média, mediana, desvio padrão e os dados dos gráficos |
+| 7 | **Insight** ganha a ligação com a **Telemetria**; `cliente` fica opcional | O ETL grava uma frase por linha, ligada ao envio; frases gerais não têm cliente |
+| 8 | Manter `faixaFaturamentoAnual` em **Cliente**, opcional | Pedido do professor; a planilha não traz esse dado |
+
+As tabelas que correspondem a essas classes estão em `database/README.md`.
 
 ### Mapeamento planilha → modelo
 
@@ -57,10 +63,9 @@ campos novos abaixo são sugestão, a confirmar:
    importa, aprova cadastros e apaga dados/histórico. O back-end precisa aplicar as **mesmas regras em cada
    endpoint** (o front só esconde telas e botões). Falta incluir uma classe
    `Usuario` (id, nome, email, senha, papel, status) no diagrama de classes.
-5. **Insights:** o diagrama tem `Insight` por cliente, mas o front hoje
-   calcula insights **agregados** (ex.: "60% do faturamento está na Classe
-   A"). Definir se o back-end/Python vai gerar os insights (`GET /insights`)
-   e em que formato.
+5. **Insights:** decidido que o ETL em Python gera as frases (tabela
+   `insight`) e as estatísticas (tabela `estatistica`). Falta definir a rota
+   que entrega isso ao front e o formato da resposta.
 6. **Vários contratos por cliente:** o diagrama permite (Cliente 1—N
    Contrato), mas o front assume uma linha por cliente com uma única
    `data_contratacao`. Se houver vários, `GET /clientes` deve incluir a
@@ -231,9 +236,9 @@ campo `linhasLidas`, acrescentado por decisão do grupo).
 
 | Campo | Valores / observações |
 |---|---|
-| `status` | `PROCESSANDO`, `NORMALIZADO` ou `ERRO_SCHEMA` |
+| `status` | `PROCESSANDO`, `NORMALIZADO`, `ERRO_SCHEMA` (planilha recusada) ou `ERRO_ETL` (planilha aceita, mas o ETL em Python falhou) |
 | `linhasLidas` | número, ou `null` enquanto `PROCESSANDO` |
-| `mensagem` | Motivo do erro quando `ERRO_SCHEMA`; vazio caso contrário |
+| `mensagem` | Motivo do erro quando `ERRO_SCHEMA` ou `ERRO_ETL`; vazio caso contrário |
 
 Regra de negócio importante: um upload com `ERRO_SCHEMA` **não deve
 substituir** a última base válida servida por `GET /clientes`.
