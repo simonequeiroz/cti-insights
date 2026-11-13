@@ -55,9 +55,8 @@ As tabelas que correspondem a essas classes estão em `database/README.md`.
    de novo (DTO + Service) e chama o Python, que padroniza e calcula. O arquivo
    não é enviado ao back-end.
 2. **Usuário:** classe nova `Usuario`, separada do Consultor (decisão 5).
-3. **Insights e estatísticas:** calculados pelo Python e entregues em
-   `GET /dashboard`. As regras de upsell, hoje em `src/utils/upsell.js`, passam
-   para o Python.
+3. **Insights, estatísticas e upsell:** calculados pelo Python e entregues em
+   `GET /dashboard`.
 4. **Um contrato por cliente**, como a planilha traz.
 5. **Sem ativo/inativo** (decisão 10).
 
@@ -309,7 +308,17 @@ Resultado calculado pelo Python para o envio mais recente com status
   "estatisticas": {
     "resumo": { "totalClientes": 32, "faturamentoTotal": 72360000, "media": 2261250, "mediana": 1470000 },
     "porSegmento": [], "porNivel": [], "porConsultor": [], "porServico": [], "porMes": [],
-    "correlacao": {}, "topClientes": [], "qualidade": {}
+    "correlacao": {}, "topClientes": [], "qualidade": {},
+    "upsell": {
+      "oportunidades": [
+        {
+          "codigo": "CTI035", "nome": "Fábrica Nacional", "segmento": "Indústria", "nivel": "A",
+          "consultor": "Ana Souza", "faturamento": 5450000, "servicos": ["MPLS", "Firewall"],
+          "motivos": ["Faturamento acima da mediana do segmento, com poucos serviços (2 contra média de 2,4)"]
+        }
+      ],
+      "segmentoPotencial": { "segmento": "Educação", "participacaoServicos": 11.5, "participacaoFaturamento": 5.9, "diferenca": 5.6 }
+    }
   },
   "insights": ["O segmento Comércio concentra a maior carteira: ..."]
 }
@@ -317,8 +326,12 @@ Resultado calculado pelo Python para o envio mais recente com status
 
 `estatisticas` é exatamente o JSON gravado pelo Python em
 `estatistica.resultado`; `insights` são as frases da tabela `insight`. Sem
-nenhum envio processado, responde `404`. O bloco de **upsell** entra em
-`estatisticas` quando as regras forem levadas para o Python.
+nenhum envio processado, responde `404`.
+
+`estatisticas.upsell` traz as oportunidades de upsell calculadas pelo Python
+(`analytics-python/upsell.py`), do maior para o menor faturamento, e o
+`segmentoPotencial` (`null` quando nenhum segmento se destaca). As regras são
+as mesmas que o front usava em `src/utils/upsell.js`.
 
 ## Spring → Python (uso interno)
 

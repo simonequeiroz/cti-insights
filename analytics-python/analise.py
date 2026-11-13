@@ -12,6 +12,7 @@ from scipy import stats as sp                                                   
 
 from insights import gerar_insights                                                 # gerar_insights: monta as frases (insights.py)
 from limpeza import ResultadoTransformacao                                          # o resultado da limpeza (limpeza.py)
+from upsell import analisar_upsell                                                  # analisar_upsell: oportunidades de upsell (upsell.py)
 
 
 # ------------------------------------------------------------------ utilitários
@@ -139,6 +140,7 @@ def calcular(res: ResultadoTransformacao, linhas_recebidas: int) -> dict:       
         "porServico": por_servico,                                                  # serviços
         "porMes": por_mes,                                                          # contratações por mês
         "correlacao": correlacao,                                                   # correlação
+        "upsell": analisar_upsell(df),                                              # oportunidades de upsell e segmento com potencial
         "topClientes": [{"codigo": x.codigo_cliente, "nome": x.nome_cliente, "segmento": x.segmento,  # 5 maiores clientes
                          "nivel": x.nivel_cliente, "faturamento": num(x.faturamento_anual)} for x in top.itertuples()],  # (continuação)
         "qualidade": {                                                              # relatório de qualidade da planilha

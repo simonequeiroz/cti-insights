@@ -75,7 +75,7 @@ planilha, e os envios anteriores continuam guardados no histórico.
 | 1–2. Ler e validar a planilha no front | **Pronto** |
 | 3. Enviar ao Spring | Falta: hoje o front grava no próprio navegador (modo simulado) |
 | 4–6. Spring (DTO, Service, gravação, chamada ao Python) | Falta: o Java só tem o esqueleto |
-| 7. Python (limpeza, estatísticas, frases, gravação) | **Pronto e testado sem banco**. Falta levar as regras de upsell do front para o Python |
+| 7. Python (limpeza, estatísticas, upsell, frases, gravação) | **Pronto e testado** com um PostgreSQL temporário |
 | Banco no Neon | Falta: guia pronto (`database/README.md`), `schema.sql` com o Ryan |
 | 8–9. Dashboard lendo do back-end | Falta: hoje o Dashboard calcula tudo no navegador |
 | Login | Simulado no navegador; falta o login no Spring |
@@ -94,7 +94,7 @@ planilha, e os envios anteriores continuam guardados no histórico.
 ## 7. Ordem de trabalho
 
 1. Banco: `schema.sql` no Neon (Ryan), seguindo `database/README.md`.
-2. Python: gravar no modelo do banco (em andamento) e calcular o upsell.
+2. Python: gravar no modelo do banco e calcular o upsell (feito).
 3. Java: login, `POST /api/uploads` (DTO + Service), `PythonEtlService`,
    `GET /api/dashboard`, `GET /api/uploads` e `GET /api/clientes`.
 4. Front: retirar o ativo/inativo, enviar ao Spring com Axios e desenhar o
