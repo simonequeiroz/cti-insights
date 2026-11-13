@@ -4,9 +4,9 @@ Recebe do backend (Spring Boot) as linhas **já validadas** e faz o ETL:
 - **limpeza.py** padroniza (`ana souza` → `Ana Souza`, `IND.` → `Indústria`, texto → número e data)
 - **analise.py** calcula (média, mediana, desvio padrão, quartis, totais por segmento, nível, consultor, serviço e mês, e correlação)
 - **insights.py** escreve as frases
-- **banco.py** grava no PostgreSQL do Neon (cliente, consultor, serviço, contrato e o resultado das contas em `estatistica_lote`) e atualiza o status do lote em `upload_lote`
+- **banco.py** grava no PostgreSQL do Neon (cliente, consultor, serviço, contrato, o resultado das contas em `estatistica` e as frases em `insight`) e atualiza o status do envio em `telemetria`
 
-O Python **não devolve dados** ao backend: o `POST /etl` responde só `{"ok": true, "loteId": ...}`. O backend lê o resultado no banco.
+O Python **não devolve dados** ao backend: o `POST /etl` responde só `{"ok": true, "telemetriaId": ...}`. O backend lê o resultado no banco.
 
 ## Rodar
 ```
@@ -26,7 +26,7 @@ Conexão com o banco: `python testar_conexao.py` deve mostrar `Conectou!`.
 ## Arquivos
 ```
 api.py              recebe o POST /etl (e o /testar) e chama o main.py
-main.py             coordena: reserva o lote, limpa, calcula e grava
+main.py             coordena: confere o envio, limpa, calcula e grava
 limpeza.py          limpa e padroniza
 analise.py          faz as contas
 insights.py         escreve as frases
