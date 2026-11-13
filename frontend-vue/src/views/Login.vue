@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { CONTA_DEMO } from '../services/api'
 import PainelInstitucional from '../components/PainelInstitucional.vue'
 
 const route = useRoute()
@@ -13,6 +14,13 @@ const senha = ref('')
 const lembrar = ref(false)
 const mostrarSenha = ref(false)
 const erro = ref('')
+
+// Entra com a conta de demonstração em um clique (só no modo simulado)
+const entrarComContaDemo = () => {
+  email.value = CONTA_DEMO.email
+  senha.value = CONTA_DEMO.senha
+  entrar()
+}
 
 // Senha certa, mas o cadastro ainda não foi aprovado (erro 403 do login)
 const MENSAGENS_NAO_APROVADO = {
@@ -231,6 +239,20 @@ const entrar = async () => {
           </button>
 
         </form>
+
+        <!-- Conta de demonstração: só no modo simulado (services/api.js) -->
+        <p
+          v-if="CONTA_DEMO"
+          class="mt-6 text-center text-sm"
+        >
+          <button
+            type="button"
+            class="cursor-pointer font-semibold text-[#006EB7] hover:underline"
+            @click="entrarComContaDemo"
+          >
+            Entrar com a conta de demonstração
+          </button>
+        </p>
 
         <!-- Leva o redirect junto: quem veio de uma tela protegida volta
              para ela depois de criar a conta -->

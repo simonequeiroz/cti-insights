@@ -45,11 +45,18 @@ npm run dev        # servidor de desenvolvimento (http://localhost:5173)
 Não há autenticação real (o back-end ainda não tem login). As contas ficam
 salvas só neste navegador.
 
+**Conta de demonstração** (para apresentação e testes): e-mail
+`admin@ctiinsights.com`, senha `cti12345`, papel Administrador. Na tela de
+login, o link **Entrar com a conta de demonstração** entra com ela em um
+clique. Ela existe sempre no modo simulado: se for apagada ou recusada, volta na próxima tentativa de login.
+Com o back-end ligado (`VITE_USE_MOCK=false`), ela não existe
+(`CONTA_DEMO` em `src/services/api.js`).
+
 1. Crie uma conta em `/cadastro` (link **Criar conta** na tela de login):
    nome e sobrenome, e-mail, **papel** e senha de no mínimo 8 caracteres.
-2. A **primeira conta** criada no navegador vira **Administrador** e já
-   entra. As seguintes ficam **aguardando aprovação** e não conseguem fazer
-   login.
+2. Se ainda não existir nenhuma conta no navegador, a primeira criada vira
+   **Administrador** e já entra. Depois que a conta de demonstração existe, os
+   novos cadastros ficam **aguardando aprovação** e não conseguem fazer login.
 3. Entre como Administrador e aprove (ou recuse) os cadastros em
    **Usuários** (`/usuarios`); dá para trocar o papel antes de aprovar.
 
