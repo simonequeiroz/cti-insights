@@ -83,10 +83,12 @@ def _por_mes(df: pd.DataFrame) -> list[dict]:                                   
 
 def _por_servico(df: pd.DataFrame) -> list[dict]:                                   # _por_servico: quantos clientes contrataram cada serviço
     longo = df[["codigo_cliente", "servicos", "faturamento_anual"]].explode("servicos").dropna(subset=["servicos"])  # uma linha por (cliente, serviço)
+    longo["faturamentoRateado"] = (df["faturamento_anual"] / df["qtd_servicos"]).reindex(longo.index)
     total = len(df)                                                                 # total de clientes
     saida = [{"servico": str(nome), "contratos": int(g["codigo_cliente"].nunique()),  # monta uma linha por serviço
               "percentual": _pct(g["codigo_cliente"].nunique(), total),             # percentual de clientes
-              "faturamentoMedio": num(g["faturamento_anual"].mean())}               # faturamento médio de quem contratou
+              "faturamentoMedio": num(g["faturamento_anual"].mean()),
+              "faturamentoRateado": num(g["faturamentoRateado"].sum())}
              for nome, g in longo.groupby("servicos")]                              # para cada serviço
     return sorted(saida, key=lambda x: (-x["contratos"], x["servico"]))             # ordena: mais contratado primeiro
 
@@ -105,9 +107,9 @@ def _correlacao(df: pd.DataFrame) -> dict:                                      
 
 
 # ---------------------------------------------------------------------- função principal
-def calcular(res: ResultadoTransformacao, linhas_recebidas: int) -> dict:           # calcular: função principal; recebe a limpeza e devolve o JSON
+def calcular(res: ResultadoTransformacao, linhas_recebidas: int, *, permitir_vazio: bool = False) -> dict:           # calcular: função principal; recebe a limpeza e devolve o JSON
     df = res.tratado                                                                # tabela dos clientes tratados
-    if df.empty:                                                                    # sem clientes
+    if df.empty and not permitir_vazio:
         raise ValueError("Não há clientes válidos para calcular estatísticas.")     # erro explicando
     fat = df["faturamento_anual"]                                                   # coluna de faturamento
     r = _resumo_serie(fat)                                                          # medidas gerais (média, mediana...)
@@ -153,5 +155,5 @@ def calcular(res: ResultadoTransformacao, linhas_recebidas: int) -> dict:       
             "segmentosOriginais": res.segmentos_originais,                          # segmentos que foram corrigidos
             "avisos": res.avisos,                                                   # avisos
         },                                                                          # fim da qualidade
-        "insights": gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, por_mes, correlacao),  # frases de insights
+        "insights": gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, por_mes, correlacao) if not df.empty else [],  # frases de insights
     }                                                                               # fim do dicionário

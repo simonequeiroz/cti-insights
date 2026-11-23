@@ -45,8 +45,8 @@ def etl(pedido: Pedido, x_etl_key: str | None = Header(default=None)) -> dict:  
     chave = os.getenv("ETL_API_KEY", "").strip()                                    # chave combinada com o Spring (vazia = sem chave, só para estudo)
     if chave and x_etl_key != chave:                                                # há chave configurada e a enviada não confere?
         raise HTTPException(status_code=401, detail="Chave do ETL inválida.")       # recusa: 401 não autorizado
-    if not pedido.linhas:                                                           # veio vazio?
-        raise HTTPException(status_code=422, detail="Nenhuma linha válida foi enviada.")  # 422: dados inválidos
+    if not pedido.linhas and pedido.recebidas != 0:
+        raise HTTPException(status_code=422, detail="Nenhuma linha válida foi enviada.")
     ok = processar_lote(_engine_banco(), pedido.telemetriaId, pedido.linhas, pedido.recebidas)  # trata, calcula e grava no banco
     if not ok:                                                                      # deu errado? (o envio já foi marcado como ERRO_ETL no banco)
         raise HTTPException(status_code=500, detail="Falha no ETL (veja o terminal do Python).")  # 500: erro no servidor

@@ -192,7 +192,7 @@ def tratar(bruto: pd.DataFrame) -> ResultadoTransformacao:                      
     for i in df.index[duplicado]:                                                   # para cada repetido
         motivos[i].append("codigo_cliente: duplicado")                              # anota o motivo
 
-    recusada = pd.Series([bool(m) for m in motivos], index=df.index)                # linhas recusadas = as que têm algum motivo
+    recusada = pd.Series([bool(m) for m in motivos], index=df.index, dtype=bool)                # linhas recusadas = as que têm algum motivo
     rejeitadas = df.loc[recusada, ["linha", "codigo_cliente", "nome_cliente"]].copy()  # tabela das recusadas
     rejeitadas["motivo"] = [" | ".join(motivos[i]) for i in df.index[recusada]]     # coluna com os motivos
 
@@ -219,7 +219,7 @@ def tratar(bruto: pd.DataFrame) -> ResultadoTransformacao:                      
     tratado = df[~recusada].copy()                                                  # tratado = só as linhas boas
     tratado["faturamento_anual"] = tratado["faturamento_anual"].astype(float)       # faturamento como número decimal
     tratado["qtd_servicos"] = tratado["servicos"].map(len)                          # quantidade de serviços por cliente
-    tratado["data_contratacao"] = pd.to_datetime(tratado["data_contratacao"].astype("datetime64[ns]"))  # data como data/hora do pandas
+    tratado["data_contratacao"] = pd.to_datetime(tratado["data_contratacao"].astype("datetime64[us]"))  # data como data/hora do pandas
     tratado["mes"] = tratado["data_contratacao"].dt.strftime("%Y-%m")               # mês no formato aaaa-mm
     tratado = tratado.reset_index(drop=True)[[                                      # organiza as colunas na ordem final
         "linha", "codigo_cliente", "nome_cliente", "consultor", "segmento", "segmento_original", "nivel_cliente",  # (continuação)

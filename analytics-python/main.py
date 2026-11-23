@@ -17,19 +17,24 @@ log = logging.getLogger("analytics")                                            
 
 def processar_lote(engine, telemetria_id: int, linhas: list[dict], recebidas: int) -> bool:  # processar_lote: trata, calcula e GRAVA no banco um envio vindo do backend
     import banco                                                                    # banco.py: funções que gravam no banco
-    if not banco.reservar_lote(engine, telemetria_id):                              # confere se o envio ainda está PROCESSANDO
+    operacao = banco.reservar_lote(engine, telemetria_id)
+    if operacao is None:
         log.warning("Envio %s não está disponível para processamento.", telemetria_id)  # não deu: avisa
         return False                                                                # devolve falso
     try:                                                                            # tenta processar
-        if not linhas:                                                              # o backend não mandou nenhuma linha?
-            raise ValueError("o backend não enviou linhas válidas")                 # erro explicando
-        bruto = pd.DataFrame(linhas).astype(object)                                 # lista de dicionários vira tabela do pandas
-        res = tratar(bruto)                                                         # limpa os dados
-        payload = calcular(res, recebidas)                                          # calcula média, mediana, agrupamentos e frases
+        if not linhas and (operacao != "EXCLUSAO_CLIENTE" or recebidas != 0):
+            raise ValueError("O backend não enviou linhas válidas.")
+        bruto = pd.DataFrame(linhas).astype(object)
+        res = tratar(bruto)
+        if linhas and res.tratado.empty:
+            raise ValueError("Nenhuma linha foi aceita pelo ETL.")
+        if operacao != "UPLOAD" and not res.rejeitadas.empty:
+            raise ValueError("A operação manual não pode remover outros clientes.")
+        payload = calcular(res, recebidas, permitir_vazio=not linhas)                                          # calcula média, mediana, agrupamentos e frases
         banco.gravar_resultado(engine, telemetria_id, res.tratado, payload, len(res.rejeitadas))  # GRAVA clientes, contratos, estatísticas e frases
         log.info("Envio %s processado.", telemetria_id)                             # registra no terminal
         return True                                                                 # deu certo
-    except Exception as e:  # noqa: BLE001 - qualquer falha deve aparecer na tela do usuário
+    except Exception:  # noqa: BLE001 - qualquer falha deve aparecer na tela do usuário
         log.exception("Falha no envio %s", telemetria_id)                           # escreve o erro completo no terminal
-        banco.marcar_erro(engine, telemetria_id, f"Falha no ETL: {e}")              # grava ERRO_ETL no envio para a tela mostrar
+        banco.marcar_erro(engine, telemetria_id, "Falha ao processar a carteira no ETL.")              # grava ERRO_ETL no envio para a tela mostrar
         return False                                                                # devolve falso
