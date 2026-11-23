@@ -1,4 +1,5 @@
 <script setup>
+import { USAR_MOCK } from '../services/api'
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
 import { useAuthStore } from '../stores/authStore'
@@ -178,7 +179,7 @@ const limparDados = async () => {
             </button>
 
             <button
-              v-if="clientes.length && auth.pode('limparDados')"
+              v-if="clientes.length && USAR_MOCK && auth.pode('limparDados')"
               type="button"
               @click="limparDados"
               class="text-sm font-medium text-red-500 transition hover:text-red-600"

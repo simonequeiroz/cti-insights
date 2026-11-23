@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { USAR_MOCK } from '../../services/api'
 import { useClientesStore } from '../../stores/clientesStore'
 import { contar, formatarNumero } from '../../utils/datas'
 import { gerarInsights } from '../../utils/insights'
@@ -12,7 +13,7 @@ defineProps({
 const emit = defineEmits(['nova'])
 const clientes = useClientesStore()
 
-const insights = computed(() => gerarInsights(clientes.lista))
+const insights = computed(() => USAR_MOCK ? gerarInsights(clientes.lista) : [])
 </script>
 
 <template>

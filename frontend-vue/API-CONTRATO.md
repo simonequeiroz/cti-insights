@@ -1,10 +1,8 @@
 # Contrato da API — proposta do front-end
 
-> **Status: PROPOSTA.** Descreve o que o front-end espera hoje, deduzido
-> dos dados que ele já usa. Deve ser **revisado e aprovado** pelas squads
-> de Java (Spring Boot) e de dados (Python/Pandas). Ainda não foi testado
-> contra um back-end real. Se o back-end precisar de outro formato, o
-> ajuste é feito em um único arquivo do front: `src/services/api.js`.
+A integração implementada está descrita no
+[guia do backend Java](../backend-java/README.md). Use `VITE_USE_MOCK=false`
+para acessar o Spring.
 
 Base da API: `VITE_API_URL` (padrão `/api`), ou seja, `GET /clientes` é
 `GET /api/clientes`. Formato: JSON. Datas de calendário: `aaaa-mm-dd`. Data e
@@ -62,7 +60,7 @@ As tabelas que correspondem a essas classes estão em `database/README.md`.
 
 ## Pontos em aberto (decidir em conjunto)
 
-1. **Autenticação:** token (JWT) ou sessão por cookie.
+1. **Autenticação:** sessão por cookie HttpOnly e proteção CSRF.
 2. **Nomes de campos:** o diagrama usa `camelCase` (Java) e o front usa
    `snake_case` (planilha). O front adapta o formato em `src/services/api.js`,
    então o back-end pode manter `camelCase`; só é preciso combinar os nomes.
@@ -79,6 +77,11 @@ As tabelas que correspondem a essas classes estão em `database/README.md`.
    valor por serviço.
 
 ## Autenticação
+
+### `GET /auth/csrf`
+
+Retorna `{ "headerName", "token" }`. Use o cabeçalho informado em requisições
+de escrita e preserve o cookie de sessão. O login renova a sessão.
 
 ### `POST /auth/login`
 
@@ -119,9 +122,9 @@ Resposta `201`:
 ```
 
 O cadastro nasce `PENDENTE` e só pode fazer login depois que um
-Administrador aprovar (`PATCH /usuarios/{id}`). **Exceção:** se ainda não
-existe nenhum usuário, a conta nasce `ADMINISTRADOR` e `APROVADO` (senão
-ninguém aprovaria os outros); nesse caso o front já faz o login em seguida.
+Administrador aprovar (`PATCH /usuarios/{id}`). No modo API, a primeira conta
+administrativa é criada pela configuração de bootstrap do Spring. A
+aprovação automática do primeiro cadastro pertence ao modo simulado.
 
 O front valida antes de enviar (nome e sobrenome, e-mail com `@`, papel
 escolhido, senha com no mínimo 8 caracteres e confirmação igual); o
@@ -288,13 +291,16 @@ Envio das linhas **já validadas pelo front**, em JSON:
 }
 ```
 
-O Spring valida de novo, grava o envio em **Telemetria** com status
-`PROCESSANDO` e responde `201` com o envio (mesmo formato de um item de
-`GET /uploads`). Depois chama o Python (`POST /etl`, abaixo). Se a validação
-do Spring recusar o envio, responde `400` com a `mensagem`.
+O Spring valida novamente e grava `PROCESSANDO` antes de chamar o ETL.
+O POST aguarda o resultado e devolve `201` com a telemetria normalizada,
+`400` quando o lote é recusado na validação ou `502` quando o ETL falha.
+O histórico registra os lotes processados e os erros de validação do Spring.
 
-O front consulta `GET /uploads` (ou `GET /dashboard`) a cada poucos segundos
-até o status mudar para `NORMALIZADO` ou `ERRO_ETL`.
+O CRUD de clientes usa `GET /clientes/{id}`, `POST /clientes`,
+`PUT /clientes/{id}` e `DELETE /clientes/{id}`. Os métodos POST e PUT recebem
+um objeto com a mesma estrutura de uma linha da planilha. Consulte
+`GET /clientes` após uma mudança para obter os identificadores da nova
+revisão. As operações de escrita retornam o registro da telemetria.
 
 ### `GET /dashboard`
 

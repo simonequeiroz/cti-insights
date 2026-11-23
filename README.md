@@ -84,21 +84,9 @@ Administrador na tela **Usuários**. Detalhes e permissões de cada papel em
 
 ## Como iniciar o Spring Boot
 
-Pré-requisito: Java 21. Não é preciso instalar o Maven, o Maven Wrapper
-(`mvnw`) baixa a versão certa sozinho.
-
-```bash
-cd backend-java
-./mvnw spring-boot:run          # Linux, macOS ou Git Bash
-.\mvnw.cmd spring-boot:run      # PowerShell / Windows
-```
-
-A aplicação sobe na porta 8080 e mostra `Started CtiInsightsApplication` no
-terminal. Ainda não há endpoints (Controller), banco de dados nem JPA, como
-previsto para esta Sprint.
-
-Credenciais nunca vão para o repositório: use um arquivo `.env` local
-(modelo em `backend-java/.env.example`, sem valores reais).
+Use JDK 21 e configure o PostgreSQL e o FastAPI conforme o
+[guia do backend Java](backend-java/README.md). O guia inclui variáveis,
+rotas, permissões e comandos para executar os testes.
 
 ## Telas entregues
 
