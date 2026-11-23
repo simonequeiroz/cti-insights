@@ -12,3 +12,12 @@ body {
     linear-gradient(90deg, #dce5ec 1px, transparent 1px);
   background-size: 40px 40px;
 }
+
+/* Usado pelo botão "Exportar PDF" (window.print()): esconde sidebar,
+   filtros e botões de ação na hora de imprimir, deixando só o conteúdo
+   (KPIs, gráficos, insights, tabela). */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
