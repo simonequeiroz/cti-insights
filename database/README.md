@@ -1,8 +1,7 @@
 # Banco de dados — como começar
 
-Guia para quem vai montar o banco do CTI Insights (PostgreSQL). Hoje a pasta
-`database/` só tem o `schema.sql`, que está **vazio**. Nenhuma tabela foi criada
-ainda, nem localmente nem no Neon.
+O arquivo `schema.sql` é a versão inicial (V1) do esquema compartilhado
+pelo Spring/JDBC e pelo FastAPI. O banco de destino é PostgreSQL.
 
 ## 1. O que já está decidido (não precisa inventar)
 
@@ -19,52 +18,25 @@ O Vue **nunca** acessa o banco. O caminho é Vue → Spring Boot (Java) → Post
 O Ricardo (Java) é quem vai conectar no banco, então combine os nomes das
 tabelas com ele.
 
-## 2. O que falta
+## 2. Aplicar o esquema
 
-1. **Escrever o `schema.sql`**: as tabelas, as chaves e as regras (seção 4).
-2. **Criar um `seed.sql`**: alguns dados de teste para o Java e o front usarem.
-3. **Criar o banco no Neon** e passar a conexão ao Ricardo e ao Miguel (seção 6).
+Use um banco vazio para aplicar a versão inicial. Em bancos já provisionados,
+confira a versão do esquema e coordene a migração com o responsável.
 
-O desenho das tabelas já foi decidido (seção 4). Restam só dois detalhes, que
-não impedem de começar (seção 5).
+```bash
+createdb cti_insights
+psql -v ON_ERROR_STOP=1 -d cti_insights -f database/schema.sql
+```
 
-## 3. Primeiros passos (na sua máquina)
+A aplicação é transacional. Registre a versão aplicada pelo commit ou pela
+tag da entrega. Evoluções devem ter scripts incrementais versionados.
 
-1. **Instale o PostgreSQL** (versão 16 ou 17) pelo instalador oficial:
-   <https://www.postgresql.org/download/windows/>. Anote a senha do usuário
-   `postgres` que o instalador pede. O instalador já traz o **pgAdmin**, que
-   é a tela para ver as tabelas. O DBeaver também serve.
-2. **Crie o banco** no pgAdmin (botão direito em *Databases* → *Create*) com o
-   nome `cti_insights`, ou pelo terminal:
+## 3. Integração
 
-   ```bash
-   psql -U postgres -c "CREATE DATABASE cti_insights;"
-   ```
-
-3. **Crie uma branch** a partir da `main` atualizada:
-
-   ```bash
-   git checkout main
-   git pull
-   git checkout -b feature/database-schema
-   ```
-
-4. **Escreva o `schema.sql`** começando pela seção 4. Rode e repita até não
-   dar erro:
-
-   ```bash
-   psql -U postgres -d cti_insights -f database/schema.sql
-   ```
-
-   Dica: comece o arquivo com `DROP TABLE IF EXISTS ... CASCADE;` para poder
-   rodar de novo do zero quantas vezes quiser.
-5. **Escreva o `seed.sql`** com 1 usuário, 1 envio em `telemetria` (status
-   `NORMALIZADO`), 2 consultores, 3 serviços e uns 5 clientes ligados a esse
-   envio, e rode da mesma forma.
-6. **Teste a consulta principal** (seção 4.3). Se ela devolver os clientes
-   certinhos, o banco atende a tela de Dashboard.
-7. **Abra um PR** para a `main` com `schema.sql`, `seed.sql` e um print do
-   pgAdmin com as tabelas, para a pasta `evidencias/`.
+Aponte as configurações do Java e do Python para o mesmo banco e esquema.
+O Spring usa JDBC e mantém a inicialização SQL
+desligada. O FastAPI grava cada carteira em uma transação. Consulte o
+[guia de execução](../backend-java/README.md).
 
 ## 4. Tabelas
 
@@ -184,7 +156,7 @@ Já decididas pelo grupo:
 
 | # | Decisão |
 |---|---|
-| 1 | **Quem cria as tabelas é o `schema.sql`.** No Java, `spring.jpa.hibernate.ddl-auto=validate`, que só confere se as tabelas batem e nunca cria nem altera. Combinar com o Ricardo. |
+| 1 | **Quem cria as tabelas é o `schema.sql`.** O Java usa JDBC com `spring.sql.init.mode=never`. |
 | 2 | **Login usa a tabela `usuario`**, separada de `consultor`: nem todo usuário é consultor (Gestor e Administrador também entram). |
 | 3 | **Um contrato por cliente.** A tabela `contrato` existe (o diagrama permite vários), mas a planilha traz um por cliente. |
 | 4 | **Frases do ETL na tabela `insight`**, uma por linha; números e gráficos em `estatistica.resultado` (`JSONB`). |
@@ -209,19 +181,7 @@ Ainda em aberto (não impedem de começar):
 2. No painel, clique em **Connect** e copie os dados de conexão: host
    (termina com `.neon.tech`), banco, usuário e senha. A conexão exige SSL
    (`sslmode=require`).
-3. Rode o mesmo `schema.sql` e o `seed.sql` nele: pelo **SQL Editor** do
-   próprio painel do Neon, ou pelo pgAdmin/DBeaver conectando com esses dados.
+3. Combine a aplicação do esquema com Ryan. Use `schema.sql` para um banco vazio.
 4. Passe ao Ricardo (Java) e ao Miguel (Python) os dados de conexão **por
    mensagem privada**. Eles vão no arquivo `.env` de cada um, que não vai para o
    Git. **Nunca** coloque senha no `schema.sql`, no README ou num commit.
-
-## 7. Checklist
-
-- [ ] PostgreSQL instalado e banco `cti_insights` criado
-- [ ] Branch `feature/database-schema` criada
-- [ ] `schema.sql` cria as 9 tabelas sem erro
-- [ ] `seed.sql` com dados de teste
-- [ ] Consulta da seção 4.3 devolve os clientes
-- [ ] Decisão 1 da seção 5 combinada com o Ricardo
-- [ ] PR aberto com print das tabelas
-- [ ] Banco criado no Neon e conexão passada ao Ricardo e ao Miguel
