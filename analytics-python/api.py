@@ -4,6 +4,7 @@
 # Como ligar:  uvicorn api:app --port 8000        (documentação automática em http://localhost:8000/docs)
 # ============================================================================
 import logging                                                                      # logging: escreve mensagens no terminal
+import hmac
 import os                                                                           # os: lê variáveis de ambiente (ETL_API_KEY)
 from typing import Any                                                              # Any: "qualquer tipo" (valores das linhas)
 
@@ -42,8 +43,10 @@ def saude() -> dict:                                                            
 
 @app.post("/etl")                                                                   # POST /etl: recebe o envio, processa e grava no banco
 def etl(pedido: Pedido, x_etl_key: str | None = Header(default=None)) -> dict:      # x_etl_key: cabeçalho X-ETL-Key
-    chave = os.getenv("ETL_API_KEY", "").strip()                                    # chave combinada com o Spring (vazia = sem chave, só para estudo)
-    if chave and x_etl_key != chave:                                                # há chave configurada e a enviada não confere?
+    chave = os.getenv("ETL_API_KEY", "").strip()
+    if not chave:
+        raise HTTPException(status_code=503, detail="Chave do ETL não configurada.")
+    if not x_etl_key or not hmac.compare_digest(x_etl_key.encode(), chave.encode()):
         raise HTTPException(status_code=401, detail="Chave do ETL inválida.")       # recusa: 401 não autorizado
     if not pedido.linhas and pedido.recebidas != 0:
         raise HTTPException(status_code=422, detail="Nenhuma linha válida foi enviada.")

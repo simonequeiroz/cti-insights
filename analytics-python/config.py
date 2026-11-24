@@ -16,7 +16,7 @@ def database_url() -> URL:                                     # função: devol
     return URL.create(                                         # monta o endereço do PostgreSQL
         "postgresql+psycopg",                                  # driver: psycopg (conversa com o PostgreSQL)
         username=os.getenv("DB_USER", "cti"),                  # usuário (do .env)
-        password=os.getenv("DB_PASSWORD", "cti123"),           # senha (do .env)
+        password=os.getenv("DB_PASSWORD"),           # senha (do .env)
         host=os.getenv("DB_HOST", "localhost"),                # servidor (no Neon termina com .neon.tech)
         port=int(os.getenv("DB_PORT", "5432")),                # porta padrão do PostgreSQL
         database=os.getenv("DB_NAME", "ctiinsights"),          # nome do banco

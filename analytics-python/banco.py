@@ -19,7 +19,7 @@ log = logging.getLogger("analytics")                                            
 
 
 def criar_engine() -> Engine:                                                       # criar_engine: abre a "porta" de conexão com o banco
-    return create_engine(database_url(), pool_pre_ping=True)                        # pool_pre_ping testa a conexão antes de usar
+    return create_engine(database_url(), pool_pre_ping=True, hide_parameters=True)                        # pool_pre_ping testa a conexão antes de usar
 
 
 def agora_utc() -> datetime:                                                        # agora_utc: hora atual em UTC

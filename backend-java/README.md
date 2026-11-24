@@ -20,7 +20,7 @@ Spring consulta as tabelas compartilhadas no PostgreSQL.
 3. Copie `backend-java/.env.example` para `backend-java/.env`. Configure
    `DB_URL` no formato JDBC, `DB_USER` e `DB_PASSWORD` para o mesmo banco e
    esquema usados pelo Python. Use `ETL_URL` como URL base do FastAPI e a
-   mesma `ETL_API_KEY` nos dois serviços. Os padrões de conexão e leitura
+   mesma `ETL_API_KEY` nos dois serviços. O FastAPI responde `503` quando a chave não foi configurada e `401` quando a chave enviada está ausente ou incorreta. Os padrões de conexão e leitura
    são 3 s e 60 s, configuráveis com `ETL_CONNECT_TIMEOUT` e `ETL_READ_TIMEOUT`.
 4. Para o primeiro administrador, configure `ADMIN_NAME`, `ADMIN_EMAIL` e
    `ADMIN_PASSWORD` antes de ligar o Spring. O bootstrap é transacional e
@@ -132,3 +132,11 @@ preservação da carteira após rejeição e o CRUD até uma carteira vazia,
 mantendo os dois clientes do lote original no banco. No Chromium, o modo
 API do Vue passou por login, importação de CSV, exibição de insight do
 FastAPI no Dashboard e consulta do cliente em Relatórios.
+
+No Windows, a integração recuperada foi revalidada com cinco testes Maven
+em PostgreSQL 17, lint, build do Vue e auditoria npm com zero alertas após
+atualizar o lockfile. Um smoke test HTTP pelo proxy do Vite confirmou login
+com sessão e CSRF, rejeição de requisição ao ETL sem chave, upload,
+clientes, dashboard, preservação da carteira após erros e edição e
+exclusão com histórico preservado. O teste usou Spring, FastAPI e
+PostgreSQL 17 locais.
