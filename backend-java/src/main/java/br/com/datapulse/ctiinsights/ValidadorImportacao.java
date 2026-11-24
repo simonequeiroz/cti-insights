@@ -18,10 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
-import static br.com.datapulse.ctiinsights.ApiErrors.Failure;
+import static br.com.datapulse.ctiinsights.ErrosApi.Failure;
 
 @Component
-class ImportData {
+class ValidadorImportacao {
     record Upload(String nomeArquivo, Integer linhasLidas, List<Input> linhas) {}
     record Input(@NotBlank @Size(max = 50) String codigo_cliente,
                  @NotBlank @Size(max = 200) String nome_cliente,
@@ -37,7 +37,7 @@ class ImportData {
     private static final DateTimeFormatter BR_DATE =
             DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
-    ImportData(Validator validator) {
+    ValidadorImportacao(Validator validator) {
         this.validator = validator;
     }
 
@@ -83,7 +83,7 @@ class ImportData {
         if (!level.matches("[ABC]") || (!uf.isEmpty() && !uf.matches("[A-Z]{2}"))) {
             throw invalid("Informe nível A, B ou C e, se preenchida, UF com duas letras.");
         }
-        var serviceNames = java.util.Arrays.stream(services.split(";")).map(ImportData::clean)
+        var serviceNames = java.util.Arrays.stream(services.split(";")).map(ValidadorImportacao::clean)
                 .filter(name -> !name.isEmpty()).toList();
         if (serviceNames.isEmpty() || serviceNames.stream().anyMatch(name -> name.length() > 100)) {
             throw invalid("Informe ao menos um serviço com até 100 caracteres.");

@@ -23,7 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 class SecurityConfig {
-    static final String ACCOUNT_ID = "cti.usuarioId";
+    static final String USUARIO_ID = "cti.usuarioId";
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -31,7 +31,7 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain security(HttpSecurity http, Accounts accounts) {
+    SecurityFilterChain security(HttpSecurity http, UsuarioService usuarios) {
         return http
                 .securityContext(context -> context.securityContextRepository(new NullSecurityContextRepository()))
                 .requestCache(cache -> cache.disable())
@@ -41,7 +41,7 @@ class SecurityConfig {
                                 error(response, 401, "Autenticação necessária."))
                         .accessDeniedHandler((request, response, error) ->
                                 error(response, 403, "Acesso negado.")))
-                .addFilterBefore(new SessionIdentity(accounts), AuthorizationFilter.class)
+                .addFilterBefore(new IdentidadeDaSessao(usuarios), AuthorizationFilter.class)
                 .authorizeHttpRequests(routes -> routes
                         .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastro").permitAll()
@@ -62,23 +62,23 @@ class SecurityConfig {
         response.getWriter().write("{\"mensagem\":\"" + message + "\"}");
     }
 
-    private static class SessionIdentity extends OncePerRequestFilter {
-        private final Accounts accounts;
+    private static class IdentidadeDaSessao extends OncePerRequestFilter {
+        private final UsuarioService usuarios;
 
-        SessionIdentity(Accounts accounts) {
-            this.accounts = accounts;
+        IdentidadeDaSessao(UsuarioService usuarios) {
+            this.usuarios = usuarios;
         }
 
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                         FilterChain chain) throws ServletException, IOException {
             var session = request.getSession(false);
-            if (session != null && session.getAttribute(ACCOUNT_ID) instanceof Long id) {
-                var account = accounts.active(id);
-                if (account == null) {
+            if (session != null && session.getAttribute(USUARIO_ID) instanceof Long id) {
+                var papel = usuarios.papelAprovado(id);
+                if (papel == null) {
                     session.invalidate();
                 } else {
-                    var role = new SimpleGrantedAuthority("ROLE_" + account.papel());
+                    var role = new SimpleGrantedAuthority("ROLE_" + papel);
                     var context = SecurityContextHolder.createEmptyContext();
                     context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(id, null, List.of(role)));
                     SecurityContextHolder.setContext(context);

@@ -12,10 +12,10 @@ import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.*;
 
-class ImportDataTests {
+class ValidadorImportacaoTests {
     private static final ValidatorFactory VALIDATORS = Validation.buildDefaultValidatorFactory();
     private static final JsonMapper JSON = new JsonMapper();
-    private final ImportData validation = new ImportData(VALIDATORS.getValidator());
+    private final ValidadorImportacao validation = new ValidadorImportacao(VALIDATORS.getValidator());
 
     @AfterAll
     static void closeValidators() {
@@ -52,14 +52,14 @@ class ImportDataTests {
     void rejectsDuplicateOrMissingRows() {
         var first = line("C1", "0", "2024-05-01", "", "MPLS");
         var duplicate = line(" c1 ", "0", "2024-05-01", "", "MPLS");
-        assertThatThrownBy(() -> validation.rows(new ImportData.Upload("carteira.xlsx", 3, List.of(first, duplicate))))
+        assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("carteira.xlsx", 3, List.of(first, duplicate))))
                 .hasMessageContaining("Linha enviada 2").hasMessageContaining("duplicado");
-        assertThatThrownBy(() -> validation.rows(new ImportData.Upload("carteira.xlsx", 2, Arrays.asList(first, null))))
+        assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("carteira.xlsx", 2, Arrays.asList(first, null))))
                 .hasMessageContaining("Linha enviada 2");
     }
 
-    private static ImportData.Input line(String code, String money, String date, String uf, String services) {
-        return new ImportData.Input(code, "Cliente Teste", "Consultor Teste", "Indústria", "a",
+    private static ValidadorImportacao.Input line(String code, String money, String date, String uf, String services) {
+        return new ValidadorImportacao.Input(code, "Cliente Teste", "Consultor Teste", "Indústria", "a",
                 JSON.readTree(money), date, services, null, uf);
     }
 }

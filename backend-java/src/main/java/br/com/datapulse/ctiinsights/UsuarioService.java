@@ -19,10 +19,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static br.com.datapulse.ctiinsights.ApiErrors.Failure;
+import static br.com.datapulse.ctiinsights.ErrosApi.Failure;
 
 @Service
-class Accounts {
+class UsuarioService {
     enum Role { CONSULTOR, GESTOR, ADMINISTRADOR }
     enum Status { PENDENTE, APROVADO, REJEITADO }
 
@@ -42,13 +42,13 @@ class Accounts {
     private final PasswordEncoder encoder;
     private final String dummyHash;
 
-    Accounts(JdbcClient jdbc, PasswordEncoder encoder) {
+    UsuarioService(JdbcClient jdbc, PasswordEncoder encoder) {
         this.jdbc = jdbc;
         this.encoder = encoder;
         this.dummyHash = encoder.encode(java.util.UUID.randomUUID().toString());
     }
 
-    Account register(Registration input) {
+    Account cadastrar(Registration input) {
         String name = input.nome() == null ? "" : input.nome().strip();
         if (name.length() > 150 || name.split("\\s+").length < 2 || input.papel() == null) {
             throw new Failure(HttpStatus.BAD_REQUEST, "Informe nome, sobrenome e papel.");
@@ -82,10 +82,10 @@ class Accounts {
                 VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (email) DO NOTHING RETURNING id
                 """).params(name, email, encoder.encode(password), role.name(), role.name(), status.name())
                 .query(Long.class).optional();
-        return find(created.orElseThrow(() -> new Failure(HttpStatus.CONFLICT, "E-mail já cadastrado.")));
+        return buscar(created.orElseThrow(() -> new Failure(HttpStatus.CONFLICT, "E-mail já cadastrado.")));
     }
 
-    Account authenticate(Credentials input) {
+    Account autenticar(Credentials input) {
         String address = input.email() == null ? "" : input.email().strip().toLowerCase(Locale.ROOT);
         if (!fitsBcrypt(input.senha()) || address.length() > 254) {
             throw invalidCredentials();
@@ -97,29 +97,29 @@ class Accounts {
         if (!matches || login.isEmpty()) {
             throw invalidCredentials();
         }
-        var account = login.orElseThrow().account();
+        var account = login.get().account();
         if (account.status() != Status.APROVADO) {
             throw new Failure(HttpStatus.FORBIDDEN, "Cadastro sem aprovação.", account.status().name());
         }
         return account;
     }
 
-    List<Account> list() {
-        return jdbc.sql(SELECT + " ORDER BY u.id DESC").query(Accounts::map).list();
+    List<Account> listar() {
+        return jdbc.sql(SELECT + " ORDER BY u.id DESC").query(UsuarioService::map).list();
     }
 
-    Account find(long id) {
-        return jdbc.sql(SELECT + " WHERE u.id = ?").param(id).query(Accounts::map).optional()
+    Account buscar(long id) {
+        return jdbc.sql(SELECT + " WHERE u.id = ?").param(id).query(UsuarioService::map).optional()
                 .orElseThrow(() -> new Failure(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
     }
 
-    Account active(long id) {
-        return jdbc.sql(SELECT + " WHERE u.id = ? AND u.status = 'APROVADO'").param(id)
-                .query(Accounts::map).optional().orElse(null);
+    Role papelAprovado(long id) {
+        return jdbc.sql("SELECT papel FROM usuario WHERE id = ? AND status = 'APROVADO'")
+                .param(id).query(String.class).optional().map(Role::valueOf).orElse(null);
     }
 
     @Transactional
-    public Account review(long id, Review input, long reviewer) {
+    public Account avaliar(long id, Review input, long reviewer) {
         if (input.status() == null || input.status() == Status.PENDENTE || input.papel() == null) {
             throw new Failure(HttpStatus.BAD_REQUEST, "Informe aprovação ou rejeição e um papel.");
         }
@@ -127,15 +127,14 @@ class Accounts {
             throw new Failure(HttpStatus.CONFLICT, "Você deve manter sua própria conta administrativa aprovada.");
         }
         jdbc.sql("LOCK TABLE usuario IN SHARE ROW EXCLUSIVE MODE").update();
-        var actor = active(reviewer);
-        if (actor == null || actor.papel() != Role.ADMINISTRADOR) {
+        if (papelAprovado(reviewer) != Role.ADMINISTRADOR) {
             throw new Failure(HttpStatus.FORBIDDEN, "Acesso restrito à administração.");
         }
         jdbc.sql("""
                 UPDATE usuario SET status = ?, papel = ?, avaliado_por_id = ?,
                     avaliado_em = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' WHERE id = ?
                 """).params(input.status().name(), input.papel().name(), reviewer, id).update();
-        return find(id);
+        return buscar(id);
     }
 
     static Instant utc(ResultSet rs, String column) throws SQLException {
@@ -171,7 +170,7 @@ class Accounts {
 @Configuration
 class AdminBootstrap {
     @Bean
-    ApplicationRunner adminInitializer(Accounts accounts, @Value("${cti.admin.nome}") String name,
+    ApplicationRunner adminInitializer(UsuarioService accounts, @Value("${cti.admin.nome}") String name,
                                        @Value("${cti.admin.email}") String email,
                                        @Value("${cti.admin.senha}") String password) {
         return args -> accounts.bootstrap(name, email, password);

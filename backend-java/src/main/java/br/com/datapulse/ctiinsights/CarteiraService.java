@@ -12,18 +12,15 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-import static br.com.datapulse.ctiinsights.ApiErrors.Failure;
+import static br.com.datapulse.ctiinsights.ErrosApi.Failure;
 
 @Service
-class Portfolio {
+class CarteiraService {
     record Upload(long id, String tipoOperacao, String nomeArquivo, Instant dataHora, String status,
                   Integer linhasLidas, String mensagem, String enviadoPor, Integer linhasImportadas) {}
     record Dashboard(Upload envio, Instant geradoEm, JsonNode estatisticas, List<String> insights) {}
@@ -31,8 +28,8 @@ class Portfolio {
                   String nivel_cliente, BigDecimal faturamento, LocalDate data_contratacao, String servico,
                   List<String> servicos, String cidade, String uf) {
 
-        ImportData.Row toRow() {
-            return new ImportData.Row(codigo_cliente, nome_cliente, consultor, segmento, nivel_cliente,
+        ValidadorImportacao.Row toRow() {
+            return new ValidadorImportacao.Row(codigo_cliente, nome_cliente, consultor, segmento, nivel_cliente,
                     faturamento, data_contratacao.toString(), String.join(";", servicos), cidade, uf);
         }
     }
@@ -58,71 +55,71 @@ class Portfolio {
 
     private final JdbcClient jdbc;
     private final JsonMapper json;
-    private final ImportData validation;
-    private final EtlClient etl;
-    private final TransactionTemplate committedInsert;
+    private final ValidadorImportacao validador;
+    private final ClienteEtl etl;
+    private final TelemetriaRepository telemetria;
 
-    Portfolio(JdbcClient jdbc, JsonMapper json, ImportData validation, EtlClient etl,
-              PlatformTransactionManager manager) {
+    CarteiraService(JdbcClient jdbc, JsonMapper json, ValidadorImportacao validador, ClienteEtl etl,
+              TelemetriaRepository telemetria) {
         this.jdbc = jdbc;
         this.json = json;
-        this.validation = validation;
+        this.validador = validador;
         this.etl = etl;
-        this.committedInsert = new TransactionTemplate(manager);
-        committedInsert.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.telemetria = telemetria;
     }
 
-    List<Upload> uploads() {
-        return jdbc.sql(UPLOADS + " ORDER BY t.id DESC").query(Portfolio::mapUpload).list();
+    List<Upload> listarEnvios() {
+        return jdbc.sql(UPLOADS + " ORDER BY t.id DESC").query(CarteiraService::mapUpload).list();
     }
 
-    List<Client> clients() {
-        return jdbc.sql(CLIENTS + " ORDER BY c.nome, c.id").query(Portfolio::mapClient).list();
+    List<Client> listarClientes() {
+        return jdbc.sql(CLIENTS + " ORDER BY c.nome, c.id").query(CarteiraService::mapClient).list();
     }
 
-    Client client(long id) {
-        return jdbc.sql(CLIENTS + " AND c.id = ?").param(id).query(Portfolio::mapClient).optional()
-                .orElseThrow(Portfolio::clientMissing);
+    Client buscarCliente(long id) {
+        return jdbc.sql(CLIENTS + " AND c.id = ?").param(id).query(CarteiraService::mapClient).optional()
+                .orElseThrow(CarteiraService::clienteNaoEncontrado);
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-    public Dashboard dashboard() {
-        var upload = jdbc.sql(UPLOADS + " WHERE t.id = (" + ACTIVE + ")").query(Portfolio::mapUpload)
+    public Dashboard consultarDashboard() {
+        var upload = jdbc.sql(UPLOADS + " WHERE t.id = (" + ACTIVE + ")").query(CarteiraService::mapUpload)
                 .optional().orElseThrow(() -> new Failure(HttpStatus.NOT_FOUND, "Nenhum envio normalizado."));
         var insights = jdbc.sql("SELECT descricao FROM insight WHERE telemetria_id = ? ORDER BY id")
                 .param(upload.id()).query(String.class).list();
         return jdbc.sql("SELECT gerado_em, resultado FROM estatistica WHERE telemetria_id = ?")
-                .param(upload.id()).query((rs, row) -> new Dashboard(upload, Accounts.utc(rs, "gerado_em"),
+                .param(upload.id()).query((rs, row) -> new Dashboard(upload, UsuarioService.utc(rs, "gerado_em"),
                         json.readTree(rs.getString("resultado")), insights))
                 .optional().orElseThrow(() -> new Failure(HttpStatus.NOT_FOUND, "Estatísticas indisponíveis."));
     }
 
     @Transactional
-    public Upload upload(ImportData.Upload request, long actor) {
-        List<ImportData.Row> rows;
+    public Upload importar(ValidadorImportacao.Upload request, long usuarioId) {
+        List<ValidadorImportacao.Row> rows;
         try {
-            rows = validation.rows(request);
+            rows = validador.rows(request);
         } catch (Failure error) {
             var filename = request.nomeArquivo();
             var count = request.linhasLidas();
-            insert(Operation.UPLOAD, filename == null || filename.isBlank() ? "arquivo" : filename,
-                    count == null || count < 0 ? null : count, actor, "ERRO_SCHEMA", error.getMessage());
+            telemetria.registrar(Operation.UPLOAD.name(), filename == null || filename.isBlank() ? "arquivo" : filename,
+                    count == null || count < 0 ? null : count, usuarioId, "ERRO_SCHEMA", error.getMessage());
             throw error;
         }
-        lockPortfolio();
-        return process(Operation.UPLOAD, request.nomeArquivo().strip(), request.linhasLidas(), rows, actor);
+        bloquearEscrita();
+        return processar(Operation.UPLOAD, request.nomeArquivo().strip(), request.linhasLidas(), rows, usuarioId);
     }
 
     @Transactional
-    public Upload change(Operation operation, Long id, ImportData.Input input, long actor) {
-        lockPortfolio();
-        ImportData.Row replacement = operation == Operation.EXCLUSAO_CLIENTE ? null : validation.row(input);
-        var previous = clients();
-        Client target = id == null ? null : previous.stream().filter(client -> client.id() == id)
-                .findFirst().orElseThrow(Portfolio::clientMissing);
-        var rows = new ArrayList<ImportData.Row>();
-        for (Client client : previous) {
-            if (client.equals(target)) {
+    public Upload alterarCarteira(Operation operation, Long id, ValidadorImportacao.Input input, long usuarioId) {
+        bloquearEscrita();
+        ValidadorImportacao.Row replacement = operation == Operation.EXCLUSAO_CLIENTE ? null : validador.row(input);
+        var carteiraAtual = listarClientes();
+        if (id != null && carteiraAtual.stream().noneMatch(cliente -> cliente.id() == id)) {
+            throw clienteNaoEncontrado();
+        }
+        var rows = new ArrayList<ValidadorImportacao.Row>();
+        for (Client client : carteiraAtual) {
+            if (id != null && client.id() == id) {
                 continue;
             }
             if (replacement != null && client.codigo_cliente().equals(replacement.codigo_cliente())) {
@@ -133,37 +130,29 @@ class Portfolio {
         if (replacement != null) {
             rows.add(replacement);
         }
-        return process(operation, "Alteração manual da carteira", rows.size(), rows, actor);
+        return processar(operation, "Alteração manual da carteira", rows.size(), rows, usuarioId);
     }
 
-    private void lockPortfolio() {
+    // Serializa uploads e edições para que duas revisões não partam da mesma carteira.
+    private void bloquearEscrita() {
         if (!jdbc.sql("SELECT pg_try_advisory_xact_lock(91376, 1)").query(Boolean.class).single()) {
             throw new Failure(HttpStatus.CONFLICT, "A carteira está sendo processada. Tente novamente.");
         }
     }
 
-    private Upload process(Operation operation, String filename, int received, List<ImportData.Row> rows, long actor) {
-        long id = insert(operation, filename, received, actor, "PROCESSANDO", "");
-        boolean ok = etl.process(id, received, rows);
+    private Upload processar(Operation operation, String filename, int received, List<ValidadorImportacao.Row> rows, long usuarioId) {
+        long id = telemetria.registrar(operation.name(), filename, received, usuarioId, "PROCESSANDO", "");
+        boolean ok = etl.processar(id, received, rows);
         jdbc.sql("""
                 UPDATE telemetria SET status = 'ERRO_ETL', mensagem = ? WHERE id = ? AND status = 'PROCESSANDO'
                 """).params(ok ? "O ETL respondeu sem confirmar a gravação." : "Não foi possível concluir o ETL.", id)
                 .update();
-        return jdbc.sql(UPLOADS + " WHERE t.id = ?").param(id).query(Portfolio::mapUpload).single();
-    }
-
-    private long insert(Operation operation, String filename, Integer received, long actor,
-                        String status, String message) {
-        return committedInsert.execute(transaction -> jdbc.sql("""
-                INSERT INTO telemetria (tipo_operacao, nome_arquivo, linhas_lidas, usuario_id, status, mensagem)
-                VALUES (:op, :arquivo, :total, :actor, :status, :msg) RETURNING id
-                """).param("op", operation.name()).param("arquivo", filename).param("total", received, java.sql.Types.INTEGER)
-                .param("actor", actor).param("status", status).param("msg", message).query(Long.class).single());
+        return jdbc.sql(UPLOADS + " WHERE t.id = ?").param(id).query(CarteiraService::mapUpload).single();
     }
 
     private static Upload mapUpload(ResultSet rs, int row) throws SQLException {
         return new Upload(rs.getLong("id"), rs.getString("tipo_operacao"), rs.getString("nome_arquivo"),
-                Accounts.utc(rs, "data_hora"), rs.getString("status"), rs.getObject("linhas_lidas", Integer.class),
+                UsuarioService.utc(rs, "data_hora"), rs.getString("status"), rs.getObject("linhas_lidas", Integer.class),
                 rs.getString("mensagem"), rs.getString("enviado_por"), rs.getObject("linhas_importadas", Integer.class));
     }
 
@@ -181,7 +170,7 @@ class Portfolio {
                 rs.getString("cidade"), rs.getString("uf"));
     }
 
-    private static Failure clientMissing() {
+    private static Failure clienteNaoEncontrado() {
         return new Failure(HttpStatus.NOT_FOUND, "Cliente não encontrado na carteira atual.");
     }
 }

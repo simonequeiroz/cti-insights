@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
-class ApiErrors {
+class ErrosApi {
     static class Failure extends RuntimeException {
         final HttpStatus status;
         final String code;

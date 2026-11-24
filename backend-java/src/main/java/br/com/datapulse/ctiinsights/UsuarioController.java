@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
-class AccountController {
-    private final Accounts accounts;
+class UsuarioController {
+    private final UsuarioService usuarios;
 
-    AccountController(Accounts accounts) {
-        this.accounts = accounts;
+    UsuarioController(UsuarioService usuarios) {
+        this.usuarios = usuarios;
     }
 
     @GetMapping("/health")
@@ -29,20 +29,20 @@ class AccountController {
     }
 
     @PostMapping("/auth/login")
-    Map<String, String> login(@RequestBody Accounts.Credentials credentials, HttpServletRequest request) {
-        var account = accounts.authenticate(credentials);
+    Map<String, String> login(@RequestBody UsuarioService.Credentials credentials, HttpServletRequest request) {
+        var account = usuarios.autenticar(credentials);
         var previous = request.getSession(false);
         if (previous != null) {
             previous.invalidate();
         }
-        request.getSession().setAttribute(SecurityConfig.ACCOUNT_ID, account.id());
+        request.getSession().setAttribute(SecurityConfig.USUARIO_ID, account.id());
         return Map.of("email", account.email(), "nome", account.nome(), "papel", account.papel().name());
     }
 
     @PostMapping("/auth/cadastro")
     @ResponseStatus(HttpStatus.CREATED)
-    Accounts.Account register(@RequestBody Accounts.Registration registration) {
-        return accounts.register(registration);
+    UsuarioService.Account register(@RequestBody UsuarioService.Registration registration) {
+        return usuarios.cadastrar(registration);
     }
 
     @PostMapping("/auth/logout")
@@ -52,13 +52,13 @@ class AccountController {
     }
 
     @GetMapping("/usuarios")
-    List<Accounts.Account> list() {
-        return accounts.list();
+    List<UsuarioService.Account> list() {
+        return usuarios.listar();
     }
 
     @PatchMapping("/usuarios/{id}")
-    Accounts.Account review(@PathVariable long id, @RequestBody Accounts.Review review,
+    UsuarioService.Account review(@PathVariable long id, @RequestBody UsuarioService.Review review,
                             @AuthenticationPrincipal Long reviewer) {
-        return accounts.review(id, review, reviewer);
+        return usuarios.avaliar(id, review, reviewer);
     }
 }
