@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useUploadStore } from '../../stores/uploadStore'
+import { USAR_MOCK } from '../../services/api'
 import { contar, formatarNumero } from '../../utils/datas'
 
 // Etapa 3: mostrar o impacto na base. Quem salva é a tela (evento
@@ -11,6 +12,15 @@ const upload = useUploadStore()
 
 const analise = computed(() => upload.analise)
 const ignoradas = computed(() => analise.value.linhasComErro.length)
+
+// Só no modo API: o ETL em Python descarta segmentos fora da lista conhecida.
+const descartadasPorSegmento = computed(() => {
+  if (USAR_MOCK) {
+    return 0
+  }
+
+  return analise.value.segmentosNaoReconhecidos.reduce((total, segmento) => total + segmento.quantidade, 0)
+})
 
 const impacto = computed(() => [
   { rotulo: 'Novos clientes', valor: `+${formatarNumero(analise.value.clientesNovos)}`, classe: 'text-green-700' },
@@ -87,6 +97,15 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
       {{ ignoradas === 1
         ? '1 linha com erro não será importada. Você pode corrigir e enviar de novo depois; ela também fica disponível para download no histórico.'
         : `${formatarNumero(ignoradas)} linhas com erro não serão importadas. Você pode corrigir e enviar de novo depois; elas também ficam disponíveis para download no histórico.` }}
+    </p>
+
+    <p
+      v-if="descartadasPorSegmento"
+      class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      {{ descartadasPorSegmento === 1
+        ? '1 cliente com segmento não reconhecido será descartado no processamento e não entra na carteira.'
+        : `${formatarNumero(descartadasPorSegmento)} clientes com segmento não reconhecido serão descartados no processamento e não entram na carteira.` }}
     </p>
 
     <div

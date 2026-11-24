@@ -47,6 +47,18 @@ const http = async (caminho, { method = 'GET', body } = {}) => {
   })
 
   if (!resposta.ok) {
+    // Sessão expirada no Spring (30 min sem uso): o localStorage ainda diz
+    // "logado", então limpa e volta ao login. As rotas /auth/* (ex.: senha
+    // errada no login) tratam o 401 na própria tela.
+    if (resposta.status === 401 && !caminho.startsWith('/auth/')) {
+      limparSessaoLocal()
+
+      if (window.location.pathname !== '/login') {
+        const destino = window.location.pathname + window.location.search
+        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}`)
+      }
+    }
+
     const corpo = await resposta.json().catch(() => ({}))
     throw erroComStatus(corpo.mensagem || `Erro ${resposta.status} em ${caminho}`, resposta.status, corpo.codigo)
   }
@@ -73,6 +85,13 @@ const papelVigente = papel => (papel === 'ANALISTA' ? 'CONSULTOR' : papel)
 // CONSULTOR, GESTOR ou ADMINISTRADOR (veja utils/papeis.js)
 export const papelUsuario = () => {
   return papelVigente(localStorage.getItem(CHAVE_PAPEL) || '')
+}
+
+const limparSessaoLocal = () => {
+  localStorage.removeItem(CHAVE_AUTH)
+  localStorage.removeItem(CHAVE_USUARIO)
+  localStorage.removeItem(CHAVE_NOME)
+  localStorage.removeItem(CHAVE_PAPEL)
 }
 
 const salvarSessao = usuario => {
@@ -279,10 +298,7 @@ export const avaliarUsuario = async (id, { status, papel }, avaliadoPor) => {
 
 // API: POST /auth/logout
 export const logout = async () => {
-  localStorage.removeItem(CHAVE_AUTH)
-  localStorage.removeItem(CHAVE_USUARIO)
-  localStorage.removeItem(CHAVE_NOME)
-  localStorage.removeItem(CHAVE_PAPEL)
+  limparSessaoLocal()
 
   if (!USAR_MOCK) {
     await http('/auth/logout', { method: 'POST' })

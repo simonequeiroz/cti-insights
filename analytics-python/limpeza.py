@@ -23,7 +23,11 @@ SEGMENTOS = {                                                                   
     "saude": "Saúde",                                                               # Saúde
     "edu": "Educação", "educacao": "Educação",                                      # Educação
     "tec": "Tecnologia", "ti": "Tecnologia", "tecnologia": "Tecnologia",            # Tecnologia
-}                                                                                   # fecha o bloco
+    "varejo": "Varejo",                                                             # Varejo
+    "agronegocio": "Agronegócio",                                                   # Agronegócio
+    "financeiro": "Financeiro",                                                     # Financeiro
+    "logistica": "Logística",                                                       # Logística
+}  # mesma lista de frontend-vue/src/utils/etl.js (MAPA_SEGMENTOS)                                                                                 # fecha o bloco
 SERVICOS = {                                                                        # dicionário: nome simplificado -> nome oficial do serviço
     "internet dedicada": "Internet Dedicada",                                       # Internet Dedicada
     "link empresarial": "Link Empresarial",                                         # Link Empresarial
