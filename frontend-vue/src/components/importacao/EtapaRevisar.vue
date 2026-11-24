@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { PERMITIR_IMPORTACAO_PARCIAL, useUploadStore } from '../../stores/uploadStore'
+import { USAR_MOCK } from '../../services/api'
 import { formatarTamanho } from '../../utils/etl'
 import { resumirCorrecoes } from '../../utils/correcoes'
 import { contar, formatarDataHora, formatarNumero } from '../../utils/datas'
@@ -91,7 +92,11 @@ const trocarArquivo = () => {
       <p class="mt-1">
         <template v-for="(segmento, indice) in analise.segmentosNaoReconhecidos" :key="segmento.valor">
           {{ indice ? ', ' : '' }}<span class="font-semibold">{{ segmento.valor }}</span> ({{ contar(segmento.quantidade, 'cliente', 'clientes') }})</template>.
-        Se for erro de digitação, corrija a planilha e envie de novo.
+        <template v-if="USAR_MOCK">Se for erro de digitação, corrija a planilha e envie de novo.</template>
+        <template v-else>
+          <span class="font-semibold">Esses clientes serão descartados no processamento e não entram na carteira.</span>
+          Corrija o segmento na planilha e envie de novo para incluí-los.
+        </template>
       </p>
     </div>
 

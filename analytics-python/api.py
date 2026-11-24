@@ -51,4 +51,6 @@ def etl(pedido: Pedido, x_etl_key: str | None = Header(default=None)) -> dict:
 def testar(linhas: list[dict[str, Any]]) -> dict:
     """Calcula indicadores de exemplo sem gravar no banco."""
     resultado = tratar(pd.DataFrame(linhas).astype(object))
+    if resultado.tratado.empty:
+        raise HTTPException(status_code=422, detail="Nenhuma linha válida para calcular os indicadores.")
     return calcular(resultado, len(linhas))

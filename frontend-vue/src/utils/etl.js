@@ -15,15 +15,22 @@ const chaveSegmento = valor => {
   return removerAcentos(String(valor || '').trim().toUpperCase()).replace(/\.$/, '')
 }
 
+// Mesma lista do ETL em Python (analytics-python/limpeza.py, SEGMENTOS):
+// segmento fora dela é descartado pelo Python na importação.
 const MAPA_SEGMENTOS = {
   'IND': 'Indústria',
   'INDUSTRIA': 'Indústria',
+  'INDUSTRIAL': 'Indústria',
   'COM': 'Comércio',
   'COMERCIO': 'Comércio',
+  'SERV': 'Serviços',
   'SERVICO': 'Serviços',
   'SERVICOS': 'Serviços',
   'SAUDE': 'Saúde',
+  'EDU': 'Educação',
   'EDUCACAO': 'Educação',
+  'TEC': 'Tecnologia',
+  'TI': 'Tecnologia',
   'TECNOLOGIA': 'Tecnologia',
   'VAREJO': 'Varejo',
   'AGRONEGOCIO': 'Agronegócio',

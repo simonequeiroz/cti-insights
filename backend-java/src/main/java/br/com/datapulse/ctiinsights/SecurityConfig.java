@@ -3,6 +3,7 @@ package br.com.datapulse.ctiinsights;
 import java.io.IOException;
 import java.util.List;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,9 @@ class SecurityConfig {
                                 error(response, 403, "Acesso negado.")))
                 .addFilterBefore(new IdentidadeDaSessao(usuarios), AuthorizationFilter.class)
                 .authorizeHttpRequests(routes -> routes
+                        // Sem isto, o denyAll abaixo bloqueia o /error do Spring e um erro 500
+                        // chega ao cliente como 401/403.
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastro").permitAll()
                         .requestMatchers("/api/usuarios", "/api/usuarios/**").hasRole("ADMINISTRADOR")
