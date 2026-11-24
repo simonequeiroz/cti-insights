@@ -19,7 +19,7 @@ log = logging.getLogger("analytics")                                            
 
 
 def criar_engine() -> Engine:                                                       # criar_engine: abre a "porta" de conexão com o banco
-    return create_engine(database_url(), pool_pre_ping=True)                        # pool_pre_ping testa a conexão antes de usar
+    return create_engine(database_url(), pool_pre_ping=True, hide_parameters=True)                        # pool_pre_ping testa a conexão antes de usar
 
 
 def agora_utc() -> datetime:                                                        # agora_utc: hora atual em UTC
@@ -28,18 +28,21 @@ def agora_utc() -> datetime:                                                    
 
 
 # ------------------------------------------------------------------- telemetria (cada envio de planilha)
-def reservar_lote(engine: Engine, telemetria_id: int) -> bool:                      # reservar_lote: confere se o envio está esperando o ETL
-    """Só processa envios com status PROCESSANDO (criados pelo backend e ainda sem resultado)."""
+def reservar_lote(engine: Engine, telemetria_id: int) -> str | None:                      # reservar_lote: confere se o envio está esperando o ETL
+    """Reserva uma única execução do envio e devolve seu tipo de operação."""
     with engine.begin() as conn:                                                    # abre uma transação (confirma ao sair do bloco)
-        r = conn.execute(                                                           # executa o UPDATE
-            text("UPDATE telemetria SET mensagem = 'ETL em andamento...' "          # avisa na mensagem que o ETL começou
-                 "WHERE id = :id AND status = 'PROCESSANDO'"), {"id": telemetria_id})  # só se o envio ainda estiver PROCESSANDO
-        return r.rowcount == 1                                                      # true se exatamente 1 envio foi encontrado
+        return conn.execute(
+            text("""
+                UPDATE telemetria SET mensagem = 'ETL em andamento...'
+                WHERE id = :id AND status = 'PROCESSANDO' AND mensagem = ''
+                RETURNING tipo_operacao
+                """), {"id": telemetria_id}
+        ).scalar_one_or_none()
 
 
 def marcar_erro(engine: Engine, telemetria_id: int, mensagem: str) -> None:         # marcar_erro: grava ERRO_ETL no envio
     with engine.begin() as conn:                                                    # abre uma transação
-        conn.execute(text("UPDATE telemetria SET status = 'ERRO_ETL', mensagem = :m WHERE id = :id"),  # SQL: status ERRO_ETL e a mensagem
+        conn.execute(text("UPDATE telemetria SET status = 'ERRO_ETL', mensagem = :m WHERE id = :id AND status = 'PROCESSANDO'"),  # SQL: status ERRO_ETL e a mensagem
                      {"id": telemetria_id, "m": mensagem[:480]})                    # mensagem limitada a 480 caracteres
 
 
@@ -47,16 +50,14 @@ def marcar_erro(engine: Engine, telemetria_id: int, mensagem: str) -> None:     
 def gravar_resultado(engine: Engine, telemetria_id: int, tratado: pd.DataFrame, payload: dict, rejeitadas_etl: int) -> None:  # gravar_resultado: grava clientes, contratos, estatísticas e insights
     """Grava tudo em uma única transação: ou o envio inteiro é processado, ou nada muda."""
     with engine.begin() as conn:                                                    # uma transação só: ou grava tudo ou nada
-        # reprocessar o mesmo envio substitui o resultado anterior
-        conn.execute(text("DELETE FROM estatistica WHERE telemetria_id = :t"), {"t": telemetria_id})  # apaga as estatísticas antigas do envio
-        conn.execute(text("DELETE FROM insight WHERE telemetria_id = :t"), {"t": telemetria_id})  # apaga as frases antigas do envio
-        conn.execute(text("""
-            DELETE FROM contrato_servico WHERE contrato_id IN
-                (SELECT ct.id FROM contrato ct JOIN cliente c ON c.id = ct.cliente_id WHERE c.telemetria_id = :t)
-        """), {"t": telemetria_id})                                                 # apaga os serviços dos contratos do envio
-        conn.execute(text("DELETE FROM contrato WHERE cliente_id IN (SELECT id FROM cliente WHERE telemetria_id = :t)"),  # apaga os contratos do envio
-                     {"t": telemetria_id})                                          # (continuação)
-        conn.execute(text("DELETE FROM cliente WHERE telemetria_id = :t"), {"t": telemetria_id})  # apaga os clientes do envio
+        # Confere o status sob bloqueio. Uma chamada que terminou após o timeout
+        # do Spring não pode publicar se o envio já estiver marcado como erro.
+        status = conn.execute(
+            text("SELECT status FROM telemetria WHERE id = :id FOR UPDATE"),
+            {"id": telemetria_id},
+        ).scalar_one()
+        if status != "PROCESSANDO":
+            raise ValueError("O envio não está mais disponível para gravação.")
 
         consultores: dict[str, int] = {}                                            # cache: nome do consultor -> id
         servicos: dict[str, int] = {}                                               # cache: nome do serviço -> id
@@ -97,7 +98,7 @@ def gravar_resultado(engine: Engine, telemetria_id: int, tratado: pd.DataFrame, 
         mensagem = f"ETL concluído: {len(tratado)} clientes tratados"               # monta a mensagem final
         if rejeitadas_etl:                                                          # se o ETL recusou alguma linha
             mensagem += f", {rejeitadas_etl} linhas recusadas na limpeza"           # acrescenta quantas
-        conn.execute(text("UPDATE telemetria SET status = 'NORMALIZADO', mensagem = :m WHERE id = :id"),  # marca o envio como NORMALIZADO
+        conn.execute(text("UPDATE telemetria SET status = 'NORMALIZADO', mensagem = :m WHERE id = :id AND status = 'PROCESSANDO'"),  # marca o envio como NORMALIZADO
                      {"id": telemetria_id, "m": mensagem + "."})                    # com a mensagem de resumo
     log.info("Envio %s gravado: %s clientes, %s consultores, %s serviços",          # escreve no terminal o resumo
              telemetria_id, len(tratado), len(consultores), len(servicos))          # (continuação) contagens

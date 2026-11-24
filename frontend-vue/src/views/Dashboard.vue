@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { lerDashboard, USAR_MOCK } from '../services/api'
 import Sidebar from '../components/Sidebar.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
@@ -49,8 +50,24 @@ const dataFim = ref('')
 const periodoAtivo = computed(() => Boolean(dataInicio.value || dataFim.value))
 const periodoImpossivel = computed(() => periodoInvertido(dataInicio.value, dataFim.value))
 
-onMounted(() => {
-  clientesStore.carregar()
+const dashboard = ref(null)
+const erroDashboard = ref('')
+const estatisticas = computed(() =>
+  filtroSegmento.value === 'Todos' && filtroNivel.value === 'Todos' && !periodoAtivo.value
+    ? dashboard.value?.estatisticas
+    : null
+)
+
+onMounted(async () => {
+  try {
+    const [, resultado] = await Promise.all([
+      clientesStore.carregar(),
+      USAR_MOCK ? null : lerDashboard()
+    ])
+    dashboard.value = resultado
+  } catch (erro) {
+    erroDashboard.value = erro.message
+  }
 })
 
 const segmentos = computed(() => {
@@ -102,13 +119,16 @@ const proximaPagina = () => {
 }
 
 const totalClientes = computed(() => {
-  return clientesFiltrados.value.length
+  return estatisticas.value?.resumo.totalClientes ?? clientesFiltrados.value.length
 })
 
 // Total de serviços contratados na base filtrada: cada cliente pode ter
 // vários serviços na mesma linha (lista "servicos"). Bases salvas antes
 // dessa lista existir só têm o texto "servico", contado como 1.
 const totalServicos = computed(() => {
+  if (estatisticas.value) {
+    return estatisticas.value.porServico.reduce((total, item) => total + item.contratos, 0)
+  }
   return clientesFiltrados.value.reduce(
     (total, cliente) => total + (cliente.servicos?.length ?? (cliente.servico ? 1 : 0)),
     0
@@ -119,6 +139,7 @@ const totalServicos = computed(() => {
 // trata consultor/segmento/nivel_cliente) — clientes sem essa coluna
 // preenchida entram como 0, em vez de quebrar a soma com NaN.
 const faturamentoTotal = computed(() => {
+  if (estatisticas.value) return estatisticas.value.resumo.faturamentoTotal
   return clientesFiltrados.value.reduce(
     (total, cliente) => total + (cliente.faturamento || 0),
     0
@@ -126,6 +147,7 @@ const faturamentoTotal = computed(() => {
 })
 
 const ticketMedio = computed(() => {
+  if (estatisticas.value) return estatisticas.value.resumo.media ?? 0
   if (totalClientes.value === 0) {
     return 0
   }
@@ -147,6 +169,11 @@ const formatarPeriodo = chave => {
 }
 
 const evolucaoContratacoes = computed(() => {
+  if (estatisticas.value) {
+    return estatisticas.value.porMes.map(({ mes, clientes }) => ({
+      periodo: mes, label: formatarPeriodo(mes), contratos: clientes
+    }))
+  }
   const contagemPorPeriodo = {}
 
   clientesFiltrados.value.forEach(cliente => {
@@ -237,6 +264,10 @@ const graficoLinhaOptions = {
 }
 
 const faturamentoPorSegmento = computed(() => {
+  if (estatisticas.value) {
+    const valores = new Map(estatisticas.value.porSegmento.map(item => [item.segmento, item.faturamentoTotal]))
+    return segmentos.value.map(segmento => valores.get(segmento) ?? 0)
+  }
   return segmentos.value.map(segmento => {
     return clientesFiltrados.value
       .filter(cliente => cliente.segmento === segmento)
@@ -331,6 +362,9 @@ const formatarMoedaCompacta = valor => {
 // com "distribuição por segmento" e "evolução de contratações".
 const distribuicaoPorNivel = computed(() => {
   const niveis = ['A', 'B', 'C']
+  if (estatisticas.value) {
+    return niveis.map(nivel => estatisticas.value.porNivel.find(item => item.nivel === nivel)?.clientes ?? 0)
+  }
 
   return niveis.map(nivel => {
     return clientesFiltrados.value.filter(
@@ -353,9 +387,11 @@ const faturamentoAcumuladoPorNivel = computed(() => {
   let acumulado = 0
 
   return niveis.map(nivel => {
-    acumulado += clientesFiltrados.value
-      .filter(cliente => cliente.nivel_cliente === nivel)
-      .reduce((total, cliente) => total + (cliente.faturamento || 0), 0)
+    acumulado += estatisticas.value
+      ? estatisticas.value.porNivel.find(item => item.nivel === nivel)?.faturamentoTotal ?? 0
+      : clientesFiltrados.value
+        .filter(cliente => cliente.nivel_cliente === nivel)
+        .reduce((total, cliente) => total + (cliente.faturamento || 0), 0)
 
     return Math.round((acumulado / faturamentoTotal.value) * 100)
   })
@@ -455,19 +491,25 @@ const graficoNivelOptions = {
 const top5Servicos = computed(() => {
   const faturamentoPorServico = {}
 
-  clientesFiltrados.value.forEach(cliente => {
-    const lista = cliente.servicos?.length ? cliente.servicos : (cliente.servico ? [cliente.servico] : [])
-
-    if (lista.length === 0) {
-      return
-    }
-
-    const parcela = (cliente.faturamento || 0) / lista.length
-
-    lista.forEach(servico => {
-      faturamentoPorServico[servico] = (faturamentoPorServico[servico] || 0) + parcela
+  if (estatisticas.value?.porServico.every(item => item.faturamentoRateado !== undefined)) {
+    estatisticas.value.porServico.forEach(item => {
+      faturamentoPorServico[item.servico] = item.faturamentoRateado
     })
-  })
+  } else {
+    clientesFiltrados.value.forEach(cliente => {
+      const lista = cliente.servicos?.length ? cliente.servicos : (cliente.servico ? [cliente.servico] : [])
+
+      if (lista.length === 0) {
+        return
+      }
+
+      const parcela = (cliente.faturamento || 0) / lista.length
+
+      lista.forEach(servico => {
+        faturamentoPorServico[servico] = (faturamentoPorServico[servico] || 0) + parcela
+      })
+    })
+  }
 
   const ranking = Object.entries(faturamentoPorServico)
     .sort((a, b) => b[1] - a[1])
@@ -482,7 +524,16 @@ const top5Servicos = computed(() => {
   }))
 })
 
-const upsell = computed(() => analisarUpsell(clientes.value, clientesFiltrados.value))
+const upsell = computed(() => {
+  if (USAR_MOCK) return analisarUpsell(clientes.value, clientesFiltrados.value)
+
+  const salvo = dashboard.value?.estatisticas.upsell
+  const codigos = new Set(clientesFiltrados.value.map(cliente => cliente.codigo_cliente))
+  return {
+    segmentoPotencial: salvo?.segmentoPotencial ?? null,
+    oportunidades: (salvo?.oportunidades ?? []).filter(item => codigos.has(item.codigo))
+  }
+})
 
 const MAX_OPORTUNIDADES = 10
 
@@ -545,6 +596,9 @@ const crescimentoContratacoes = computed(() => {
 })
 
 const insights = computed(() => {
+  if (!USAR_MOCK) {
+    return (dashboard.value?.insights ?? []).map(descricao => ({ descricao }))
+  }
   return [
     {
       titulo: 'Concentração de Receita',
@@ -670,6 +724,7 @@ const exportarCSV = () => {
     <!-- CONTEÚDO -->
 
     <main class="mx-auto max-w-7xl px-6 py-10">
+      <p v-if="erroDashboard" role="alert" class="text-sm text-red-700">{{ erroDashboard }}</p>
 
       <!-- TÍTULO -->
 
@@ -1150,7 +1205,7 @@ const exportarCSV = () => {
 
           <div
             v-for="insight in insights"
-            :key="insight.titulo"
+            :key="insight.titulo || insight.descricao"
             class="flex gap-3 rounded-lg bg-white p-4 shadow-md shadow-gray-200/60 ring-1 ring-gray-100"
           >
 
@@ -1158,7 +1213,7 @@ const exportarCSV = () => {
 
             <div class="min-w-0">
 
-              <p class="text-sm font-bold text-[#006EB7]">
+              <p v-if="insight.titulo" class="text-sm font-bold text-[#006EB7]">
                 {{ insight.titulo }}
               </p>
 

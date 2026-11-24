@@ -53,8 +53,8 @@ professora orientou que o projeto não trata isso.
 
 | De → Para | Rota | O que vai | O que volta |
 |---|---|---|---|
-| Front → Spring | `POST /api/auth/login` | e-mail e senha | usuário, papel e token |
-| Front → Spring | `POST /api/uploads` | nome do arquivo, total de linhas lidas e as linhas válidas (JSON) | o envio criado (`telemetria`), com status `PROCESSANDO` |
+| Front → Spring | `POST /api/auth/login` | e-mail e senha | usuário e papel, com cookie de sessão |
+| Front → Spring | `POST /api/uploads` | nome do arquivo, total de linhas lidas e as linhas válidas (JSON) | a telemetria após o processamento |
 | Spring → Python | `POST /etl` | `{ "telemetriaId", "recebidas", "linhas" }` | `{ "ok": true }` ou erro (o envio vira `ERRO_ETL`) |
 | Front → Spring | `GET /api/uploads` | — | histórico de envios com o status |
 | Front → Spring | `GET /api/dashboard` | — | estatísticas, gráficos, upsell e frases do envio mais recente |
@@ -68,18 +68,13 @@ ficam ligados ao envio (`telemetria_id`), e o Dashboard mostra o envio mais
 recente com status `NORMALIZADO`. Assim, os números sempre batem com a última
 planilha, e os envios anteriores continuam guardados no histórico.
 
-## 5. Situação atual
+## 5. Situação da integração
 
-| Passo | Situação |
-|---|---|
-| 1–2. Ler e validar a planilha no front | **Pronto** |
-| 3. Enviar ao Spring | Falta: hoje o front grava no próprio navegador (modo simulado) |
-| 4–6. Spring (DTO, Service, gravação, chamada ao Python) | Falta: o Java só tem o esqueleto |
-| 7. Python (limpeza, estatísticas, upsell, frases, gravação) | **Pronto e testado** com um PostgreSQL temporário |
-| Banco no Neon | Falta: guia pronto (`database/README.md`), `schema.sql` com o Ryan |
-| 8–9. Dashboard lendo do back-end | Falta: hoje o Dashboard calcula tudo no navegador |
-| Login | Simulado no navegador; falta o login no Spring |
-| Ativo/inativo | **Retirado** do front; cada planilha substitui a carteira |
+O modo API do Vue envia os lotes ao Spring e consulta o histórico, a carteira
+e os indicadores persistidos. O Spring valida as linhas, aplica os papéis
+e envia os lotes ao FastAPI. O esquema compartilhado e o fluxo foram
+verificados com PostgreSQL local. A configuração do banco e dos serviços
+compartilhados segue o [guia do backend](../backend-java/README.md).
 
 ## 6. O que pode ser apontado como erro na apresentação
 

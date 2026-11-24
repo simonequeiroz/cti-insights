@@ -7,13 +7,11 @@
 //
 // Modo mock (padrão): guarda tudo no localStorage deste navegador.
 // Modo API: defina VITE_USE_MOCK=false e VITE_API_URL no arquivo .env
-// (veja .env.example). Os endpoints usados estão em API-CONTRATO.md e são
-// uma PROPOSTA a validar com a squad de Java — ainda não foram testados
-// contra um back-end real.
+// (veja .env.example). Os endpoints estão em API-CONTRATO.md.
 
 import { STATUS_CONTA } from '../utils/papeis'
 
-const USAR_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+export const USAR_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 const CHAVE_AUTH = 'ctiAuth'
@@ -36,15 +34,21 @@ const lerJson = (chave, padrao) => {
 // não aprovado, 409 = e-mail já cadastrado.
 const erroComStatus = (mensagem, status, codigo = '') => Object.assign(new Error(mensagem), { status, codigo })
 
-const http = async (caminho, opcoes = {}) => {
+const http = async (caminho, { method = 'GET', body } = {}) => {
+  const headers = {}
+  if (method !== 'GET') {
+    const csrf = await http('/auth/csrf')
+    headers[csrf.headerName] = csrf.token
+    headers['Content-Type'] = 'application/json'
+  }
+
   const resposta = await fetch(`${API_URL}${caminho}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opcoes
+    method, body, headers, credentials: 'same-origin'
   })
 
   if (!resposta.ok) {
     const corpo = await resposta.json().catch(() => ({}))
-    throw erroComStatus(`Erro ${resposta.status} em ${caminho}`, resposta.status, corpo.codigo)
+    throw erroComStatus(corpo.mensagem || `Erro ${resposta.status} em ${caminho}`, resposta.status, corpo.codigo)
   }
 
   return resposta.status === 204 ? null : resposta.json()
@@ -53,7 +57,7 @@ const http = async (caminho, opcoes = {}) => {
 // ---------- Sessão ----------
 
 // Síncronas de propósito: a guarda de rota e a Sidebar precisam da resposta
-// na hora. No modo API, troque por token/cookie de sessão.
+// na hora. No modo API, a sessão é validada pelo Spring a cada requisição.
 // Sessão sem papel (de antes dos papéis existirem) não vale: entra de novo.
 export const estaAutenticado = () => {
   return localStorage.getItem(CHAVE_AUTH) === 'true' && Boolean(papelUsuario())
@@ -198,8 +202,8 @@ const resumoSenha = async senha => {
 // API: POST /auth/cadastro  { nome, email, senha, papel }
 //   -> { id, nome, email, papel, status }   (409 se o e-mail já tiver cadastro)
 // O cadastro nasce PENDENTE: só entra depois que um Administrador aprovar.
-// Exceção: a primeira conta do sistema vira Administrador já aprovada —
-// senão não haveria ninguém para aprovar os outros.
+// No mock, a primeira conta pode ser Administrador. Na API, a primeira
+// conta administrativa é configurada no bootstrap do Spring.
 export const cadastrar = async (nome, email, senha, papel) => {
   if (!USAR_MOCK) {
     return http('/auth/cadastro', {
@@ -310,6 +314,35 @@ export const salvarClientes = async clientes => {
 // ---------- Histórico de processamento (telemetria) ----------
 
 // API: GET /uploads -> [RegistroUpload]
+export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/uploads', {
+  method: 'POST',
+  body: JSON.stringify({
+    nomeArquivo,
+    linhasLidas,
+    linhas: validos.map(cliente => ({
+      codigo_cliente: cliente.codigo_cliente,
+      nome_cliente: cliente.nome_cliente,
+      consultor: cliente.consultor,
+      segmento: cliente.segmento,
+      nivel_cliente: cliente.nivel_cliente,
+      faturamento_anual: cliente.faturamento,
+      data_contratacao: cliente.data_contratacao,
+      servicos_contratados: (cliente.servicos || []).join(';'),
+      cidade: cliente.cidade,
+      uf: cliente.uf
+    }))
+  })
+})
+
+export const lerDashboard = async () => {
+  try {
+    return await http('/dashboard')
+  } catch (erro) {
+    if (erro.status === 404) return null
+    throw erro
+  }
+}
+
 export const listarHistorico = async () => {
   if (!USAR_MOCK) {
     return http('/uploads')

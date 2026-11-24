@@ -1,9 +1,11 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import {
+  enviarPlanilha,
   esperarSimulado,
   limparDados as limparDadosSalvos,
   listarHistorico,
-  salvarHistorico
+  salvarHistorico,
+  USAR_MOCK
 } from '../services/api'
 import { useAuthStore } from './authStore'
 import { useClientesStore } from './clientesStore'
@@ -225,6 +227,17 @@ export const useUploadStore = defineStore('upload', {
       const ignoradas = analise.linhasComErro.length
 
       try {
+        if (!USAR_MOCK) {
+          const item = await enviarPlanilha(analise)
+          this.historico = [item, ...this.historico.filter(envio => envio.id !== item.id)]
+          this.descartarArquivo()
+          await useClientesStore().carregar().catch(() => {})
+          return {
+            ...item,
+            linhasIgnoradas: item.linhasLidas - item.linhasImportadas
+          }
+        }
+
         await useClientesStore().substituirBase(analise.validos)
 
         const item = {
@@ -260,9 +273,10 @@ export const useUploadStore = defineStore('upload', {
         this.erros = []
         return item
       } catch (erro) {
-        // Ex.: estourou o limite do armazenamento local do navegador
-        console.error('Erro ao salvar a base:', erro)
-        this.erros = ['Não foi possível salvar a base neste navegador (arquivo grande demais para o armazenamento local). Envie uma planilha menor.']
+        this.erros = [USAR_MOCK
+          ? 'Não foi possível salvar a base neste navegador. Envie uma planilha menor.'
+          : erro.message || 'Não foi possível enviar a planilha.']
+        if (!USAR_MOCK) await this.carregarHistorico().catch(() => {})
         return null
       } finally {
         this.carregando = false
@@ -272,6 +286,7 @@ export const useUploadStore = defineStore('upload', {
     // Arquivo que nem chegou na revisão (ilegível ou vazio)
     registrarFalha(mensagem) {
       this.erros = [mensagem]
+      if (!USAR_MOCK) return
 
       this.historico = [{
         id: Date.now(),
@@ -306,7 +321,7 @@ export const useUploadStore = defineStore('upload', {
       this.historico = await listarHistorico()
 
       // Registros antigos que ficaram presos em PROCESSANDO
-      if (!this.carregando) {
+      if (USAR_MOCK && !this.carregando) {
         let mudou = false
 
         this.historico.forEach(item => {

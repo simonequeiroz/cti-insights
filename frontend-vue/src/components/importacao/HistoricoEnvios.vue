@@ -1,4 +1,5 @@
 <script setup>
+import { USAR_MOCK } from '../../services/api'
 import { ref } from 'vue'
 import { useAuthStore } from '../../stores/authStore'
 import { useUploadStore } from '../../stores/uploadStore'
@@ -134,7 +135,7 @@ const statusInfo = item => {
                     <!-- O histórico é o registro de auditoria: só o
                          Administrador remove itens -->
                     <button
-                      v-if="auth.pode('removerHistorico')"
+                      v-if="USAR_MOCK && auth.pode('removerHistorico')"
                       type="button"
                       class="text-gray-400 transition hover:text-red-500"
                       aria-label="Remover do histórico"
