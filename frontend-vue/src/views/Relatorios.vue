@@ -168,11 +168,11 @@ const limparDados = async () => {
           <div>
 
             <h1 class="text-3xl font-bold text-[#292A2F]">
-              Relatórios
+              Clientes
             </h1>
 
             <p class="mt-2 text-sm text-gray-500">
-              Base de clientes detalhada, com busca por empresa e por período de contratação.
+              Carteira de clientes detalhada: busque por empresa, filtre por período, exporte e mantenha os dados em dia.
             </p>
 
           </div>
@@ -272,7 +272,7 @@ const limparDados = async () => {
           <div class="border-b border-gray-200 p-5">
 
             <h2 class="text-lg font-bold text-[#292A2F]">
-              Base de Clientes Detalhada
+              Carteira atual
             </h2>
 
             <p class="mt-1 text-sm text-gray-500">

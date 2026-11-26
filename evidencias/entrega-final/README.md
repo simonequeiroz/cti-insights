@@ -18,11 +18,11 @@ fictícios**. Desktop em 1366 px e celular em 390 px.
 | `07-cadastro.png` | Primeiro acesso: o cadastro aguarda a aprovação de um administrador |
 | `08-dashboard-desktop.png` | Dashboard: KPIs, 4 gráficos, insights, upsell e tabela de clientes |
 | `09-dashboard-celular.png` | Dashboard no celular (cartões e gráficos em uma coluna) |
-| `10-menu-celular.png` | Menu hambúrguer aberto no celular |
+| `10-menu-celular.png` | Menu hambúrguer aberto no celular, por cima da página |
 | `11-importar-enviar.png` | Importação, etapa 1: envio da planilha e histórico |
 | `12-importar-revisar.png` | Etapa 2: correções automáticas (`IND.` → `Indústria`), linhas com erro e segmento não reconhecido |
 | `13-importar-confirmar.png` | Etapa 3: impacto na carteira antes de gravar |
-| `14-relatorios.png` | Relatórios: busca, período, exportação CSV e ações por cliente |
+| `14-clientes.png` | Clientes: busca, período, exportação CSV e ações por cliente |
 | `15-editar-cliente.png` | Formulário de edição de cliente |
 | `16-novo-cliente-validacao.png` | Validação do formulário de novo cliente |
 | `17-usuarios.png` | Aprovação de cadastros e papéis (só administrador) |
@@ -35,6 +35,7 @@ fictícios**. Desktop em 1366 px e celular em 390 px.
 | `h02-tempo-dashboard.txt` | H02: dashboard completo em cerca de 0,25 s (meta: até 10 s) |
 | `front-chrome.txt` | Front contra a API real: 8 de 8 |
 | `login-chrome.txt` | Tela de login: 11 de 11 |
+| `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |
 | `edicao-cliente-chrome.txt` | Inclusão, edição e exclusão de cliente com recálculo do dashboard: 11 de 11 |
 | `front-lint-build.txt` | `npm run lint` sem erros e `npm run build` concluído |
 

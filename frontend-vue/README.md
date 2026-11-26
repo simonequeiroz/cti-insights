@@ -71,16 +71,16 @@ O que cada papel pode fazer (regras em `src/utils/papeis.js`):
 
 | Ação | Consultor | Gestor | Administrador |
 |---|:---:|:---:|:---:|
-| Dashboard, Relatórios e exportar CSV/PDF | ✅ | ✅ | ✅ |
+| Dashboard, Clientes e exportar CSV/PDF | ✅ | ✅ | ✅ |
 | Importar planilha e ver histórico | ✅ | ❌ | ✅ |
-| Incluir e editar cliente (Relatórios) | ✅ | ❌ | ✅ |
-| Excluir cliente (Relatórios) | ❌ | ❌ | ✅ |
+| Incluir e editar cliente (tela Clientes) | ✅ | ❌ | ✅ |
+| Excluir cliente (tela Clientes) | ❌ | ❌ | ✅ |
 | Remover item do histórico e limpar dados locais | ❌ | ❌ | ✅ |
 | Aprovar cadastros (`/usuarios`) | ❌ | ❌ | ✅ |
 
 Quem abre pelo endereço uma tela que o papel não permite volta ao
 Dashboard com um aviso. Para testar de novo o estado "sem dados", use o
-botão de limpar dados em **Relatórios** (Administrador).
+botão de limpar dados em **Clientes** (Administrador).
 
 ## Telas e rotas
 
@@ -105,12 +105,12 @@ src/
 │   └── api.js        # ÚNICO ponto de acesso a dados e sessão (mock ou API)
 ├── stores/
 │   ├── authStore.js     # sessão, login, cadastro e papel do usuário
-│   ├── clientesStore.js # carteira de clientes (Dashboard e Relatórios)
+│   ├── clientesStore.js # carteira de clientes (Dashboard e Clientes)
 │   └── uploadStore.js   # leitura, limpeza e validação da planilha; histórico
 ├── utils/
 │   ├── papeis.js        # papéis (Consultor, Gestor, Administrador) e permissões
 │   ├── upsell.js        # regras de oportunidade de upsell do Dashboard
-│   └── periodo.js       # filtro por período de contratação (Dashboard e Relatórios)
+│   └── periodo.js       # filtro por período de contratação (Dashboard e Clientes)
 ├── views/            # uma por rota: Home, Login, Cadastro, UploadView, Dashboard, Relatorios, Usuarios
 └── components/       # Sidebar, CardIndicador (KPIs), etapas da importação e blocos da página inicial
 ```
@@ -133,7 +133,7 @@ src/
    `localStorage`. As linhas **substituem a carteira anterior**: cada planilha enviada é a
    carteira completa naquele momento. Antes de confirmar, a tela avisa quais
    clientes da carteira atual não estão na planilha nova. Dashboard e
-   Relatórios leem dessa carteira. O sistema não trata clientes ativos ou
+   Clientes leem dessa carteira. O sistema não trata clientes ativos ou
    inativos.
 
 Chaves usadas no `localStorage` (no modo API, só as de sessão):
@@ -171,7 +171,7 @@ como interrompido na próxima vez que a tela de Upload abrir.
 
 ### Filtro por período
 
-Dashboard e Relatórios têm os campos **De** e **Até**, que filtram pela **data
+Dashboard e Clientes têm os campos **De** e **Até**, que filtram pela **data
 de contratação** (limites inclusivos; um dos dois pode ficar vazio). Com o
 filtro ativo, clientes sem data ficam de fora. O faturamento exibido é o
 **faturamento anual** de cada cliente contratado no período, não a receita

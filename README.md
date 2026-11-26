@@ -39,7 +39,7 @@ cancelamentos e churn.
  PostgreSQL (Neon) ───── cliente, consultor, servico, contrato, estatistica, insight
    ▲
    │ 7. GET /api/dashboard  (o Spring lê o que o Python gravou)
- Vue ─────────────────── 8. Dashboard e Relatórios desenham os números e as frases
+ Vue ─────────────────── 8. Dashboard e Clientes desenham os números e as frases
 ```
 
 Os dados são validados três vezes: no Vue, para avisar o usuário na hora; no
@@ -173,7 +173,7 @@ ficam salvos no próprio navegador (`localStorage`).
    mostra os erros por linha, avisa sobre segmentos não reconhecidos e pede
    confirmação. Cada planilha enviada substitui a carteira anterior.
 3. **Analisar:** o **Dashboard** mostra os indicadores, os gráficos, as
-   oportunidades de upsell e os insights. **Relatórios** lista a base de
+   oportunidades de upsell e os insights. **Clientes** lista a base de
    clientes com busca e filtros.
 
 As colunas esperadas na planilha e as regras de cada uma estão em
@@ -194,7 +194,7 @@ da planilha".
 | `/login` e `/cadastro` | Login e Cadastro | Acesso e pedido de conta |
 | `/dashboard` | Dashboard | KPIs, gráficos por segmento, nível (curva ABC), período e serviço, upsell, insights, filtros e exportação CSV/PDF |
 | `/upload` | Importar | Envio em etapas (enviar, revisar, confirmar e concluir) e histórico de envios |
-| `/relatorios` | Relatórios | Base de clientes com busca, filtro por período e paginação |
+| `/relatorios` | Clientes | Carteira de clientes com busca, período, exportação CSV e inclusão, edição e exclusão de cliente |
 | `/usuarios` | Usuários | Só administrador: aprova ou recusa cadastros e define papéis |
 
 A interface é responsiva. No celular, o menu lateral vira um menu hambúrguer.
@@ -207,7 +207,7 @@ A interface é responsiva. No celular, o menu lateral vira um menu hambúrguer.
 | Python, sem banco | Com o ETL ligado, abra http://localhost:8000/docs e rode `/testar` com [`amostras/clientes.json`](analytics-python/amostras/clientes.json). O esperado é 2 clientes com média e mediana de 1.135.000. |
 | Hipótese H01 (100 registros com erros de grafia) | Com o ETL ligado: `cd analytics-python` e `python teste_h01.py` |
 | Front-End | `cd frontend-vue` e `npm run lint` e `npm run build` |
-| Fluxo completo | Login, importação de uma planilha, conferência no Dashboard e em Relatórios, e logout |
+| Fluxo completo | Login, importação de uma planilha, conferência no Dashboard e em Clientes, e logout |
 
 Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](evidencias/entrega-final/). Os da Sprint 2 estão em [`evidencias/sprint-2/`](evidencias/sprint-2/).
 

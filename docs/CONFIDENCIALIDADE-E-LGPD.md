@@ -53,7 +53,7 @@ de dados pessoais. Esta seção mostra como o CTI Insights aplica cada um.
 | **Segurança** | Proteger contra acesso indevido | Login obrigatório, senhas com hash BCrypt, papéis por usuário, conexão SSL com o banco e senhas fora do código (detalhes na seção 4). |
 | **Prevenção** | Evitar danos antes que aconteçam | A planilha é validada antes de gravar. O cadastro só vale depois da aprovação de um administrador. |
 | **Transparência** | Deixar claro o que é feito com os dados | A tela de importação mostra o que foi corrigido, o que foi descartado e por quê. O histórico registra quem enviou cada planilha e quando. |
-| **Qualidade dos dados** | Manter os dados corretos | Padronização automática (`IND.` → `Indústria`) e edição de clientes em Relatórios. |
+| **Qualidade dos dados** | Manter os dados corretos | Padronização automática (`IND.` → `Indústria`) e edição de clientes na tela Clientes. |
 | **Responsabilização** | Poder demonstrar as medidas adotadas | Este documento, o histórico de envios (tabela `telemetria`) e o código no repositório. |
 
 ## 4. Medidas de segurança implementadas

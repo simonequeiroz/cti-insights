@@ -32,7 +32,7 @@ const todosItensMenu = [
   },
   {
     caminho: '/relatorios',
-    rotulo: 'Relatórios',
+    rotulo: 'Clientes',
     icone: 'M9 17V9m3 8V5m3 12v-6M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z'
   },
   {
@@ -123,68 +123,82 @@ const sair = async () => {
 
 <template>
 
+  <!-- Fixo na tela (sticky) ao rolar: no computador e no tablet a coluna
+       inteira acompanha a página; no celular, a barra do topo com o
+       hambúrguer. -->
   <aside
-    class="flex flex-wrap items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:h-screen sm:w-16 sm:shrink-0 md:w-48 sm:flex-col sm:flex-nowrap sm:items-stretch sm:justify-between sm:border-b-0 sm:border-r sm:px-2 sm:py-6 md:px-4 2xl:w-64 2xl:px-5"
+    class="sticky top-0 z-40 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:h-screen sm:w-16 sm:shrink-0 sm:flex-col sm:items-stretch sm:justify-start sm:self-start sm:border-b-0 sm:border-r sm:px-2 sm:py-6 md:w-48 md:px-4 2xl:w-64 2xl:px-5"
   >
 
-    <!-- Logo + botão hambúrguer (mobile) + navegação -->
+    <!-- Logo + botão hambúrguer (o botão só aparece no celular) -->
 
-    <div class="w-full sm:w-auto">
+    <div class="flex w-full items-center justify-between sm:block sm:w-auto">
 
-      <div class="flex items-center justify-between sm:block">
-
-        <RouterLink
-          to="/dashboard"
-          class="text-lg font-bold tracking-tight text-[#006EB7] sm:block sm:text-center md:text-left md:text-xl"
-        >
-          <span class="sm:hidden md:inline">CTI Insights</span><span class="hidden sm:inline md:hidden">CTI</span><span class="text-[#FF8F00]">.</span>
-        </RouterLink>
-
-        <button
-          type="button"
-          @click="alternarMenu"
-          :aria-expanded="menuAberto"
-          aria-controls="menu-principal"
-          :aria-label="menuAberto ? 'Fechar menu' : (auth.cadastrosPendentes ? 'Abrir menu (há cadastros aguardando aprovação)' : 'Abrir menu')"
-          class="relative flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 sm:hidden"
-        >
-          <!-- No mobile o link Usuários fica escondido com o menu fechado -->
-          <span
-            v-if="auth.cadastrosPendentes && !menuAberto"
-            aria-hidden="true"
-            class="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white"
-          ></span>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              v-if="menuAberto"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M6 6l12 12M18 6L6 18"
-            />
-            <path
-              v-else
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-
-      </div>
-
-      <div
-        id="menu-principal"
-        class="sm:block"
-        :class="menuAberto ? 'block' : 'hidden'"
+      <RouterLink
+        to="/dashboard"
+        class="text-lg font-bold tracking-tight text-[#006EB7] sm:block sm:text-center md:text-left md:text-xl"
       >
+        <span class="sm:hidden md:inline">CTI Insights</span><span class="hidden sm:inline md:hidden">CTI</span><span class="text-[#FF8F00]">.</span>
+      </RouterLink>
+
+      <button
+        type="button"
+        @click="alternarMenu"
+        :aria-expanded="menuAberto"
+        aria-controls="menu-principal"
+        :aria-label="menuAberto ? 'Fechar menu' : (auth.cadastrosPendentes ? 'Abrir menu (há cadastros aguardando aprovação)' : 'Abrir menu')"
+        class="relative flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition hover:bg-gray-100 sm:hidden"
+      >
+        <!-- No celular o link Usuários fica escondido com o menu fechado -->
+        <span
+          v-if="auth.cadastrosPendentes && !menuAberto"
+          aria-hidden="true"
+          class="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white"
+        ></span>
+
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            v-if="menuAberto"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 6l12 12M18 6L6 18"
+          />
+          <path
+            v-else
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
+    </div>
+
+    <!-- Fundo escurecido do menu do celular: tocar fora fecha o menu -->
+    <div
+      v-if="menuAberto"
+      aria-hidden="true"
+      class="fixed inset-0 top-[65px] -z-10 bg-black/30 sm:hidden"
+      @click="fecharMenu"
+    ></div>
+
+    <!-- Painel do menu. No celular abre POR CIMA da página, logo abaixo da
+         barra do topo; a partir de sm, "sm:contents" faz o painel sumir do
+         layout e os dois blocos (navegação e usuário) ficam direto na coluna. -->
+    <div
+      id="menu-principal"
+      class="absolute left-0 right-0 top-full max-h-[calc(100vh-65px)] overflow-y-auto border-b border-gray-200 bg-white px-4 pb-5 shadow-lg sm:contents"
+      :class="menuAberto ? 'block' : 'hidden'"
+    >
+
+      <div>
 
         <p class="mt-4 border-b border-dashed border-gray-300 pb-2.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:hidden md:mb-3.5 md:mt-8 md:block">
           Navegação
@@ -198,11 +212,11 @@ const sair = async () => {
             :to="item.caminho"
             :title="rotuloDoItem(item)"
             :aria-label="rotuloDoItem(item)"
-            class="flex items-center gap-3 sm:justify-center md:justify-start"
+            class="group flex items-center gap-3 rounded-[10px] sm:justify-center md:justify-start"
           >
             <span
-              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
-              :class="linkAtivo(item.caminho) ? 'bg-[#006EB7]' : 'bg-gray-100'"
+              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] transition-colors"
+              :class="linkAtivo(item.caminho) ? 'bg-[#006EB7]' : 'bg-gray-100 group-hover:bg-blue-50'"
             >
               <span
                 v-if="avisosDoItem(item)"
@@ -212,10 +226,11 @@ const sair = async () => {
 
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-[17px] w-[17px]"
+                class="h-[17px] w-[17px] transition-colors"
+                :class="linkAtivo(item.caminho) ? 'text-white' : 'text-gray-500 group-hover:text-[#006EB7]'"
                 fill="none"
                 viewBox="0 0 24 24"
-                :stroke="linkAtivo(item.caminho) ? '#ffffff' : '#6B7280'"
+                stroke="currentColor"
                 stroke-width="2"
               >
                 <path
@@ -227,8 +242,8 @@ const sair = async () => {
             </span>
 
             <span
-              class="font-['IBM_Plex_Mono'] text-[12.5px] uppercase tracking-wide sm:hidden md:inline"
-              :class="linkAtivo(item.caminho) ? 'font-semibold text-[#006EB7]' : 'font-medium text-gray-500'"
+              class="font-['IBM_Plex_Mono'] text-[12.5px] uppercase tracking-wide transition-colors sm:hidden md:inline"
+              :class="linkAtivo(item.caminho) ? 'font-semibold text-[#006EB7]' : 'font-medium text-gray-500 group-hover:text-[#006EB7]'"
             >{{ item.rotulo }}</span>
           </RouterLink>
 
@@ -236,62 +251,59 @@ const sair = async () => {
 
       </div>
 
-    </div>
+      <!-- Usuário logado + sair (no computador fica no rodapé da coluna) -->
 
-    <!-- Usuário logado + sair (no mobile fica dentro do menu aberto) -->
+      <div class="mt-4 border-t border-dashed border-gray-300 pt-4 sm:mt-auto">
 
-    <div
-      class="w-full border-t border-dashed border-gray-300 pt-4 sm:block sm:w-auto"
-      :class="menuAberto ? 'mt-4 block' : 'hidden'"
-    >
+        <div class="flex items-center gap-3 sm:justify-center md:justify-start">
 
-      <div class="flex items-center gap-3 sm:justify-center md:justify-start">
+          <div
+            :title="nomeExibido"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-[#A85700]">
+            {{ iniciais }}
+          </div>
 
-        <div
-          :title="nomeExibido"
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-[#A85700]">
-          {{ iniciais }}
+          <div class="min-w-0 sm:hidden md:block">
+            <p
+              class="truncate text-sm font-semibold text-[#292A2F]"
+              :title="emailUsuario"
+            >
+              {{ nomeExibido }}
+            </p>
+
+            <p class="font-['IBM_Plex_Mono'] text-[11px] uppercase tracking-wide text-gray-500">
+              {{ auth.rotuloPapel }}
+            </p>
+          </div>
+
         </div>
 
-        <div class="min-w-0 sm:hidden md:block">
-          <p
-            class="truncate text-sm font-semibold text-[#292A2F]"
-            :title="emailUsuario"
+        <button
+          type="button"
+          @click="sair"
+          title="Sair do sistema"
+          aria-label="Sair do sistema"
+          class="mt-4 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-red-600 sm:w-full sm:justify-center md:w-auto md:justify-start"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            {{ nomeExibido }}
-          </p>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"
+            />
+          </svg>
 
-          <p class="font-['IBM_Plex_Mono'] text-[11px] uppercase tracking-wide text-gray-500">
-            {{ auth.rotuloPapel }}
-          </p>
-        </div>
+          <span class="sm:hidden md:inline">Sair</span>
+        </button>
 
       </div>
-
-      <button
-        type="button"
-        @click="sair"
-        title="Encerrar a Sessão"
-        aria-label="Encerrar a Sessão"
-        class="mt-4 flex items-center gap-2 text-sm font-medium text-red-500 sm:w-full sm:justify-center md:w-auto md:justify-start transition hover:text-red-600"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 shrink-0"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"
-          />
-        </svg>
-
-        <span class="sm:hidden md:inline">Encerrar a Sessão</span>
-      </button>
 
     </div>
 

@@ -20,8 +20,8 @@
           <li><a href="#seguranca" class="hover:text-[#FF8F00] transition-colors">Segurança dos dados</a></li>
           <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Oportunidades de
               upsell</router-link></li>
-          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Relatórios de
-              Clientes</router-link></li>
+          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Carteira de
+              clientes</router-link></li>
         </ul>
       </div>
 

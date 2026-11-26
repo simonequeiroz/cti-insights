@@ -909,15 +909,17 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <!-- GRÁFICO DE ROSCA: SEGMENTO -->
 
-        <div class="flex flex-col rounded-lg border border-gray-200 bg-white p-6">
+        <!-- @container: a legenda vai para o lado só quando o PRÓPRIO cartão
+             é largo; em tablet/celular fica embaixo, sem cortar os nomes -->
+        <div class="@container flex flex-col rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Faturamento por segmento
           </h2>
 
-          <div class="mt-5 flex flex-1 flex-col items-center gap-6 @sm:flex-row @xl:@max-3xl:gap-4">
+          <div class="mt-5 flex flex-1 flex-col items-center gap-6 @md:flex-row">
 
-            <div class="relative h-44 w-44 @xl:@max-3xl:h-36 @xl:@max-3xl:w-36 flex-shrink-0">
+            <div class="relative h-44 w-44 flex-shrink-0">
 
               <Doughnut
                 :data="graficoDonutData"

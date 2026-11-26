@@ -32,7 +32,7 @@ professora orientou que o projeto não trata isso.
  PostgreSQL (Neon) ───── cliente, consultor, servico, contrato, estatistica, insight
    ▲
    │ 8. GET /api/dashboard  (Spring lê o que o Python gravou)
- Vue ─────────────────── 9. Dashboard e Relatórios só desenham os números e frases
+ Vue ─────────────────── 9. Dashboard e Clientes só desenham os números e frases
 ```
 
 ## 3. O que cada parte faz (e o que não faz)
@@ -58,7 +58,7 @@ professora orientou que o projeto não trata isso.
 | Spring → Python | `POST /etl` | `{ "telemetriaId", "recebidas", "linhas" }` | `{ "ok": true }` ou erro (o envio vira `ERRO_ETL`) |
 | Front → Spring | `GET /api/uploads` | — | histórico de envios com o status |
 | Front → Spring | `GET /api/dashboard` | — | estatísticas, gráficos, upsell e frases do envio mais recente |
-| Front → Spring | `GET /api/clientes` | — | a carteira do envio mais recente (tela Relatórios) |
+| Front → Spring | `GET /api/clientes` | — | a carteira do envio mais recente (tela Clientes) |
 
 Detalhes de cada rota: `frontend-vue/API-CONTRATO.md`. Tabelas:
 `database/README.md`.

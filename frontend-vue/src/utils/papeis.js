@@ -13,12 +13,12 @@ export const PAPEIS = [
   {
     valor: 'CONSULTOR',
     rotulo: 'Consultor',
-    descricao: 'Importa as planilhas de clientes e acompanha o Dashboard e os Relatórios.'
+    descricao: 'Importa as planilhas, mantém a carteira de clientes e acompanha o Dashboard.'
   },
   {
     valor: 'GESTOR',
     rotulo: 'Gestor',
-    descricao: 'Acompanha o Dashboard e os Relatórios e exporta os dados.'
+    descricao: 'Acompanha o Dashboard e a carteira de clientes e exporta os dados.'
   },
   {
     valor: 'ADMINISTRADOR',
