@@ -88,6 +88,7 @@ entre as partes estão em [docs/FLUXO-DO-SISTEMA.md](docs/FLUXO-DO-SISTEMA.md).
 | [`database/`](database/) | Esquema do banco (`schema.sql`) | Ryan |
 | [`docs/`](docs/) | Fluxo do sistema | Simone |
 | [`evidencias/`](evidencias/) | Prints e registros de execução | Simone |
+| [`testes/`](testes/) | Testes no navegador (Playwright) e ferramentas | Simone |
 | `01_Documentacao/`, `02_Modelagem_e_Diagramas/`, `03_Prototipos_UX_UI/` | Documentação da Sprint 1, diagrama de classes e protótipos do Figma | Simone |
 
 O professor sugere os nomes `frontend/`, `backend/` e `python/`. Mantivemos os
