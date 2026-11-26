@@ -45,4 +45,4 @@ Variáveis: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSLMO
 O `.env` tem a senha do banco e **não vai para o Git**.
 
 ## Situação atual
-Os arquivos Python e o teste sem banco (`/saude` e `/testar`) estão prontos. Ainda faltam a chamada do backend (`PythonEtlService.java`) e as tabelas no Neon; até lá, o `POST /etl` não tem banco para gravar.
+Integrado. O backend chama o `POST /etl` a cada planilha enviada, e o Python grava o resultado nas tabelas do Neon. O fluxo completo, do upload ao dashboard, foi testado de ponta a ponta.
