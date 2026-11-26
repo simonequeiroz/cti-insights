@@ -17,7 +17,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `05-login-servidor-fora-do-ar.png` | Mensagem amigável quando o servidor não responde |
 | `06-login-sessao-expirada.png` | Aviso de sessão encerrada por inatividade |
 | `07-cadastro.png` | Primeiro acesso: o cadastro aguarda a aprovação de um administrador |
-| `08-dashboard-desktop.png` | Dashboard: KPIs, 4 gráficos, insights, upsell e tabela de clientes |
+| `08-dashboard-desktop.png` | Dashboard: origem dos dados, KPIs, 4 gráficos (com a curva ABC), insights, upsell e Top 10 clientes |
 | `09-dashboard-celular.png` | Dashboard no celular (cartões e gráficos em uma coluna) |
 | `10-menu-celular.png` | Menu hambúrguer aberto no celular, por cima da página |
 | `11-importar-enviar.png` | Importação, etapa 1: envio da planilha e histórico |
@@ -38,6 +38,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `login-chrome.txt` | Tela de login: 11 de 11 |
 | `importacao-chrome.txt` | Importação: histórico, segmentos aceitos, prévia, aviso de tempo e tela final: 11 de 11 |
 | `planilha-professor.txt` | Planilha de aula do professor: 36 linhas lidas, 25 corrigidas sozinhas, os 4 erros intencionais recusados, 32 clientes |
+| `dashboard-chrome.txt` | Dashboard: origem dos dados, filtros, aviso nos insights, Top 10 e PDF: 10 de 10 |
 | `clientes-chrome.txt` | Tela Clientes: busca, filtros, ordenação, resumo, upsell, CSV e celular: 21 de 21 |
 | `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |
 | `edicao-cliente-chrome.txt` | Inclusão, edição e exclusão de cliente com recálculo do dashboard: 11 de 11 |

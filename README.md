@@ -192,7 +192,7 @@ da planilha".
 |---|---|---|
 | `/` | Home pública | Apresenta o sistema e leva ao Login |
 | `/login` e `/cadastro` | Login e Cadastro | Acesso e pedido de conta |
-| `/dashboard` | Dashboard | KPIs, gráficos por segmento, nível (curva ABC), período e serviço, upsell, insights, filtros e exportação CSV/PDF |
+| `/dashboard` | Dashboard | Origem dos dados, KPIs, gráficos por segmento, nível (curva ABC), mês e serviço, insights, upsell, Top 10 clientes, filtros e exportação CSV/PDF |
 | `/upload` | Importar | Envio em etapas (enviar, revisar, confirmar e concluir) e histórico de envios |
 | `/relatorios` | Clientes | Carteira com busca, filtros (segmento, nível, consultor, período), ordenação, selo de upsell, exportação CSV e inclusão, edição e exclusão de cliente |
 | `/usuarios` | Usuários | Só administrador: aprova ou recusa cadastros e define papéis |

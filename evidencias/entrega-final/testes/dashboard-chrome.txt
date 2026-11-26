@@ -1,0 +1,12 @@
+# Dashboard no Chrome (26/11/2026, carteira de 32 clientes): origem dos dados, filtros, aviso nos insights, Top 10 e PDF
+[OK   ] mostra a origem dos dados Base: dados.xlsx · 26/11/2026 às 15:41 por Simone Queiroz
+[OK   ] segmentos em ordem alfabética Comércio, Educação, Indústria, Saúde, Serviços, Tecnologia
+[OK   ] sem filtro, sem aviso nos insights 
+[OK   ] Top 10 no lugar da tabela paginada 
+[OK   ] Top 10 em ordem de faturamento 7200000 … 2850000
+[OK   ] com filtro, aviso de que os insights são da carteira inteira 
+[OK   ] Top 10 acompanha o filtro (4 clientes de Saúde) 
+[OK   ] link "Ver todos em Clientes" leva à tela Clientes 
+[OK   ] PDF sem o link de navegação 
+[OK   ] sem erros de JavaScript 
+Resumo: 10 OK, 0 FALHA
