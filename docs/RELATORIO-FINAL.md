@@ -158,8 +158,10 @@ Os prints estão em [`evidencias/`](../evidencias/).
 | Miguel Herculano Viana | Ciência de Dados | ETL em pandas, planilha de correção, linhas rejeitadas e testes do tratamento. |
 | Ryan Vinicius da Silva | Banco e nuvem | Projeto PostgreSQL no Neon e configuração da conexão. |
 
-<!-- CONFIRMAR: os commits de "Daniel Morais" (ETL em Python, upsell e documentação do banco) e de
-"giovanineves02" pertencem a qual integrante? Ajustar a tabela acima. -->
+**Nota sobre o histórico do Git:** os commits com os nomes "Daniel Morais" e
+"giovanineves02" foram feitos por integrantes do grupo em computadores
+compartilhados, onde o Git estava configurado com a conta de outra pessoa.
+Essas pessoas não participaram do projeto.
 
 O histórico completo está nos
 [Pull Requests](https://github.com/simonequeiroz/cti-insights/pulls?q=is%3Apr) e nos
