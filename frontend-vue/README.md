@@ -46,8 +46,10 @@ npm run dev        # servidor de desenvolvimento (http://localhost:5173)
 
 **Com o back-end (`VITE_USE_MOCK=false`):** entre com o administrador
 definido em `ADMIN_EMAIL` e `ADMIN_PASSWORD` no `.env` do Spring. Novas
-contas são criadas em `/cadastro` e ficam aguardando a aprovação de um
-Administrador em **Usuários**. Quem guarda as contas é o Spring, no banco.
+contas são criadas em `/cadastro` (papel Consultor ou Gestor) e ficam
+aguardando a aprovação de um Administrador em **Usuários**, que pode
+confirmar o papel, promover alguém a Administrador, bloquear acessos e gerar
+senha temporária. Quem guarda as contas é o Spring, no banco.
 
 **No modo simulado (`VITE_USE_MOCK=true`):** as contas ficam salvas só
 neste navegador.

@@ -1,0 +1,16 @@
+# Cadastro no Chrome (26/11/2026), respostas do Spring simuladas (nenhuma conta criada no banco)
+[OK   ] papéis do cadastro: só Consultor e Gestor Selecione seu papel, Consultor, Gestor
+[OK   ] dica avisa que o administrador confirma o papel 
+[OK   ] formulário vazio: um erro embaixo de cada campo Digite seu nome e sobrenome. | Digite seu e-mail. | Escolha o seu papel. | Crie uma senha. | Repita a senha.
+[OK   ] foco vai para o primeiro campo com erro 
+[OK   ] campo com erro fica com borda vermelha e aria-invalid 
+[OK   ] nada é enviado ao servidor com erro 
+[OK   ] só o nome: pede o sobrenome 
+[OK   ] e-mail "ana@empresa" barrado no navegador 
+[OK   ] senhas diferentes: erro só na confirmação 
+[OK   ] foco vai para a confirmação 
+[OK   ] 409: mensagem geral em 14 px 
+[OK   ] tela final orienta a avisar o administrador ⏳ Cadastro enviado! Sua conta de Consultor (ana.souza@cti.exemplo) está aguardando aprovação de um administrador. Avise o administrador da sua equipe para agili
+[OK   ] redirect externo no cadastro vai ao Dashboard http://localhost:5173/dashboard
+[OK   ] sem erros de JavaScript 
+Resumo: 14 OK, 0 FALHA

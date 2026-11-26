@@ -30,6 +30,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `18-usuarios-acoes.png` | Usuários com cadastros simulados: aprovar, recusar, mudar papel, gerar senha temporária, bloquear e reativar |
 | `19-senha-temporaria.png` | Senha temporária gerada, mostrada uma única vez |
 | `20-troca-obrigatoria.png` | Quem entra com senha temporária precisa criar uma senha nova |
+| `21-cadastro-validacao.png` | Cadastro no celular: erro embaixo de cada campo |
 
 ## Testes ([`testes/`](testes/))
 
@@ -43,6 +44,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `planilha-professor.txt` | Planilha de aula do professor: 36 linhas lidas, 25 corrigidas sozinhas, os 4 erros intencionais recusados, 32 clientes |
 | `dashboard-chrome.txt` | Dashboard: origem dos dados, filtros, aviso nos insights, Top 10 e PDF: 10 de 10 |
 | `clientes-chrome.txt` | Tela Clientes: busca, filtros, ordenação, resumo, upsell, CSV e celular: 21 de 21 |
+| `cadastro-chrome.txt` | Cadastro: papéis, erros por campo, e-mail, tela final e retorno seguro: 14 de 14 |
 | `usuarios-chrome.txt` | Usuários e troca de senha: 28 de 28 |
 | `backend-mvn-test.txt` | Back-end: 6 de 6, incluindo o teste de bloqueio, troca de papel e senha temporária |
 | `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |

@@ -23,7 +23,7 @@ export const PAPEIS = [
   {
     valor: 'ADMINISTRADOR',
     rotulo: 'Administrador',
-    descricao: 'Acesso total: importa planilhas, aprova cadastros e pode apagar dados e histórico.'
+    descricao: 'Tudo o que o consultor faz, mais aprovar cadastros, gerenciar acessos e excluir clientes.'
   }
 ]
 
