@@ -1,14 +1,16 @@
 // Camada de acesso a dados do front-end.
 //
 // Toda leitura/gravação de dados e de sessão passa por aqui — nenhuma tela
-// ou store deve tocar em localStorage nem chamar fetch diretamente. Assim,
+// ou store deve tocar em localStorage nem chamar a API diretamente. Assim,
 // ligar o back-end (Spring Boot) é trocar o corpo destas funções, sem mexer
 // nas telas.
 //
 // Modo mock (padrão): guarda tudo no localStorage deste navegador.
 // Modo API: defina VITE_USE_MOCK=false e VITE_API_URL no arquivo .env
-// (veja .env.example). Os endpoints estão em API-CONTRATO.md.
+// (veja .env.example). As chamadas usam axios, e os endpoints estão em
+// API-CONTRATO.md.
 
+import axios from 'axios'
 import { STATUS_CONTA } from '../utils/papeis'
 
 export const USAR_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
@@ -34,6 +36,36 @@ const lerJson = (chave, padrao) => {
 // não aprovado, 409 = e-mail já cadastrado.
 const erroComStatus = (mensagem, status, codigo = '') => Object.assign(new Error(mensagem), { status, codigo })
 
+// Cliente axios da API do Spring Boot. withCredentials envia o cookie da
+// sessão. O timeout cobre o processamento da planilha: o Spring espera o
+// Python por até 60 s.
+const cliente = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  timeout: 90000
+})
+
+// Mensagem que o usuário entende para cada tipo de falha. O Spring manda o
+// motivo em "mensagem" (ex.: e-mail já cadastrado). Sem isso, o texto
+// depende do que aconteceu: servidor fora do ar, demora ou erro interno.
+const mensagemDoErro = (erro, caminho) => {
+  if (erro.code === 'ECONNABORTED' || erro.code === 'ETIMEDOUT') {
+    return 'O servidor demorou para responder. Tente de novo em instantes.'
+  }
+
+  if (!erro.response) {
+    return 'Não foi possível falar com o servidor. Confira a sua conexão e tente de novo.'
+  }
+
+  const { status, data } = erro.response
+
+  if (data?.mensagem) return data.mensagem
+  if (status >= 500) return 'O servidor encontrou um problema. Tente de novo em instantes.'
+  if (status === 403) return 'Você não tem permissão para esta ação.'
+  if (status === 404) return 'Informação não encontrada.'
+  return `Não foi possível concluir a operação (erro ${status} em ${caminho}).`
+}
+
 const http = async (caminho, { method = 'GET', body } = {}) => {
   const headers = {}
   if (method !== 'GET') {
@@ -42,15 +74,16 @@ const http = async (caminho, { method = 'GET', body } = {}) => {
     headers['Content-Type'] = 'application/json'
   }
 
-  const resposta = await fetch(`${API_URL}${caminho}`, {
-    method, body, headers, credentials: 'same-origin'
-  })
+  try {
+    const resposta = await cliente.request({ url: caminho, method, data: body, headers })
+    return resposta.status === 204 || resposta.data === '' ? null : resposta.data
+  } catch (erro) {
+    const status = erro.response?.status ?? 0
 
-  if (!resposta.ok) {
     // Sessão expirada no Spring (30 min sem uso): o localStorage ainda diz
     // "logado", então limpa e volta ao login. As rotas /auth/* (ex.: senha
     // errada no login) tratam o 401 na própria tela.
-    if (resposta.status === 401 && !caminho.startsWith('/auth/')) {
+    if (status === 401 && !caminho.startsWith('/auth/')) {
       limparSessaoLocal()
 
       if (window.location.pathname !== '/login') {
@@ -59,11 +92,8 @@ const http = async (caminho, { method = 'GET', body } = {}) => {
       }
     }
 
-    const corpo = await resposta.json().catch(() => ({}))
-    throw erroComStatus(corpo.mensagem || `Erro ${resposta.status} em ${caminho}`, resposta.status, corpo.codigo)
+    throw erroComStatus(mensagemDoErro(erro, caminho), status, erro.response?.data?.codigo)
   }
-
-  return resposta.status === 204 ? null : resposta.json()
 }
 
 // ---------- Sessão ----------

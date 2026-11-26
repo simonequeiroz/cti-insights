@@ -72,7 +72,7 @@ const criarConta = async () => {
   } catch (falha) {
     erro.value = falha.status === 409
       ? 'Este e-mail já tem cadastro. Faça login para entrar.'
-      : 'Não foi possível criar a conta. Tente novamente.'
+      : falha.message || 'Não foi possível criar a conta. Tente novamente.'
     return
   } finally {
     enviando.value = false

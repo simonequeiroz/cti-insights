@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { lerDashboard, USAR_MOCK } from '../services/api'
 import Sidebar from '../components/Sidebar.vue'
+import CardIndicador from '../components/CardIndicador.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { contar } from '../utils/datas'
@@ -931,74 +932,10 @@ const exportarCSV = () => {
         class="grid grid-cols-1 gap-5 @sm:grid-cols-2 @xl:grid-cols-4"
       >
 
-        <!-- Total -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Faturamento Total
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ formatarMoedaInteira(faturamentoTotal) }}
-          </p>
-
-        </div>
-
-
-        <!-- Total de clientes -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Clientes na base
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ totalClientes }}
-          </p>
-
-        </div>
-
-
-        <!-- Serviços contratados -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Serviços Contratados
-          </p>
-
-          <p
-            class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]"
-          >
-            {{ totalServicos }}
-          </p>
-
-        </div>
-
-
-        <!-- Ticket -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Ticket Médio
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ formatarMoedaInteira(ticketMedio) }}
-          </p>
-
-        </div>
+        <CardIndicador titulo="Faturamento Total" :valor="formatarMoedaInteira(faturamentoTotal)" />
+        <CardIndicador titulo="Clientes na base" :valor="totalClientes" />
+        <CardIndicador titulo="Serviços Contratados" :valor="totalServicos" />
+        <CardIndicador titulo="Ticket Médio" :valor="formatarMoedaInteira(ticketMedio)" />
 
       </div>
 
@@ -1017,7 +954,7 @@ const exportarCSV = () => {
             Faturamento por segmento
           </h2>
 
-          <div class="mt-5 flex flex-1 items-center gap-6 @xl:@max-3xl:gap-4">
+          <div class="mt-5 flex flex-1 flex-col items-center gap-6 @sm:flex-row @xl:@max-3xl:gap-4">
 
             <div class="relative h-44 w-44 @xl:@max-3xl:h-36 @xl:@max-3xl:w-36 flex-shrink-0">
 
@@ -1037,7 +974,7 @@ const exportarCSV = () => {
 
             </div>
 
-            <div class="min-w-0 flex-1 space-y-2.5">
+            <div class="w-full min-w-0 flex-1 space-y-2.5">
 
               <div
                 v-for="item in legendaSegmentos"
@@ -1141,7 +1078,7 @@ const exportarCSV = () => {
             Cliente com mais de um serviço: faturamento dividido em partes iguais entre eles (estimativa).
           </p>
 
-          <div class="mt-5 h-80 overflow-y-auto @xl:@max-3xl:h-64">
+          <div class="mt-5 max-h-80 overflow-y-auto @xl:@max-3xl:max-h-64">
 
             <ul
               v-if="top5Servicos.length"

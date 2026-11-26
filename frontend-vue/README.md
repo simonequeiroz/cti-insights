@@ -4,10 +4,11 @@ Interface web do CTI Insights: o usuário importa planilhas comerciais
 (`.xlsx` / `.csv`), o sistema normaliza os dados e exibe um dashboard
 executivo e uma base de clientes detalhada.
 
-> **Estado atual:** o front-end funciona de forma **independente**, sem
-> back-end. Autenticação e dados são simulados no navegador
-> (`localStorage`). A integração com as demais squads (Java, Python,
-> banco de dados) está descrita em [Integração com as outras squads](#integração-com-as-outras-squads).
+> **Estado atual:** integrado ao back-end. Com `VITE_USE_MOCK=false`, o
+> login, o upload, o dashboard e os relatórios usam a API do Spring Boot,
+> que grava no PostgreSQL do Neon. O modo simulado (`VITE_USE_MOCK=true`)
+> continua disponível para ver as telas sem back-end. Detalhes em
+> [Integração com as outras squads](#integração-com-as-outras-squads).
 
 ## Stack
 
@@ -19,6 +20,7 @@ executivo e uma base de clientes detalhada.
 | Rotas | Vue Router |
 | Estado | Pinia |
 | Gráficos | Chart.js + vue-chartjs |
+| Chamadas à API | Axios |
 | Leitura de planilhas | SheetJS (`xlsx`) |
 | Qualidade | ESLint + Prettier |
 
@@ -40,10 +42,15 @@ npm run dev        # servidor de desenvolvimento (http://localhost:5173)
 | `npm run lint` | Verifica o código com ESLint |
 | `npm run format` | Formata `src/` com Prettier |
 
-### Como entrar (protótipo)
+### Como entrar
 
-Não há autenticação real (o back-end ainda não tem login). As contas ficam
-salvas só neste navegador.
+**Com o back-end (`VITE_USE_MOCK=false`):** entre com o administrador
+definido em `ADMIN_EMAIL` e `ADMIN_PASSWORD` no `.env` do Spring. Novas
+contas são criadas em `/cadastro` e ficam aguardando a aprovação de um
+Administrador em **Usuários**. Quem guarda as contas é o Spring, no banco.
+
+**No modo simulado (`VITE_USE_MOCK=true`):** as contas ficam salvas só
+neste navegador.
 
 **Conta de demonstração** (para apresentação e testes): e-mail
 `admin@ctiinsights.com`, senha `cti12345`, papel Administrador. Na tela de
@@ -95,16 +102,18 @@ src/
 ├── services/
 │   └── api.js        # ÚNICO ponto de acesso a dados e sessão (mock ou API)
 ├── stores/
+│   ├── authStore.js     # sessão, login, cadastro e papel do usuário
+│   ├── clientesStore.js # carteira de clientes (Dashboard e Relatórios)
 │   └── uploadStore.js   # leitura, limpeza e validação da planilha; histórico
 ├── utils/
 │   ├── papeis.js        # papéis (Consultor, Gestor, Administrador) e permissões
 │   ├── upsell.js        # regras de oportunidade de upsell do Dashboard
 │   └── periodo.js       # filtro por período de contratação (Dashboard e Relatórios)
 ├── views/            # uma por rota: Home, Login, Cadastro, UploadView, Dashboard, Relatorios, Usuarios
-└── components/       # Sidebar e blocos da página inicial (Hero, Metrics, ...)
+└── components/       # Sidebar, CardIndicador (KPIs), etapas da importação e blocos da página inicial
 ```
 
-## Como os dados fluem hoje
+## Como os dados fluem
 
 1. Na tela **Importar** (rota `/upload`), o arquivo é lido no navegador
    (`utils/etl.js`, chamado pelo `uploadStore.js`). Se o arquivo não abrir,
@@ -117,14 +126,15 @@ src/
 3. Cada linha é **validada** pelo dicionário de dados. Linhas com erro não
    entram e podem ser baixadas para correção; as demais seguem para a
    revisão. A regra está em `PERMITIR_IMPORTACAO_PARCIAL` (`uploadStore.js`).
-4. Ao confirmar, as linhas válidas **substituem a carteira anterior**
-   (`services/api.js`, hoje no `localStorage`): cada planilha enviada é a
+4. Ao confirmar, as linhas válidas vão ao Spring (`POST /api/uploads`), que
+   chama o Python e grava no banco. No modo simulado, ficam no
+   `localStorage`. As linhas **substituem a carteira anterior**: cada planilha enviada é a
    carteira completa naquele momento. Antes de confirmar, a tela avisa quais
    clientes da carteira atual não estão na planilha nova. Dashboard e
    Relatórios leem dessa carteira. O sistema não trata clientes ativos ou
    inativos.
 
-Chaves usadas no `localStorage`:
+Chaves usadas no `localStorage` (no modo API, só as de sessão):
 
 | Chave | Conteúdo |
 |---|---|
@@ -198,47 +208,47 @@ mesmo segmento (segmentos com pelo menos 3 clientes):
 | `dadosOriginais` / `dadosTratados` | `analise` (`validos` e `linhasComErro`) |
 | Getters `totalClientes`, `totalErros`, `clientesNivelA`, `temDados` | Mesmos nomes, no `uploadStore.js` |
 | Formulário em `UploadView.vue` | `UploadView.vue` conduz as etapas em `components/importacao/` |
-| `services/api.js` com Axios no futuro | Já existe em modo simulado, com `fetch`; o Axios entra com o back-end, na função `http` |
+| `services/api.js` com Axios | Função `http` em `services/api.js`, com mensagens de erro amigáveis |
 
-**Próxima etapa:** Vue → Pinia → Axios → Spring Boot → PostgreSQL no Neon.
+Caminho dos dados: Vue → Pinia → Axios → Spring Boot → PostgreSQL no Neon.
 O Vue não acessa o banco diretamente; quem grava é o Spring Boot.
 
 ## Integração com as outras squads
 
 Telas, stores e a guarda de rota **não** acessam `localStorage` nem
-`fetch` diretamente: tudo passa por [src/services/api.js](src/services/api.js).
-Hoje essas funções simulam o back-end no navegador (modo mock). Para ligar
-a API real, troca-se o comportamento dentro desse arquivo; as telas não
-mudam.
+chamam a API diretamente: tudo passa por [src/services/api.js](src/services/api.js).
+No modo API, as chamadas usam **Axios** com o cookie da sessão e o token
+CSRF do Spring.
 
 | Item | Situação |
 |---|---|
-| Camada de acesso a dados (`src/services/api.js`) | Pronta (modo mock) |
+| Camada de acesso a dados (`src/services/api.js`) com Axios | Pronta e testada contra o Spring |
 | Alternância mock/API por variável de ambiente (`.env.example`) | Pronta |
 | Proxy `/api` no Vite (aponta para `localhost:8080`) | Pronto |
-| Contrato dos endpoints ([API-CONTRATO.md](API-CONTRATO.md)) | **Proposta**, a validar com as squads |
-| Chamadas reais à API (`VITE_USE_MOCK=false`) | Escritas, **nunca testadas** contra um back-end |
-| Envio da planilha ao back-end (`POST /uploads`) | Não implementado |
+| Login, cadastro e aprovação de usuários reais | Prontos |
+| Envio da planilha ao back-end (`POST /uploads`) | Pronto |
+| Dashboard com os dados do Python (`GET /dashboard`) | Pronto |
+| Sessão expirada (401) volta ao login | Pronto |
 
-Para usar a API quando ela existir:
+**Tratamento de erros:** a tela sempre mostra uma mensagem em português.
+Se o Spring explicar o motivo (campo `mensagem`), ela aparece. Sem isso, a
+mensagem depende da falha: servidor fora do ar ("Não foi possível falar
+com o servidor"), demora acima de 90 s, erro interno (5xx), falta de
+permissão (403) ou dado não encontrado (404). No login, só o 401 vira
+"E-mail ou senha inválidos".
+
+Para usar a API:
 
 ```bash
 cp .env.example .env     # depois edite: VITE_USE_MOCK=false
 npm run dev
 ```
 
-**Decisões pendentes com as squads** (detalhes em
-[API-CONTRATO.md](API-CONTRATO.md)):
+Os três serviços (Python, Spring e Vue) precisam estar ligados. Veja o
+passo a passo no [README da raiz](../README.md#como-executar).
 
-1. Quem valida e limpa a planilha: hoje o front faz isso; o ideal é o
-   back-end/Python fazer, e o front só exibir status, linhas lidas e erros.
-2. Tipo de autenticação (cookie de sessão ou token).
-3. Nomes finais dos campos, conforme o schema do banco.
-
-Continuam simulados até o back-end existir: login (autenticação real),
-cadastro e aprovação de usuários, e persistência dos clientes e do
-histórico. As permissões por papel hoje só escondem telas e botões no
-front; o back-end precisa aplicar as mesmas regras em cada endpoint.
+As permissões por papel escondem telas e botões no front, e o Spring
+aplica as mesmas regras em cada rota.
 
 ## Convenções
 

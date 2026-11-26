@@ -47,9 +47,16 @@ const entrar = async () => {
   try {
     await auth.entrar(email.value, senha.value)
   } catch (falha) {
-    erro.value = falha.status === 403
-      ? MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
-      : 'E-mail ou senha inválidos.'
+    // 401 = senha errada; 403 = cadastro não aprovado. Qualquer outra falha
+    // (servidor fora do ar, erro interno) mostra o motivo real, para não
+    // parecer que a senha está errada.
+    if (falha.status === 403) {
+      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
+    } else if (falha.status === 401) {
+      erro.value = 'E-mail ou senha inválidos.'
+    } else {
+      erro.value = falha.message || 'Não foi possível entrar. Tente novamente.'
+    }
     return
   }
 
