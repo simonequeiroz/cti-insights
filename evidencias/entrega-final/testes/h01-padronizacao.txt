@@ -1,0 +1,7 @@
+# Hipótese H01 — python analytics-python/teste_h01.py (26/11/2026)
+Recebidos: 100 | aceitos: 94 | descartados: 6
+Segmentos esperados: {'Indústria': 34, 'Comércio': 18, 'Serviços': 18, 'Tecnologia': 12, 'Saúde': 6, 'Educação': 6}
+Segmentos obtidos:   {'Indústria': 34, 'Comércio': 18, 'Serviços': 18, 'Tecnologia': 12, 'Educação': 6, 'Saúde': 6}
+Consultores: 5 grafias -> ['Ana Souza', 'Carlos Lima', 'Beatriz Reis']
+Tempo de processamento: 2.13 s
+H01 CONFIRMADA

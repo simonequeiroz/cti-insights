@@ -1,0 +1,3 @@
+# H02 — tempo para abrir o dashboard completo (26/11/2026)
+dashboard completo (s): 0.226, 0.256, 0.25, 0.226, 0.253
+GET /api/dashboard (s): 0.04

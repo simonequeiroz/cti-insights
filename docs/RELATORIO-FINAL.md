@@ -122,7 +122,7 @@ não forçou uma implementação que não existe.
 | Back-end (`mvnw test`, com a suíte de integração no Neon) | 5 de 5 |
 | Front (`npm run lint` e `npm run build`) | Sem erros |
 
-Os prints estão em [`evidencias/`](../evidencias/).
+Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](../evidencias/entrega-final/).
 
 ## 7. Limitações e melhorias futuras
 

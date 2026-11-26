@@ -209,7 +209,7 @@ A interface é responsiva. No celular, o menu lateral vira um menu hambúrguer.
 | Front-End | `cd frontend-vue` e `npm run lint` e `npm run build` |
 | Fluxo completo | Login, importação de uma planilha, conferência no Dashboard e em Relatórios, e logout |
 
-Os prints dos testes estão em [`evidencias/`](evidencias/).
+Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](evidencias/entrega-final/). Os da Sprint 2 estão em [`evidencias/sprint-2/`](evidencias/sprint-2/).
 
 ## Segurança e dados
 

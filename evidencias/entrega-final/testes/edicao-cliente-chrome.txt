@@ -1,0 +1,15 @@
+# Inclusão, edição e exclusão de cliente em Relatórios, no Chrome contra a API real (26/11/2026)
+# Rodado uma vez: cada alteração gera uma nova versão da carteira no banco.
+antes: 2 clientes, total 2270000
+[OK   ] formulário vazio mostra erro em cada campo obrigatório 8 erros
+[OK   ] código repetido é recusado com mensagem -> "Código de cliente já existe na carteira."
+[OK   ] inclusão salva e avisa -> "Empresa Teste E2E foi incluído na carteira. Os indicadores foram recalculados."
+[OK   ] dashboard recalculado com o novo cliente 3 clientes, total 2370000
+[OK   ] formulário de edição vem preenchido fat=100000 serv="Backup; Voip"
+[OK   ] edição salva e avisa -> "Empresa Teste E2E foi atualizado. Os indicadores foram recalculados."
+[OK   ] dashboard recalculado com o novo faturamento total 2520000
+[OK   ] exclusão salva e avisa -> "Empresa Teste E2E foi excluído da carteira."
+[OK   ] carteira volta ao estado inicial 2 clientes, total 2270000
+[OK   ] cliente de teste sumiu da lista 
+[OK   ] sem erros de JavaScript 
+Resumo: 11 OK, 0 FALHA
