@@ -51,6 +51,12 @@ const routes = [
     component: Usuarios,
     meta: { requiresAuth: true, permissao: 'gerenciarUsuarios' },
   },
+  {
+    // Endereço que não existe: volta para a página inicial em vez de
+    // mostrar uma tela em branco
+    path: '/:caminho(.*)*',
+    redirect: '/',
+  },
 ]
 
 const router = createRouter({

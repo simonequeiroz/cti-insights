@@ -88,7 +88,7 @@ const http = async (caminho, { method = 'GET', body } = {}) => {
 
       if (window.location.pathname !== '/login') {
         const destino = window.location.pathname + window.location.search
-        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}`)
+        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}&motivo=sessao`)
       }
     }
 
