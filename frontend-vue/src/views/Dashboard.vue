@@ -8,6 +8,7 @@ import { useClientesStore } from '../stores/clientesStore'
 import { contar } from '../utils/datas'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import { analisarUpsell } from '../utils/upsell'
+import { exportarClientesCsv } from '../utils/exportarCsv'
 import {
   Chart,
   LineElement,
@@ -670,48 +671,8 @@ const exportarPDF = () => {
   window.print()
 }
 
-// Exporta a base filtrada como CSV. Usa ; como separador de coluna (não ,)
-// porque o Excel em português usa a vírgula como separador decimal — com
-// vírgula separando colunas, o Excel BR não reconhece e joga tudo numa
-// coluna só ao abrir o arquivo. Aspas em volta de cada valor evitam o
-// mesmo problema que o parser de upload tem com ; dentro de campos (ex.:
-// serviços separados por ;); o BOM é pra o Excel reconhecer acentuação
-// em UTF-8 corretamente.
-const exportarCSV = () => {
-  const cabecalho = [
-    'Código', 'Cliente', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Data da contratação', 'Serviço'
-  ]
-
-  const escapar = valor => `"${String(valor ?? '').replace(/"/g, '""')}"`
-
-  // Ponto decimal -> vírgula, pro Excel BR reconhecer como número e não como texto
-  const formatarNumeroCsv = valor => {
-    return valor === null || valor === undefined ? '' : String(valor).replace('.', ',')
-  }
-
-  const linhas = clientesFiltrados.value.map(cliente => [
-    cliente.codigo_cliente || '',
-    cliente.nome_cliente,
-    cliente.consultor || '',
-    cliente.segmento,
-    formatarNumeroCsv(cliente.faturamento),
-    cliente.nivel_cliente,
-    formatarData(cliente.data_contratacao),
-    cliente.servico || ''
-  ].map(escapar).join(';'))
-
-  const csv = [cabecalho.map(escapar).join(';'), ...linhas].join('\n')
-
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `cti-insights-clientes-${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-
-  URL.revokeObjectURL(url)
-}
+// Exporta a base filtrada (mesmos filtros da tela) como CSV
+const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 </script>
 
 <template>
@@ -738,7 +699,7 @@ const exportarCSV = () => {
           </h1>
 
           <p class="mt-2 text-sm text-gray-500">
-            Visão geral de performance comercial e recomendações em tempo real.
+            Faturamento, clientes e oportunidades da carteira, calculados a partir da última planilha importada.
           </p>
 
         </div>

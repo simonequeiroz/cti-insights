@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar.vue'
 import AppToast from '../components/AppToast.vue'
 import { avaliarUsuario, listarUsuarios } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
-import { formatarDataHora } from '../utils/datas'
+import { contar, formatarDataHora } from '../utils/datas'
 import { PAPEIS, rotuloPapel, STATUS_CONTA } from '../utils/papeis'
 
 // Tela do Administrador (rota protegida por "gerenciarUsuarios"):
@@ -222,7 +222,7 @@ const avaliar = async (usuario, status) => {
               </h2>
 
               <p class="mt-1 text-sm text-gray-500">
-                {{ todos.length }} cadastro(s). Um cadastro recusado pode ser aprovado depois.
+                {{ contar(todos.length, 'cadastro', 'cadastros') }}. Um cadastro recusado pode ser aprovado depois.
               </p>
 
             </div>

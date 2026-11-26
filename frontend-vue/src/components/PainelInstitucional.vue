@@ -23,8 +23,8 @@
       </p>
 
       <p class="mt-6 hidden text-base leading-relaxed text-[#AFC2D8] md:block">
-        Acesse o painel inteligente para gestão unificada de clientes,
-        faturamento, contratos e telemetria gerada via Python/Pandas
+        Veja onde está a receita da sua carteira, como está cada consultor
+        e quais clientes podem contratar mais serviços.
       </p>
 
     </div>

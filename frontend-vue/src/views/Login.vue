@@ -11,7 +11,9 @@ const auth = useAuthStore()
 
 const email = ref('')
 const senha = ref('')
-const lembrar = ref(false)
+// "Esqueci minha senha": o sistema não envia e-mail; a tela orienta a
+// procurar o administrador.
+const mostrarAjudaSenha = ref(false)
 const mostrarSenha = ref(false)
 const erro = ref('')
 
@@ -204,28 +206,26 @@ const entrar = async () => {
 
           </div>
 
-          <!-- Lembrar acesso / Esqueci minha senha (cada um sem quebrar no
-               meio; em tela muito estreita o link desce para a linha de baixo) -->
+          <!-- Esqueci minha senha: mostra a orientação logo abaixo -->
 
-          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 whitespace-nowrap text-sm">
-
-            <label class="flex items-center gap-2 text-gray-600">
-              <input
-                v-model="lembrar"
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-[#006EB7] focus:ring-[#006EB7]/30"
-              />
-              Lembrar acesso
-            </label>
-
+          <div class="text-right text-sm">
             <button
               type="button"
+              :aria-expanded="mostrarAjudaSenha"
               class="font-medium text-[#006EB7] hover:underline"
+              @click="mostrarAjudaSenha = !mostrarAjudaSenha"
             >
               Esqueci minha senha
             </button>
-
           </div>
+
+          <p
+            v-if="mostrarAjudaSenha"
+            class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-[#03558c]"
+          >
+            Por segurança, o sistema não envia senhas por e-mail. Fale com o
+            administrador do CTI Insights da sua empresa.
+          </p>
 
           <!-- Mensagem de erro -->
 

@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { useUploadStore } from '../stores/uploadStore'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
+import { exportarClientesCsv } from '../utils/exportarCsv'
 
 const auth = useAuthStore()
 
@@ -176,6 +177,16 @@ const limparDados = async () => {
               class="text-sm text-[#006EB7] transition hover:underline"
             >
               Limpar período
+            </button>
+
+            <button
+              v-if="clientesFiltrados.length"
+              type="button"
+              @click="exportarClientesCsv(clientesFiltrados)"
+              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#006EB7] hover:text-[#006EB7]"
+              title="Baixa os clientes desta lista (com a busca e o período aplicados) para abrir no Excel"
+            >
+              Exportar CSV
             </button>
 
             <button

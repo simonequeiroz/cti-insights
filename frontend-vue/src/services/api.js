@@ -359,6 +359,12 @@ export const salvarClientes = async clientes => {
 
 // ---------- Histórico de processamento (telemetria) ----------
 
+// O Spring devolve em "enviadoPor" só o nome (texto); as telas usam
+// { nome, email }, como no modo mock.
+const comResponsavel = envio => (typeof envio?.enviadoPor === 'string'
+  ? { ...envio, enviadoPor: { nome: envio.enviadoPor } }
+  : envio)
+
 // API: GET /uploads -> [RegistroUpload]
 export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/uploads', {
   method: 'POST',
@@ -378,7 +384,7 @@ export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/
       uf: cliente.uf
     }))
   })
-})
+}).then(comResponsavel)
 
 export const lerDashboard = async () => {
   try {
@@ -391,7 +397,7 @@ export const lerDashboard = async () => {
 
 export const listarHistorico = async () => {
   if (!USAR_MOCK) {
-    return http('/uploads')
+    return (await http('/uploads')).map(comResponsavel)
   }
 
   return lerJson(CHAVE_TELEMETRIA, [])
