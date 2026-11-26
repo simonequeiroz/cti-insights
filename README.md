@@ -117,6 +117,10 @@ psql "postgresql://USUARIO:SENHA@ep-SEU-ENDPOINT.REGIAO.aws.neon.tech/neondb?ssl
 
 Os dados de conexão ficam em **Connect** no painel do Neon.
 
+Se o banco foi criado **antes de 27/11/2026**, rode também a migração
+[`database/migracoes/V2__trocar_senha.sql`](database/migracoes/V2__trocar_senha.sql)
+(pode rodar mais de uma vez sem erro).
+
 ### 3. Arquivos `.env`
 
 Copie cada `.env.example` para `.env` e preencha com os seus dados. Os
@@ -169,6 +173,9 @@ ficam salvos no próprio navegador (`localStorage`).
 1. **Entrar:** use o e-mail e a senha do administrador definidos em `ADMIN_*`.
    Outras pessoas usam **Criar conta** e esperam a aprovação do administrador
    na tela **Usuários**.
+   Quem esquecer a senha pede ao administrador uma **senha temporária**; ao
+   entrar com ela, o sistema pede uma senha nova. Todos podem trocar a própria
+   senha pelo menu (**Trocar senha**).
 2. **Importar:** em **Importar**, envie a planilha da carteira. O sistema
    mostra os erros por linha, avisa sobre segmentos não reconhecidos e pede
    confirmação. Cada planilha enviada substitui a carteira anterior.
@@ -184,7 +191,7 @@ da planilha".
 |---|---|
 | Consultor | Ver toda a carteira, importar planilhas, incluir e editar clientes |
 | Gestor | Ver dashboard e toda a carteira, e exportar |
-| Administrador | Tudo, mais aprovar cadastros e excluir clientes |
+| Administrador | Tudo, mais aprovar cadastros, mudar papéis, bloquear acessos, gerar senha temporária e excluir clientes |
 
 ## Telas
 

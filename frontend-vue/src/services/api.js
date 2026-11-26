@@ -20,6 +20,8 @@ const CHAVE_AUTH = 'ctiAuth'
 const CHAVE_USUARIO = 'ctiUsuario'
 const CHAVE_NOME = 'ctiNome'
 const CHAVE_PAPEL = 'ctiPapel'
+// 'true' quando a pessoa entrou com uma senha temporária e precisa criar outra
+const CHAVE_TROCAR_SENHA = 'ctiTrocarSenha'
 const CHAVE_CLIENTES = 'ctiClientes'
 const CHAVE_TELEMETRIA = 'ctiTelemetria'
 const CHAVE_CONTAS = 'ctiContas'
@@ -122,12 +124,19 @@ const limparSessaoLocal = () => {
   localStorage.removeItem(CHAVE_USUARIO)
   localStorage.removeItem(CHAVE_NOME)
   localStorage.removeItem(CHAVE_PAPEL)
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
 }
 
 const salvarSessao = usuario => {
   localStorage.setItem(CHAVE_AUTH, 'true')
   localStorage.setItem(CHAVE_USUARIO, usuario.email)
   localStorage.setItem(CHAVE_PAPEL, usuario.papel)
+
+  if (usuario.trocarSenha) {
+    localStorage.setItem(CHAVE_TROCAR_SENHA, 'true')
+  } else {
+    localStorage.removeItem(CHAVE_TROCAR_SENHA)
+  }
 
   if (usuario.nome) {
     localStorage.setItem(CHAVE_NOME, usuario.nome)
@@ -147,6 +156,8 @@ const nomeAPartirDoEmail = email => {
     .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
     .join(' ')
 }
+
+export const precisaTrocarSenha = () => localStorage.getItem(CHAVE_TROCAR_SENHA) === 'true'
 
 export const nomeUsuario = () => {
   return localStorage.getItem(CHAVE_NOME) || nomeAPartirDoEmail(usuarioAtual())
@@ -324,6 +335,48 @@ export const avaliarUsuario = async (id, { status, papel }, avaliadoPor) => {
 
   salvarContas(contas)
   return semSenha(atualizada)
+}
+
+// ---------- Senha ----------
+
+// Troca a própria senha (confirma a atual). Também é o passo obrigatório de
+// quem entrou com uma senha temporária.
+// API: POST /auth/senha  { senhaAtual, novaSenha } -> 204
+export const trocarSenha = async (senhaAtual, novaSenha) => {
+  if (!USAR_MOCK) {
+    await http('/auth/senha', { method: 'POST', body: JSON.stringify({ senhaAtual, novaSenha }) })
+  } else {
+    const contas = lerContas()
+    const conta = contas.find(item => item.email === usuarioAtual())
+
+    if (!conta || conta.senha !== await resumoSenha(senhaAtual)) {
+      throw erroComStatus('A senha atual não confere.', 400)
+    }
+    if (novaSenha === senhaAtual) {
+      throw erroComStatus('A senha nova deve ser diferente da atual.', 400)
+    }
+
+    const senha = await resumoSenha(novaSenha)
+    salvarContas(contas.map(item => (item.email === conta.email ? { ...item, senha, trocarSenha: false } : item)))
+  }
+
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
+}
+
+// O administrador gera uma senha temporária para quem esqueceu a sua. Ela
+// volta uma única vez; o usuário cria uma nova no próximo acesso.
+// API: POST /usuarios/{id}/senha-temporaria -> { senhaTemporaria }
+export const gerarSenhaTemporaria = async id => {
+  if (!USAR_MOCK) {
+    return (await http(`/usuarios/${id}/senha-temporaria`, { method: 'POST' })).senhaTemporaria
+  }
+
+  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const numeros = crypto.getRandomValues(new Uint32Array(12))
+  const temporaria = [...numeros].map(n => alfabeto[n % alfabeto.length]).join('')
+  const senha = await resumoSenha(temporaria)
+  salvarContas(lerContas().map(item => (item.id === id ? { ...item, senha, trocarSenha: true } : item)))
+  return temporaria
 }
 
 // API: POST /auth/logout

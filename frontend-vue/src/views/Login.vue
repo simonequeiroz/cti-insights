@@ -251,8 +251,9 @@ const entrar = async () => {
             v-if="mostrarAjudaSenha"
             class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-[#03558c]"
           >
-            Por segurança, o sistema não envia senhas por e-mail. Fale com o
-            administrador do CTI Insights da sua empresa.
+            Por segurança, o sistema não envia senhas por e-mail. Peça ao
+            administrador do CTI Insights uma <strong>senha temporária</strong>. Ao entrar
+            com ela, o sistema pede que você crie uma senha nova.
           </p>
 
           <!-- Mensagem de erro -->

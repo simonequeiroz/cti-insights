@@ -278,12 +278,36 @@ const sair = async () => {
 
         </div>
 
+        <RouterLink
+          to="/trocar-senha"
+          title="Trocar senha"
+          aria-label="Trocar senha"
+          class="mt-4 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-[#006EB7] sm:w-full sm:justify-center md:w-auto md:justify-start"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+            />
+          </svg>
+
+          <span class="sm:hidden md:inline">Trocar senha</span>
+        </RouterLink>
+
         <button
           type="button"
           @click="sair"
           title="Sair do sistema"
           aria-label="Sair do sistema"
-          class="mt-4 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-red-600 sm:w-full sm:justify-center md:w-auto md:justify-start"
+          class="mt-3 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-red-600 sm:w-full sm:justify-center md:w-auto md:justify-start"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -76,7 +76,8 @@ O que cada papel pode fazer (regras em `src/utils/papeis.js`):
 | Incluir e editar cliente (tela Clientes) | ✅ | ❌ | ✅ |
 | Excluir cliente (tela Clientes) | ❌ | ❌ | ✅ |
 | Remover item do histórico e limpar dados locais | ❌ | ❌ | ✅ |
-| Aprovar cadastros (`/usuarios`) | ❌ | ❌ | ✅ |
+| Aprovar cadastros, mudar papel, bloquear acesso e gerar senha temporária (`/usuarios`) | ❌ | ❌ | ✅ |
+| Trocar a própria senha (`/trocar-senha`) | ✅ | ✅ | ✅ |
 
 Quem abre pelo endereço uma tela que o papel não permite volta ao
 Dashboard com um aviso. Para testar de novo o estado "sem dados", use o

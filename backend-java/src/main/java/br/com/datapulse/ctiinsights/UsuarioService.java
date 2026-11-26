@@ -1,6 +1,7 @@
 package br.com.datapulse.ctiinsights;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -31,7 +32,14 @@ class UsuarioService {
     record Review(Status status, Role papel) {}
     record Reviewer(String nome, String email) {}
     record Account(long id, String nome, String email, Role papel, Role papelSolicitado,
-                   Status status, Instant criadoEm, Instant avaliadoEm, Reviewer avaliadoPor) {}
+                   Status status, Instant criadoEm, Instant avaliadoEm, Reviewer avaliadoPor,
+                   boolean trocarSenha) {}
+    record TrocaSenha(String senhaAtual, String novaSenha) {}
+
+    // Senha temporária: 12 caracteres sem os que se confundem (0/O, 1/l/I)
+    private static final String ALFABETO_SENHA = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    private static final int TAMANHO_SENHA_TEMPORARIA = 12;
+    private static final SecureRandom ALEATORIO = new SecureRandom();
 
     private static final String SELECT = """
             SELECT u.*, a.nome AS avaliador_nome, a.email AS avaliador_email
@@ -137,6 +145,49 @@ class UsuarioService {
         return buscar(id);
     }
 
+    // O administrador gera uma senha temporária para quem esqueceu a sua. Ela
+    // aparece uma única vez na resposta; no banco fica só o hash. No próximo
+    // acesso, o usuário é levado a criar uma senha nova (trocar_senha).
+    @Transactional
+    public String gerarSenhaTemporaria(long id, long administrador) {
+        if (id == administrador) {
+            throw new Failure(HttpStatus.CONFLICT, "Para mudar a sua própria senha, use \"Trocar senha\".");
+        }
+        jdbc.sql("LOCK TABLE usuario IN SHARE ROW EXCLUSIVE MODE").update();
+        if (papelAprovado(administrador) != Role.ADMINISTRADOR) {
+            throw new Failure(HttpStatus.FORBIDDEN, "Acesso restrito à administração.");
+        }
+        buscar(id);
+        var senha = new StringBuilder(TAMANHO_SENHA_TEMPORARIA);
+        for (int i = 0; i < TAMANHO_SENHA_TEMPORARIA; i++) {
+            senha.append(ALFABETO_SENHA.charAt(ALEATORIO.nextInt(ALFABETO_SENHA.length())));
+        }
+        jdbc.sql("UPDATE usuario SET senha_hash = ?, trocar_senha = TRUE WHERE id = ?")
+                .params(encoder.encode(senha.toString()), id).update();
+        return senha.toString();
+    }
+
+    // Qualquer usuário logado troca a própria senha, confirmando a atual
+    @Transactional
+    public void trocarSenha(long id, TrocaSenha input) {
+        String atual = input == null ? null : input.senhaAtual();
+        String nova = input == null ? null : input.novaSenha();
+        String hash = jdbc.sql("SELECT senha_hash FROM usuario WHERE id = ? AND status = 'APROVADO'")
+                .param(id).query(String.class).optional()
+                .orElseThrow(() -> new Failure(HttpStatus.UNAUTHORIZED, "Autenticação necessária."));
+        if (!fitsBcrypt(atual) || !encoder.matches(atual, hash)) {
+            throw new Failure(HttpStatus.BAD_REQUEST, "A senha atual não confere.");
+        }
+        if (!fitsBcrypt(nova) || nova.codePointCount(0, nova.length()) < 8) {
+            throw new Failure(HttpStatus.BAD_REQUEST, "A senha deve ter ao menos 8 caracteres e até 72 bytes.");
+        }
+        if (nova.equals(atual)) {
+            throw new Failure(HttpStatus.BAD_REQUEST, "A senha nova deve ser diferente da atual.");
+        }
+        jdbc.sql("UPDATE usuario SET senha_hash = ?, trocar_senha = FALSE WHERE id = ?")
+                .params(encoder.encode(nova), id).update();
+    }
+
     static Instant utc(ResultSet rs, String column) throws SQLException {
         LocalDateTime value = rs.getObject(column, LocalDateTime.class);
         return value == null ? null : value.toInstant(ZoneOffset.UTC);
@@ -147,7 +198,8 @@ class UsuarioService {
         return new Account(rs.getLong("id"), rs.getString("nome"), rs.getString("email"),
                 Role.valueOf(rs.getString("papel")), Role.valueOf(rs.getString("papel_solicitado")),
                 Status.valueOf(rs.getString("status")), utc(rs, "criado_em"), utc(rs, "avaliado_em"),
-                reviewer == null ? null : new Reviewer(rs.getString("avaliador_nome"), reviewer));
+                reviewer == null ? null : new Reviewer(rs.getString("avaliador_nome"), reviewer),
+                rs.getBoolean("trocar_senha"));
     }
 
     private static boolean fitsBcrypt(String password) {

@@ -33,7 +33,9 @@ Todas as rotas abaixo usam o prefixo `/api`. Antes de uma escrita, obtenha o tok
 | `GET /health`, `GET /auth/csrf` | Públicas. Saúde do processo e token CSRF. |
 | `POST /auth/cadastro`, `POST /auth/login` | Públicas. Cadastro pendente ou login de conta aprovada. |
 | `POST /auth/logout` | Autenticado. Encerra a sessão. |
-| `GET /usuarios`, `PATCH /usuarios/{id}` | Administrador. Lista e avalia cadastros. |
+| `GET /usuarios`, `PATCH /usuarios/{id}` | Administrador. Lista usuários, aprova, recusa, bloqueia, reativa e troca o papel. Vale na hora, mesmo para quem está logado, porque a sessão é conferida a cada requisição. |
+| `POST /usuarios/{id}/senha-temporaria` | Administrador. Gera uma senha temporária (devolvida uma única vez). No próximo login, a resposta traz `trocarSenha: true`. |
+| `POST /auth/senha` | Autenticado. Troca a própria senha: `{ senhaAtual, novaSenha }` → `204`. |
 | `GET /uploads`, `POST /uploads` | Consultor ou administrador. Histórico e envio de carteira. |
 | `GET /clientes`, `GET /clientes/{id}`, `GET /dashboard` | Autenticado. Dados do último envio normalizado. |
 | `POST /clientes`, `PUT /clientes/{id}` | Consultor ou administrador. Inclusão e edição. |

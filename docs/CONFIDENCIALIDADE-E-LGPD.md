@@ -62,6 +62,13 @@ Todas as medidas abaixo estão no código e podem ser conferidas:
 
 - **Acesso só com login aprovado.** Um cadastro novo fica pendente até um
   administrador aprovar (`UsuarioService.java`).
+- **Acesso revogável na hora.** O administrador bloqueia quem não deve mais
+  entrar (por exemplo, quem saiu da empresa) e troca papéis. Como o Spring
+  confere a situação da conta a cada requisição, o bloqueio vale mesmo para
+  quem está logado.
+- **Senha esquecida sem expor a senha.** O administrador gera uma senha
+  temporária, mostrada uma única vez, e o sistema obriga a pessoa a criar uma
+  nova no próximo acesso. Ninguém, nem o administrador, conhece a senha final.
 - **Senhas com hash BCrypt.** A senha nunca é gravada em texto
   (`SecurityConfig.java`).
 - **Papéis.** Consultor, gestor e administrador só fazem as ações permitidas
@@ -109,9 +116,9 @@ O sistema é um MVP acadêmico. Para uso real com dados da CTI, faltaria:
 - **Política de retenção.** Cada planilha enviada gera uma nova versão da
   carteira, e as versões antigas continuam no banco. Seria preciso definir por
   quanto tempo guardá-las e apagar as antigas.
-- **Direitos do titular.** Hoje, para corrigir ou excluir os próprios dados
-  (nome e e-mail), o usuário precisa pedir ao administrador. Não há uma tela
-  para isso.
+- **Direitos do titular.** O usuário troca a própria senha, mas, para
+  corrigir ou excluir o nome e o e-mail, precisa pedir ao administrador. Não
+  há uma tela para isso, e o sistema não apaga contas: só bloqueia.
 - **Registro de acessos.** O histórico registra quem enviou cada planilha, mas
   não quem consultou os dados.
 - **Contrato com a empresa.** O uso de dados reais exigiria um termo assinado

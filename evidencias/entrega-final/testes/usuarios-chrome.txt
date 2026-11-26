@@ -1,0 +1,30 @@
+# Tela Usuários e troca de senha no Chrome (26/11/2026). Lista de usuários simulada (A), login simulado (B) e troca real da senha do administrador, desfeita no fim (C)
+[OK   ] você não tem ações na própria conta 
+[OK   ] aprovada tem Gerar senha e Bloquear 
+[OK   ] sem acesso tem "Dar acesso" 
+[OK   ] recusar pede confirmação 
+[OK   ] aprovar envia o papel escolhido 
+[OK   ] "Salvar papel" só aparece depois de mudar 
+[OK   ] salvar papel envia APROVADO + GESTOR 
+[OK   ] senha temporária pede confirmação 
+[OK   ] janela mostra a senha 
+[OK   ] copiar senha 
+[OK   ] bloquear pede confirmação 
+[OK   ] bloquear envia REJEITADO 
+[OK   ] depois de bloquear aparece "Dar acesso" 
+[OK   ] erro mostra a mensagem do Spring 
+[OK   ] celular: botões de ação visíveis sem arrastar para o lado 198, 328
+[OK   ] celular: sem rolagem lateral 
+[OK   ] com senha temporária, vai direto para "Crie uma senha nova" 
+[OK   ] sem menu durante a troca obrigatória 
+[OK   ] não consegue abrir outra tela antes de trocar 
+[OK   ] confirmação diferente é recusada 
+[OK   ] depois de trocar, entra no sistema http://localhost:5173/dashboard
+[OK   ] link "Trocar senha" no menu abre a tela (com menu) 
+[OK   ] senha atual errada é recusada pelo Spring 
+[OK   ] troca real aceita 
+[OK   ] entra com a senha nova 
+[OK   ] senha original restaurada 
+[OK   ] entra de novo com a senha original 
+[OK   ] sem erros de JavaScript 
+Resumo: 28 OK, 0 FALHA

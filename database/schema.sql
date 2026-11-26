@@ -11,7 +11,10 @@ CREATE TABLE usuario (
     status TEXT NOT NULL CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO')),
     criado_em TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
     avaliado_em TIMESTAMP,
-    avaliado_por_id BIGINT REFERENCES usuario (id)
+    avaliado_por_id BIGINT REFERENCES usuario (id),
+    -- true depois que o administrador gera uma senha temporária: o usuário
+    -- precisa criar uma senha nova no próximo acesso (V2)
+    trocar_senha BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE consultor (

@@ -7,6 +7,7 @@ import UploadView from '../views/UploadView.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Relatorios from '../views/Relatorios.vue'
 import Usuarios from '../views/Usuarios.vue'
+import TrocarSenha from '../views/TrocarSenha.vue'
 import { useAuthStore } from '../stores/authStore'
 
 const routes = [
@@ -52,6 +53,12 @@ const routes = [
     meta: { requiresAuth: true, permissao: 'gerenciarUsuarios' },
   },
   {
+    path: '/trocar-senha',
+    name: 'TrocarSenha',
+    component: TrocarSenha,
+    meta: { requiresAuth: true },
+  },
+  {
     // Endereço que não existe: volta para a página inicial em vez de
     // mostrar uma tela em branco
     path: '/:caminho(.*)*',
@@ -81,6 +88,12 @@ router.beforeEach(to => {
   // manda direto para o dashboard.
   if (to.meta.somenteVisitante && autenticado) {
     return '/dashboard'
+  }
+
+  // Entrou com senha temporária: só libera o sistema depois de criar uma
+  // senha nova
+  if (autenticado && auth.precisaTrocarSenha && to.path !== '/trocar-senha') {
+    return { path: '/trocar-senha', query: to.meta.requiresAuth ? { redirect: to.fullPath } : {} }
   }
 
   // Tela que o papel do usuário não pode usar (ex.: Gestor abrindo
