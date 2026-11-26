@@ -73,6 +73,8 @@ O que cada papel pode fazer (regras em `src/utils/papeis.js`):
 |---|:---:|:---:|:---:|
 | Dashboard, Relatórios e exportar CSV/PDF | ✅ | ✅ | ✅ |
 | Importar planilha e ver histórico | ✅ | ❌ | ✅ |
+| Incluir e editar cliente (Relatórios) | ✅ | ❌ | ✅ |
+| Excluir cliente (Relatórios) | ❌ | ❌ | ✅ |
 | Remover item do histórico e limpar dados locais | ❌ | ❌ | ✅ |
 | Aprovar cadastros (`/usuarios`) | ❌ | ❌ | ✅ |
 
@@ -89,7 +91,7 @@ botão de limpar dados em **Relatórios** (Administrador).
 | `/cadastro` | Cadastro (primeiro acesso) | Pública |
 | `/upload` | Importar: envio da planilha em etapas e histórico de importações | Consultor e Administrador |
 | `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, filtros por segmento, nível e período, exportação CSV/PDF) | Requer login |
-| `/relatorios` | Base de clientes detalhada, com busca por empresa e filtro por período | Requer login |
+| `/relatorios` | Base de clientes detalhada, com busca, filtro por período, exportação CSV e inclusão/edição/exclusão de cliente | Requer login |
 | `/usuarios` | Aprovação de cadastros e papel de cada usuário | Administrador |
 
 ## Estrutura de `src/`

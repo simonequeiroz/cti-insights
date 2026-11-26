@@ -40,6 +40,15 @@ const MAPA_SEGMENTOS = {
 
 const SEGMENTOS_CONHECIDOS = new Set(Object.values(MAPA_SEGMENTOS))
 
+// Segmentos aceitos, em ordem alfabética (lista de escolha do formulário de
+// cliente em Relatórios)
+export const SEGMENTOS_VALIDOS = [...SEGMENTOS_CONHECIDOS].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+
+export const UFS = [
+  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA',
+  'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'
+]
+
 // Segmento fora do mapa cai pra "Primeira Maiúscula" até alguém adicionar
 // a entrada certa no mapa. Pode ser um segmento novo ou erro de digitação
 // ("INDISTIRA"), então a tela de revisão pede conferência.

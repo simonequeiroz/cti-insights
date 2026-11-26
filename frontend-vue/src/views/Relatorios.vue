@@ -2,6 +2,8 @@
 import { USAR_MOCK } from '../services/api'
 import { computed, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
+import AppToast from '../components/AppToast.vue'
+import FormularioCliente from '../components/FormularioCliente.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { useUploadStore } from '../stores/uploadStore'
@@ -85,6 +87,47 @@ const formatarData = valor => {
 
   const [ano, mes, dia] = valor.split('-')
   return `${dia}/${mes}/${ano}`
+}
+
+// ---------- Inclusão, edição e exclusão de clientes ----------
+
+const formularioAberto = ref(false)
+const clienteEmEdicao = ref(null)
+const aviso = ref({ mensagem: '', tipo: 'sucesso' })
+const excluindo = ref(null)
+
+const podeEditar = computed(() => auth.pode('editarCliente'))
+const podeExcluir = computed(() => auth.pode('excluirCliente'))
+const mostrarAcoes = computed(() => podeEditar.value || podeExcluir.value)
+
+// Consultores da carteira, para o formulário sugerir enquanto digita
+const consultores = computed(() => [...new Set(clientes.value.map(c => c.consultor).filter(Boolean))].sort())
+
+const abrirFormulario = (cliente = null) => {
+  clienteEmEdicao.value = cliente
+  formularioAberto.value = true
+}
+
+const aoSalvar = mensagem => {
+  formularioAberto.value = false
+  aviso.value = { mensagem, tipo: 'sucesso' }
+}
+
+const confirmarExclusao = async cliente => {
+  const confirmou = window.confirm(
+    `Excluir ${cliente.nome_cliente} (${cliente.codigo_cliente}) da carteira? Os indicadores do Dashboard serão recalculados sem esse cliente.`
+  )
+  if (!confirmou) return
+
+  excluindo.value = cliente.codigo_cliente
+  try {
+    await clientesStore.excluirCliente(cliente)
+    aviso.value = { mensagem: `${cliente.nome_cliente} foi excluído da carteira.`, tipo: 'sucesso' }
+  } catch (falha) {
+    aviso.value = { mensagem: falha.message || 'Não foi possível excluir. Tente novamente.', tipo: 'erro' }
+  } finally {
+    excluindo.value = null
+  }
 }
 
 // Zera só o localStorage DESTE navegador (clientes importados + histórico
@@ -180,6 +223,15 @@ const limparDados = async () => {
             </button>
 
             <button
+              v-if="podeEditar"
+              type="button"
+              @click="abrirFormulario()"
+              class="rounded-md bg-[#006EB7] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+            >
+              + Novo cliente
+            </button>
+
+            <button
               v-if="clientesFiltrados.length"
               type="button"
               @click="exportarClientesCsv(clientesFiltrados)"
@@ -231,7 +283,7 @@ const limparDados = async () => {
 
           <div class="overflow-x-auto">
 
-            <table class="w-full min-w-[820px] text-left text-sm">
+            <table class="w-full text-left text-sm" :class="mostrarAcoes ? 'min-w-[960px]' : 'min-w-[820px]'">
 
               <thead class="bg-gray-50">
                 <tr>
@@ -265,6 +317,10 @@ const limparDados = async () => {
 
                   <th class="p-4 font-semibold text-gray-500">
                     Data da contratação
+                  </th>
+
+                  <th v-if="mostrarAcoes" class="p-4 text-right font-semibold text-gray-500">
+                    Ações
                   </th>
                 </tr>
               </thead>
@@ -309,6 +365,28 @@ const limparDados = async () => {
 
                   <td class="p-4 text-gray-500">
                     {{ formatarData(cliente.data_contratacao) }}
+                  </td>
+
+                  <td v-if="mostrarAcoes" class="whitespace-nowrap p-4 text-right">
+                    <button
+                      v-if="podeEditar"
+                      type="button"
+                      :aria-label="`Editar ${cliente.nome_cliente}`"
+                      class="rounded px-2 py-1 text-sm font-semibold text-[#006EB7] transition hover:bg-blue-50"
+                      @click="abrirFormulario(cliente)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      v-if="podeExcluir"
+                      type="button"
+                      :disabled="excluindo === cliente.codigo_cliente"
+                      :aria-label="`Excluir ${cliente.nome_cliente}`"
+                      class="ml-1 rounded px-2 py-1 text-sm font-semibold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                      @click="confirmarExclusao(cliente)"
+                    >
+                      {{ excluindo === cliente.codigo_cliente ? 'Excluindo...' : 'Excluir' }}
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -380,6 +458,20 @@ const limparDados = async () => {
       </main>
 
     </div>
+
+    <FormularioCliente
+      v-if="formularioAberto"
+      :cliente="clienteEmEdicao"
+      :consultores="consultores"
+      @fechar="formularioAberto = false"
+      @salvo="aoSalvar"
+    />
+
+    <AppToast
+      :mensagem="aviso.mensagem"
+      :tipo="aviso.tipo"
+      @fechar="aviso.mensagem = ''"
+    />
 
   </div>
 

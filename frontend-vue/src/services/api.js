@@ -346,6 +346,53 @@ export const listarClientes = async () => {
   return lerJson(CHAVE_CLIENTES, [])
 }
 
+// Inclui (original = null) ou edita um cliente da carteira atual.
+// API: POST /clientes ou PUT /clientes/{id}. O Spring monta uma nova versão
+// da carteira e o Python recalcula os indicadores; os ids mudam, então quem
+// chama deve recarregar a lista. 409 = código já existe; 502 = falha no ETL.
+export const salvarCliente = async (original, dados) => {
+  if (!USAR_MOCK) {
+    const corpo = JSON.stringify({
+      codigo_cliente: dados.codigo_cliente,
+      nome_cliente: dados.nome_cliente,
+      consultor: dados.consultor,
+      segmento: dados.segmento,
+      nivel_cliente: dados.nivel_cliente,
+      faturamento_anual: dados.faturamento,
+      data_contratacao: dados.data_contratacao,
+      servicos_contratados: dados.servicos.join(';'),
+      cidade: dados.cidade,
+      uf: dados.uf
+    })
+
+    return original
+      ? http(`/clientes/${original.id}`, { method: 'PUT', body: corpo })
+      : http('/clientes', { method: 'POST', body: corpo })
+  }
+
+  // Mock: a carteira fica no localStorage; o código identifica o cliente
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  const outros = lista.filter(cliente => cliente.codigo_cliente !== original?.codigo_cliente)
+
+  if (outros.some(cliente => cliente.codigo_cliente === dados.codigo_cliente)) {
+    throw erroComStatus('Código de cliente já existe na carteira.', 409)
+  }
+
+  const cliente = { ...dados, servico: dados.servicos.join(', ') }
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify([...outros, cliente]))
+  return cliente
+}
+
+// API: DELETE /clientes/{id}  (só Administrador)
+export const excluirCliente = async cliente => {
+  if (!USAR_MOCK) {
+    return http(`/clientes/${cliente.id}`, { method: 'DELETE' })
+  }
+
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify(lista.filter(item => item.codigo_cliente !== cliente.codigo_cliente)))
+}
+
 // Mock: o front trata a planilha e guarda o resultado aqui.
 // API: a base é gravada pelo back-end ao receber a planilha
 // (POST /uploads); esta função deixa de ser necessária.

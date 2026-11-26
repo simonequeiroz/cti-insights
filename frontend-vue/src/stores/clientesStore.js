@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { listarClientes, salvarClientes } from '../services/api'
+import { excluirCliente, listarClientes, salvarCliente, salvarClientes } from '../services/api'
 
 // Base de clientes em uso (a última importação confirmada). Antes, Dashboard,
 // Relatórios e uploadStore tinham cada um a sua cópia, carregada por conta
@@ -31,6 +31,18 @@ export const useClientesStore = defineStore('clientes', {
       await salvarClientes(clientes)
       this.lista = clientes
       this.carregado = true
+    },
+
+    // Inclusão/edição de um cliente (Relatórios). Recarrega a lista porque,
+    // na API, cada alteração gera uma nova versão da carteira com novos ids.
+    async salvarCliente(original, dados) {
+      await salvarCliente(original, dados)
+      await this.carregar()
+    },
+
+    async excluirCliente(cliente) {
+      await excluirCliente(cliente)
+      await this.carregar()
     },
 
     // Só zera a memória; quem apaga o armazenamento é o uploadStore

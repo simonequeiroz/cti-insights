@@ -4,9 +4,10 @@
 // back-end, que deve aplicar as mesmas regras em cada endpoint.
 //
 // Todos consultam o Dashboard e os Relatórios e exportam os dados. Além disso:
-//   Consultor     → importa a planilha consolidada da carteira
+//   Consultor     → importa a planilha da carteira e inclui/edita clientes
 //   Gestor        → só acompanha os resultados (perfil estratégico)
-//   Administrador → importa, aprova cadastros e apaga dados/histórico
+//   Administrador → tudo do consultor, mais excluir clientes, aprovar
+//                   cadastros e apagar dados/histórico
 
 export const PAPEIS = [
   {
@@ -31,6 +32,8 @@ export const rotuloPapel = valor => PAPEIS.find(papel => papel.valor === valor)?
 // Ação → papéis que podem fazê-la
 const PERMISSOES = {
   importarPlanilha: ['CONSULTOR', 'ADMINISTRADOR'],
+  editarCliente: ['CONSULTOR', 'ADMINISTRADOR'],
+  excluirCliente: ['ADMINISTRADOR'],
   removerHistorico: ['ADMINISTRADOR'],
   limparDados: ['ADMINISTRADOR'],
   gerenciarUsuarios: ['ADMINISTRADOR']
