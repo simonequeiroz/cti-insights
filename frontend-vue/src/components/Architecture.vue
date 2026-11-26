@@ -70,7 +70,7 @@ const passos = [
 
 const protecoes = [
   'Só entra quem tem cadastro aprovado por um administrador.',
-  'Cada papel (consultor, gestor, administrador) vê apenas o que precisa.',
+  'Cada papel (consultor, gestor, administrador) só faz as ações da sua função: por exemplo, só o administrador exclui clientes e aprova acessos.',
   'As senhas são guardadas criptografadas, nunca em texto.',
   'Os dados ficam em banco na nuvem com conexão segura (SSL), e as credenciais nunca vão para o código.'
 ]

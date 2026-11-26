@@ -142,6 +142,11 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](../evide
 - A planilha não tem histórico: cada envio substitui a carteira, então não
   há comparação entre períodos.
 
+**Limitações do sistema:**
+- Não há carteira por consultor. Todo usuário aprovado vê os clientes de
+  todos os consultores. O papel limita as ações (só o administrador exclui,
+  o gestor só consulta), mas não quais clientes cada um vê.
+
 **Limitações dos insights** (encontradas pelo próprio grupo):
 - Algumas frases precisam de ajuste. Ex.: "correlação fraca positiva" quando
   o valor-p mostra que não há correlação, e "o consultor" para uma consultora.
@@ -153,6 +158,8 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](../evide
    segmento e por consultor).
 3. Importar direto do sistema de faturamento da CTI, sem depender da planilha.
 4. Enviar a lista de oportunidades de upsell para cada consultor.
+5. Ligar cada conta de login ao seu consultor, para que cada um veja só a
+   própria carteira e apenas o gestor e o administrador vejam tudo.
 
 ## 8. Contribuição dos integrantes
 

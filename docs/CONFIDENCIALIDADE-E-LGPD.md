@@ -64,8 +64,11 @@ Todas as medidas abaixo estão no código e podem ser conferidas:
   administrador aprovar (`UsuarioService.java`).
 - **Senhas com hash BCrypt.** A senha nunca é gravada em texto
   (`SecurityConfig.java`).
-- **Papéis.** Consultor, gestor e administrador só acessam o que precisam. A
-  regra vale no front e é garantida pelo Spring em cada rota.
+- **Papéis.** Consultor, gestor e administrador só fazem as ações permitidas
+  à sua função. Por exemplo, o gestor só consulta, e só o administrador exclui
+  clientes e aprova cadastros. A regra vale no front e é garantida pelo Spring
+  em cada rota. O papel limita as **ações**, e não **quais clientes** cada um
+  vê: todos os usuários aprovados veem a carteira inteira (veja a seção 6).
 - **Sessão protegida.** O cookie de sessão é `HttpOnly` e `SameSite=Lax`, a
   sessão expira após 30 minutos sem uso e as escritas exigem token CSRF.
 - **Banco protegido.** O navegador nunca acessa o banco. Só o Spring e o
@@ -96,6 +99,12 @@ para um repositório público deve ser considerada exposta e trocada na hora.
 ## 6. Limitações e próximos passos
 
 O sistema é um MVP acadêmico. Para uso real com dados da CTI, faltaria:
+
+- **Carteira por consultor.** Hoje todo usuário aprovado vê os clientes de
+  todos os consultores. Pelo princípio da necessidade, o ideal seria cada
+  consultor ver só a própria carteira, e só o gestor e o administrador verem
+  tudo. Para isso, cada conta de login precisaria ser ligada ao consultor
+  correspondente, e o Spring filtraria os clientes de acordo.
 
 - **Política de retenção.** Cada planilha enviada gera uma nova versão da
   carteira, e as versões antigas continuam no banco. Seria preciso definir por

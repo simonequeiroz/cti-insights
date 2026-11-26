@@ -39,7 +39,7 @@ professora orientou que o projeto não trata isso.
 
 | Parte | Faz | **Não** faz |
 |---|---|---|
-| **Vue + Pinia** (front) | Lê a planilha, valida cada linha, mostra os erros antes de enviar, envia as linhas válidas, desenha gráficos e tabelas com o que o back-end devolve, controla o que cada papel vê | Não calcula estatísticas nem upsell; não grava dados; não acessa o banco |
+| **Vue + Pinia** (front) | Lê a planilha, valida cada linha, mostra os erros antes de enviar, envia as linhas válidas, desenha gráficos e tabelas com o que o back-end devolve, mostra a cada papel só as telas e botões que ele pode usar | Não calcula estatísticas nem upsell; não grava dados; não acessa o banco |
 | **Spring Boot** (Java) | Login e papéis, revalida os dados (DTO + Service), grava cada envio, chama o Python, entrega os dados ao front (`/api/...`), aplica as permissões de cada papel em cada rota | Não calcula estatísticas; não confia só na validação do front |
 | **Python** (pandas + FastAPI) | Padroniza (ex.: `IND.` → `Indústria`), calcula média, mediana, desvio, agrupamentos e **oportunidades de upsell**, escreve as frases e grava o resultado | Não lê a planilha; não valida campo a campo de novo; não fala com o front |
 | **PostgreSQL** (Neon) | Guarda os dados tratados, o histórico de envios e os resultados | Não tem regra de negócio, só as regras de integridade (`CHECK`, chaves) |

@@ -182,8 +182,8 @@ da planilha".
 
 | Papel | O que pode fazer |
 |---|---|
-| Consultor | Ver os dados, importar planilhas, incluir e editar clientes |
-| Gestor | Ver dashboard e relatórios |
+| Consultor | Ver toda a carteira, importar planilhas, incluir e editar clientes |
+| Gestor | Ver dashboard e toda a carteira, e exportar |
 | Administrador | Tudo, mais aprovar cadastros e excluir clientes |
 
 ## Telas
@@ -219,7 +219,10 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](evidenci
 - Senhas e chaves ficam só nos arquivos `.env`, que não vão para o Git. O
   repositório traz apenas os `.env.example`, sem valores.
 - As senhas dos usuários são gravadas com hash (BCrypt). As rotas exigem
-  login, e cada papel só acessa o que lhe cabe.
+  login, e cada papel só faz as ações permitidas a ele. Por exemplo, só o
+  administrador exclui clientes e aprova cadastros.
+- Todos os usuários aprovados **veem a carteira inteira**, de todos os
+  consultores (veja as limitações abaixo).
 - A conexão com o Neon usa SSL (`sslmode=require`).
 
 ## Limitações conhecidas
@@ -230,6 +233,14 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](evidenci
   avisa quantos clientes saíram por isso.
 - Com poucos clientes na planilha, as medidas estatísticas e a correlação têm
   pouco valor e devem ser lidas com cuidado.
+- **Não há carteira por consultor.** A conta de login não está ligada ao
+  consultor da planilha, então todo usuário aprovado vê os clientes de todos
+  os consultores, e um consultor pode editar o cliente de um colega. O papel
+  limita as **ações**, não **quais clientes** cada um vê.
+- **A planilha é a fonte oficial da carteira.** A tela Clientes serve para
+  ajustes entre um envio e outro. Um cliente incluído pela tela sai da
+  carteira se não estiver na próxima planilha enviada (a etapa Confirmar
+  avisa antes).
 
 ## Integrantes e responsabilidades
 
