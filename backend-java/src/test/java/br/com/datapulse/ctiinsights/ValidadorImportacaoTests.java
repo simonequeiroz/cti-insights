@@ -53,9 +53,18 @@ class ValidadorImportacaoTests {
         var first = line("C1", "0", "2024-05-01", "", "MPLS");
         var duplicate = line(" c1 ", "0", "2024-05-01", "", "MPLS");
         assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("carteira.xlsx", 3, List.of(first, duplicate))))
-                .hasMessageContaining("Linha enviada 2").hasMessageContaining("duplicado");
+                .isInstanceOf(ClienteDuplicadoException.class).hasMessageContaining("Linha enviada 2").hasMessageContaining("duplicado");
         assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("carteira.xlsx", 2, Arrays.asList(first, null))))
                 .hasMessageContaining("Linha enviada 2");
+    }
+
+    @Test
+    void distinguishesInvalidExcelAndMissingColumn() {
+        assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("", 0, List.of())))
+                .isInstanceOf(ExcelInvalidoException.class);
+        assertThatThrownBy(() -> validation.rows(new ValidadorImportacao.Upload("carteira.xlsx", 1,
+                List.of(line("", "0", "2024-05-01", "", "MPLS")))))
+                .isInstanceOf(ColunaObrigatoriaException.class).hasMessageContaining("codigo_cliente");
     }
 
     private static ValidadorImportacao.Input line(String code, String money, String date, String uf, String services) {

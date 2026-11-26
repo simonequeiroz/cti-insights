@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import br.com.datapulse.ctiinsights.model.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -45,9 +46,11 @@ class CarteiraService {
             LEFT JOIN estatistica e ON e.telemetria_id = t.id
             """;
     private static final String CLIENTS = """
-            SELECT c.*, co.nome AS consultor, ct.data_inicio,
+            SELECT c.*, co.nome AS consultor, ct.id AS contrato_id, ct.data_inicio,
+                   ARRAY(SELECT s.id FROM contrato_servico cs JOIN servico s ON s.id = cs.servico_id
+                         WHERE cs.contrato_id = ct.id ORDER BY s.nome, s.id) AS servico_ids,
                    ARRAY(SELECT s.nome FROM contrato_servico cs JOIN servico s ON s.id = cs.servico_id
-                         WHERE cs.contrato_id = ct.id ORDER BY s.nome) AS servicos
+                         WHERE cs.contrato_id = ct.id ORDER BY s.nome, s.id) AS servicos
             FROM cliente c LEFT JOIN consultor co ON co.id = c.consultor_id
             LEFT JOIN contrato ct ON ct.cliente_id = c.id
             WHERE c.telemetria_id = (
@@ -85,8 +88,9 @@ class CarteiraService {
     public Dashboard consultarDashboard() {
         var upload = jdbc.sql(UPLOADS + " WHERE t.id = (" + ACTIVE + ")").query(CarteiraService::mapUpload)
                 .optional().orElseThrow(() -> new Failure(HttpStatus.NOT_FOUND, "Nenhum envio normalizado."));
-        var insights = jdbc.sql("SELECT descricao FROM insight WHERE telemetria_id = ? ORDER BY id")
-                .param(upload.id()).query(String.class).list();
+        var insights = jdbc.sql("SELECT id, telemetria_id, descricao FROM insight WHERE telemetria_id = ? ORDER BY id")
+                .param(upload.id()).query((rs, row) -> new Insight(rs.getLong("id"), rs.getLong("telemetria_id"),
+                        rs.getString("descricao"))).list().stream().map(Entidade::resumo).toList();
         return jdbc.sql("SELECT gerado_em, resultado FROM estatistica WHERE telemetria_id = ?")
                 .param(upload.id()).query((rs, row) -> new Dashboard(upload, UsuarioService.utc(rs, "gerado_em"),
                         json.readTree(rs.getString("resultado")), insights))
@@ -99,8 +103,8 @@ class CarteiraService {
         try {
             rows = validador.rows(request);
         } catch (Failure error) {
-            var filename = request.nomeArquivo();
-            var count = request.linhasLidas();
+            var filename = request == null ? null : request.nomeArquivo();
+            var count = request == null ? null : request.linhasLidas();
             telemetria.registrar(Operation.UPLOAD.name(), filename == null || filename.isBlank() ? "arquivo" : filename,
                     count == null || count < 0 ? null : count, usuarioId, "ERRO_SCHEMA", error.getMessage());
             throw error;
@@ -123,7 +127,7 @@ class CarteiraService {
                 continue;
             }
             if (replacement != null && client.codigo_cliente().equals(replacement.codigo_cliente())) {
-                throw new Failure(HttpStatus.CONFLICT, "Código de cliente já existe na carteira.");
+                throw new ClienteDuplicadoException(HttpStatus.CONFLICT, "Código de cliente já existe na carteira.");
             }
             rows.add(client.toRow());
         }
@@ -151,23 +155,36 @@ class CarteiraService {
     }
 
     private static Upload mapUpload(ResultSet rs, int row) throws SQLException {
-        return new Upload(rs.getLong("id"), rs.getString("tipo_operacao"), rs.getString("nome_arquivo"),
+        var t = new Telemetria(rs.getLong("id"), rs.getString("tipo_operacao"), rs.getString("nome_arquivo"),
                 UsuarioService.utc(rs, "data_hora"), rs.getString("status"), rs.getObject("linhas_lidas", Integer.class),
                 rs.getString("mensagem"), rs.getString("enviado_por"), rs.getObject("linhas_importadas", Integer.class));
+        return new Upload(t.getId(), t.getTipoOperacao(), t.getNomeArquivo(), t.getDataHora(), t.getStatus(),
+                t.getLinhasLidas(), t.getMensagem(), t.getEnviadoPor(), t.getLinhasImportadas());
     }
 
     private static Client mapClient(ResultSet rs, int row) throws SQLException {
         Array sqlArray = rs.getArray("servicos");
-        List<String> services;
+        Array idArray = rs.getArray("servico_ids");
+        List<Servico> servicos = new ArrayList<>();
         try {
-            services = List.of((String[]) sqlArray.getArray());
+            String[] nomes = (String[]) sqlArray.getArray();
+            Object[] ids = (Object[]) idArray.getArray();
+            for (int i = 0; i < nomes.length; i++) servicos.add(new Servico(((Number) ids[i]).longValue(), nomes[i]));
         } finally {
             sqlArray.free();
+            idArray.free();
         }
-        return new Client(rs.getLong("id"), rs.getString("consultor"), rs.getString("codigo"), rs.getString("nome"),
+        Long contratoId = rs.getObject("contrato_id", Long.class);
+        Long consultorId = rs.getObject("consultor_id", Long.class);
+        var contrato = contratoId == null ? null : new Contrato(contratoId, rs.getObject("data_inicio", LocalDate.class), servicos);
+        var consultor = consultorId == null ? null : new Consultor(consultorId, rs.getString("consultor"));
+        var cliente = new Cliente(rs.getLong("id"), consultor, rs.getString("codigo"), rs.getString("nome"),
                 rs.getString("segmento"), rs.getString("nivel"), rs.getBigDecimal("faturamento_anual"),
-                rs.getObject("data_inicio", LocalDate.class), String.join(", ", services), services,
-                rs.getString("cidade"), rs.getString("uf"));
+                contrato, rs.getString("cidade"), rs.getString("uf"));
+        var services = contrato == null ? List.<String>of() : cliente.getContrato().getServicos().stream().map(Entidade::resumo).toList();
+        return new Client(cliente.getId(), consultor == null ? null : cliente.getConsultor().resumo(),
+                cliente.getCodigo(), cliente.getNome(), cliente.getSegmento(), cliente.getNivel(), cliente.getFaturamento(),
+                contrato == null ? null : contrato.getDataInicio(), String.join(", ", services), services, cliente.getCidade(), cliente.getUf());
     }
 
     private static Failure clienteNaoEncontrado() {

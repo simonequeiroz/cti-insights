@@ -2,6 +2,11 @@ package br.com.datapulse.ctiinsights;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Arrays;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
@@ -32,14 +37,32 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain security(HttpSecurity http, UsuarioService usuarios) {
+    CorsConfigurationSource corsConfigurationSource(@Value("${cti.cors.allowed-origins}") String origins) {
+        var config = new CorsConfiguration();
+        var allowed = Arrays.stream(origins.split(",")).map(String::strip).filter(x -> !x.isEmpty()).toList();
+        if (allowed.stream().anyMatch(x -> x.contains("*"))) {
+            throw new IllegalArgumentException("CORS exige origens explÃ­citas, sem curingas.");
+        }
+        config.setAllowedOrigins(allowed);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Content-Type", "Accept", "X-CSRF-TOKEN", "X-XSRF-TOKEN"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(600L);
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+
+    @Bean
+    SecurityFilterChain security(HttpSecurity http, UsuarioService usuarios, @org.springframework.beans.factory.annotation.Qualifier("corsConfigurationSource") CorsConfigurationSource cors) {
         return http
+                .cors(configuration -> configuration.configurationSource(cors))
                 .securityContext(context -> context.securityContextRepository(new NullSecurityContextRepository()))
                 .requestCache(cache -> cache.disable())
                 .logout(logout -> logout.disable())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, error) ->
-                                error(response, 401, "Autenticação necessária."))
+                                error(response, 401, "AutenticaÃ§Ã£o necessÃ¡ria."))
                         .accessDeniedHandler((request, response, error) ->
                                 error(response, 403, "Acesso negado.")))
                 .addFilterBefore(new IdentidadeDaSessao(usuarios), AuthorizationFilter.class)
