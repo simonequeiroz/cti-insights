@@ -29,20 +29,28 @@ class UsuarioController {
     }
 
     @PostMapping("/auth/login")
-    Map<String, String> login(@RequestBody UsuarioService.Credentials credentials, HttpServletRequest request) {
+    Map<String, Object> login(@RequestBody UsuarioService.Credentials credentials, HttpServletRequest request) {
         var account = usuarios.autenticar(credentials);
         var previous = request.getSession(false);
         if (previous != null) {
             previous.invalidate();
         }
         request.getSession().setAttribute(SecurityConfig.USUARIO_ID, account.id());
-        return Map.of("email", account.email(), "nome", account.nome(), "papel", account.papel().name());
+        // trocarSenha = true: entrou com senha temporária e precisa criar uma nova
+        return Map.of("email", account.email(), "nome", account.nome(), "papel", account.papel().name(),
+                "trocarSenha", account.trocarSenha());
     }
 
     @PostMapping("/auth/cadastro")
     @ResponseStatus(HttpStatus.CREATED)
     UsuarioService.Account register(@RequestBody UsuarioService.Registration registration) {
         return usuarios.cadastrar(registration);
+    }
+
+    @PostMapping("/auth/senha")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void changePassword(@RequestBody UsuarioService.TrocaSenha input, @AuthenticationPrincipal Long id) {
+        usuarios.trocarSenha(id, input);
     }
 
     @PostMapping("/auth/logout")
@@ -60,5 +68,10 @@ class UsuarioController {
     UsuarioService.Account review(@PathVariable long id, @RequestBody UsuarioService.Review review,
                             @AuthenticationPrincipal Long reviewer) {
         return usuarios.avaliar(id, review, reviewer);
+    }
+
+    @PostMapping("/usuarios/{id}/senha-temporaria")
+    Map<String, String> temporaryPassword(@PathVariable long id, @AuthenticationPrincipal Long administrador) {
+        return Map.of("senhaTemporaria", usuarios.gerarSenhaTemporaria(id, administrador));
     }
 }

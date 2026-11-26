@@ -11,9 +11,25 @@ const auth = useAuthStore()
 
 const email = ref('')
 const senha = ref('')
-const lembrar = ref(false)
+// "Esqueci minha senha": o sistema não envia e-mail; a tela orienta a
+// procurar o administrador.
+const mostrarAjudaSenha = ref(false)
 const mostrarSenha = ref(false)
 const erro = ref('')
+const entrando = ref(false)
+
+// O api.js manda para cá com ?motivo=sessao quando o Spring encerra a
+// sessão (30 min sem uso ou servidor reiniciado): a tela explica por que
+// pediu login de novo.
+const sessaoExpirada = route.query.motivo === 'sessao'
+
+// Só volta para caminhos internos (ex.: /relatorios). Qualquer outra coisa
+// em ?redirect= (outro site, "//site", texto estranho) vai ao Dashboard.
+const destinoSeguro = destino => {
+  return typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//') && !destino.startsWith('/\\')
+    ? destino
+    : '/dashboard'
+}
 
 // Entra com a conta de demonstração em um clique (só no modo simulado)
 const entrarComContaDemo = () => {
@@ -29,6 +45,7 @@ const MENSAGENS_NAO_APROVADO = {
 }
 
 const entrar = async () => {
+  if (entrando.value) return
   erro.value = ''
 
   if (!email.value || !senha.value) {
@@ -44,16 +61,28 @@ const entrar = async () => {
   // Só entra quem se cadastrou (/cadastro) e foi aprovado por um
   // Administrador (/usuarios); em modo mock, tudo neste navegador (veja
   // services/api.js). A guarda de rota e a Sidebar leem a sessão do authStore.
+  // Botão desabilitado e "Entrando..." enquanto espera: o primeiro acesso
+  // do dia pode demorar alguns segundos (o banco gratuito "acorda").
+  entrando.value = true
   try {
     await auth.entrar(email.value, senha.value)
   } catch (falha) {
-    erro.value = falha.status === 403
-      ? MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
-      : 'E-mail ou senha inválidos.'
+    // 401 = senha errada; 403 = cadastro não aprovado. Qualquer outra falha
+    // (servidor fora do ar, erro interno) mostra o motivo real, para não
+    // parecer que a senha está errada.
+    if (falha.status === 403) {
+      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
+    } else if (falha.status === 401) {
+      erro.value = 'E-mail ou senha inválidos.'
+    } else {
+      erro.value = falha.message || 'Não foi possível entrar. Tente novamente.'
+    }
     return
+  } finally {
+    entrando.value = false
   }
 
-  router.push(route.query.redirect || '/dashboard')
+  router.push(destinoSeguro(route.query.redirect))
 }
 </script>
 
@@ -66,7 +95,7 @@ const entrar = async () => {
 
     <!-- Painel direito: formulário de login -->
 
-    <div class="flex flex-1 flex-col items-center justify-center bg-white px-6 py-8 sm:py-16">
+    <div class="flex flex-1 flex-col items-center justify-start bg-white px-6 py-8 sm:py-16 md:justify-center">
 
       <RouterLink
         to="/"
@@ -94,11 +123,19 @@ const entrar = async () => {
       >
 
         <h1 class="text-2xl font-bold text-[#292A2F]">
-          Bem-vindo de volta!
+          Acesse sua conta
         </h1>
 
         <p class="mt-2 text-sm text-gray-500">
-          Faça login para acessar sua conta.
+          Use o e-mail e a senha do seu cadastro.
+        </p>
+
+        <p
+          v-if="sessaoExpirada"
+          role="status"
+          class="mt-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          Sua sessão foi encerrada, por exemplo, após 30 minutos sem uso. Entre de novo para continuar de onde parou.
         </p>
 
         <form
@@ -197,34 +234,34 @@ const entrar = async () => {
 
           </div>
 
-          <!-- Lembrar acesso / Esqueci minha senha (cada um sem quebrar no
-               meio; em tela muito estreita o link desce para a linha de baixo) -->
+          <!-- Esqueci minha senha: mostra a orientação logo abaixo -->
 
-          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 whitespace-nowrap text-sm">
-
-            <label class="flex items-center gap-2 text-gray-600">
-              <input
-                v-model="lembrar"
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-[#006EB7] focus:ring-[#006EB7]/30"
-              />
-              Lembrar acesso
-            </label>
-
+          <div class="text-right text-sm">
             <button
               type="button"
+              :aria-expanded="mostrarAjudaSenha"
               class="font-medium text-[#006EB7] hover:underline"
+              @click="mostrarAjudaSenha = !mostrarAjudaSenha"
             >
               Esqueci minha senha
             </button>
-
           </div>
+
+          <p
+            v-if="mostrarAjudaSenha"
+            class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-[#03558c]"
+          >
+            Por segurança, o sistema não envia senhas por e-mail. Peça ao
+            administrador do CTI Insights uma <strong>senha temporária</strong>. Ao entrar
+            com ela, o sistema pede que você crie uma senha nova.
+          </p>
 
           <!-- Mensagem de erro -->
 
           <div
             v-if="erro"
-            class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-600"
+            role="alert"
+            class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
           >
             {{ erro }}
           </div>
@@ -233,9 +270,21 @@ const entrar = async () => {
 
           <button
             type="submit"
-            class="w-full rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+            :disabled="entrando"
+            :aria-busy="entrando"
+            class="flex w-full items-center justify-center gap-2 rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:cursor-wait disabled:opacity-80"
           >
-            Acessar Painel
+            <svg
+              v-if="entrando"
+              class="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25" />
+              <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            {{ entrando ? 'Entrando...' : 'Acessar Painel' }}
           </button>
 
         </form>

@@ -1,0 +1,21 @@
+# Passada geral antes da entrega (26/11/2026), com tudo rodando contra o Neon
+
+Back-end  ./mvnw test (integração no Neon)          6 de 6
+Python    teste_h01.py (100 registros com erros)     H01 confirmada
+Python    testar_conexao.py                          conectou
+Python    /testar com amostras/clientes.json         2 clientes, média e mediana 1.135.000 (igual ao README)
+Front     npm run lint                               sem erros
+Front     npm run build                              sem avisos (pacote principal 201 KB, telas carregadas sob demanda)
+
+Chrome    front-chrome          8 de 8
+Chrome    login-chrome         11 de 11
+Chrome    menu-lateral-chrome  14 de 14
+Chrome    importacao-chrome    11 de 11
+Chrome    clientes-chrome      21 de 21
+Chrome    dashboard-chrome     10 de 10
+Chrome    usuarios-chrome      28 de 28
+Chrome    cadastro-chrome      14 de 14
+Chrome    modo demonstração    10 de 10 (VITE_USE_MOCK=true, sem nenhuma chamada à API)
+
+Documentação   14 arquivos .md, 0 links quebrados
+Segurança      nenhum .env versionado; nenhuma senha ou chave real nos arquivos do repositório

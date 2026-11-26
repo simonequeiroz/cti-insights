@@ -1,12 +1,14 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { lerDashboard, USAR_MOCK } from '../services/api'
 import Sidebar from '../components/Sidebar.vue'
+import CardIndicador from '../components/CardIndicador.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
-import { contar } from '../utils/datas'
+import { contar, formatarDataHora } from '../utils/datas'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import { analisarUpsell } from '../utils/upsell'
+import { exportarClientesCsv } from '../utils/exportarCsv'
 import {
   Chart,
   LineElement,
@@ -19,7 +21,7 @@ import {
   Legend
 } from 'chart.js'
 
-import { Line, Bar, Doughnut } from 'vue-chartjs'
+import { Bar, Doughnut } from 'vue-chartjs'
 
 Chart.register(
   LineElement,
@@ -70,10 +72,32 @@ onMounted(async () => {
   }
 })
 
+// De onde vêm os números: o envio mais recente (planilha ou alteração na
+// tela Clientes). Só no modo API, que tem esse registro.
+const ALTERACOES_MANUAIS = {
+  CRIACAO_CLIENTE: 'inclusão de cliente',
+  EDICAO_CLIENTE: 'edição de cliente',
+  EXCLUSAO_CLIENTE: 'exclusão de cliente'
+}
+
+const origemDosDados = computed(() => {
+  const envio = dashboard.value?.envio
+  if (!envio) return ''
+  const origem = ALTERACOES_MANUAIS[envio.tipoOperacao]
+    ? `última alteração na tela Clientes (${ALTERACOES_MANUAIS[envio.tipoOperacao]})`
+    : envio.nomeArquivo
+  const quem = typeof envio.enviadoPor === 'string' ? envio.enviadoPor : envio.enviadoPor?.nome
+  return `Base: ${origem} · ${formatarDataHora(envio.dataHora)}${quem ? ` por ${quem}` : ''}`
+})
+
+// Com filtro ativo, os números e gráficos são da seleção, mas os insights
+// escritos pelo Python são da carteira inteira: a tela avisa
+const filtroAtivo = computed(() => filtroSegmento.value !== 'Todos' || filtroNivel.value !== 'Todos' || periodoAtivo.value)
+
 const segmentos = computed(() => {
   return [...new Set(
-    clientes.value.map(cliente => cliente.segmento)
-  )]
+    clientes.value.map(cliente => cliente.segmento).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 })
 
 const clientesFiltrados = computed(() => {
@@ -92,31 +116,10 @@ const clientesFiltrados = computed(() => {
   })
 })
 
-// Paginação da tabela "Clientes" (a base pode ter centenas de linhas)
-const ITENS_POR_PAGINA = 10
-const paginaAtual = ref(1)
-
-const totalPaginas = computed(() => {
-  return Math.max(1, Math.ceil(clientesFiltrados.value.length / ITENS_POR_PAGINA))
-})
-
-const clientesPaginados = computed(() => {
-  const inicio = (paginaAtual.value - 1) * ITENS_POR_PAGINA
-  return clientesFiltrados.value.slice(inicio, inicio + ITENS_POR_PAGINA)
-})
-
-// Muda o filtro (segmento/nível), volta pra primeira página do resultado
-watch([filtroSegmento, filtroNivel, dataInicio, dataFim], () => {
-  paginaAtual.value = 1
-})
-
-const paginaAnterior = () => {
-  if (paginaAtual.value > 1) paginaAtual.value--
-}
-
-const proximaPagina = () => {
-  if (paginaAtual.value < totalPaginas.value) paginaAtual.value++
-}
+// "Top 10 clientes por faturamento" (a lista completa fica na tela Clientes)
+const top10Clientes = computed(() => [...clientesFiltrados.value]
+  .sort((a, b) => (Number(b.faturamento) || 0) - (Number(a.faturamento) || 0))
+  .slice(0, 10))
 
 const totalClientes = computed(() => {
   return estatisticas.value?.resumo.totalClientes ?? clientesFiltrados.value.length
@@ -206,18 +209,18 @@ const graficoLinhaData = computed(() => {
 
         data: evolucaoContratacoes.value.map(item => item.contratos),
 
-        borderColor: '#FF8F00',
-
         backgroundColor: '#FF8F00',
 
-        tension: 0.3,
+        borderRadius: 4,
 
-        pointRadius: 4
+        maxBarThickness: 28
       }
     ]
   }
 })
 
+// Barras, e não linha: são contagens inteiras por mês (0, 1, 2...), e uma
+// curva suavizada sugeriria valores intermediários que não existem
 const graficoLinhaOptions = {
   responsive: true,
 
@@ -225,11 +228,7 @@ const graficoLinhaOptions = {
 
   plugins: {
     legend: {
-      display: true,
-      position: 'bottom',
-      labels: {
-        usePointStyle: true
-      }
+      display: false
     },
 
     tooltip: {
@@ -252,6 +251,7 @@ const graficoLinhaOptions = {
 
     y: {
       beginAtZero: true,
+      grace: '15%',
       title: {
         display: true,
         text: 'Quantidade de contratos'
@@ -411,26 +411,35 @@ const graficoNivelData = computed(() => {
 
         backgroundColor: ['#006EB7', '#FF8F00', '#94A3B8'],
 
-        yAxisID: 'y'
+        yAxisID: 'y',
+
+        // Desenhada antes (order maior): a linha fica na frente das barras
+        order: 2
       },
       {
         type: 'line',
 
-        label: '% acumulado do faturamento',
+        label: 'Faturamento acumulado (curva ABC)',
 
         data: faturamentoAcumuladoPorNivel.value,
 
-        borderColor: '#FF8F00',
+        borderColor: '#292A2F',
 
-        backgroundColor: '#FF8F00',
+        backgroundColor: '#292A2F',
 
-        tension: 0.3,
+        borderWidth: 2,
 
-        pointRadius: 4,
+        tension: 0,
+
+        pointRadius: 5,
+
+        pointHoverRadius: 7,
 
         fill: false,
 
-        yAxisID: 'y1'
+        yAxisID: 'y1',
+
+        order: 1
       }
     ]
   }
@@ -443,7 +452,19 @@ const graficoNivelOptions = {
 
   plugins: {
     legend: {
-      display: false
+      display: true,
+      position: 'bottom',
+      labels: {
+        usePointStyle: true,
+        // A legenda das barras usa o azul do nível A como amostra
+        generateLabels: chart => chart.data.datasets.map((dataset, indice) => ({
+          text: dataset.type === 'line' ? dataset.label : 'Clientes no nível',
+          fillStyle: dataset.type === 'line' ? '#292A2F' : '#006EB7',
+          strokeStyle: dataset.type === 'line' ? '#292A2F' : '#006EB7',
+          pointStyle: dataset.type === 'line' ? 'line' : 'rect',
+          datasetIndex: indice
+        }))
+      }
     },
 
     tooltip: {
@@ -463,6 +484,12 @@ const graficoNivelOptions = {
   scales: {
     y: {
       beginAtZero: true,
+      // Folga no topo: a barra mais alta não encosta na borda do gráfico
+      grace: '15%',
+      title: {
+        display: true,
+        text: 'Clientes'
+      },
       ticks: {
         stepSize: 1
       }
@@ -471,12 +498,17 @@ const graficoNivelOptions = {
     y1: {
       position: 'right',
       min: 0,
-      max: 100,
+      max: 110,
+      title: {
+        display: true,
+        text: 'Faturamento acumulado'
+      },
       grid: {
         drawOnChartArea: false
       },
       ticks: {
-        callback: valor => `${valor}%`
+        stepSize: 20,
+        callback: valor => (valor <= 100 ? `${valor}%` : '')
       }
     }
   }
@@ -531,7 +563,20 @@ const upsell = computed(() => {
   const codigos = new Set(clientesFiltrados.value.map(cliente => cliente.codigo_cliente))
   return {
     segmentoPotencial: salvo?.segmentoPotencial ?? null,
-    oportunidades: (salvo?.oportunidades ?? []).filter(item => codigos.has(item.codigo))
+    // O Python devolve { codigo, nome, consultor, segmento, faturamento,
+    // motivos }; a tabela usa o mesmo formato do modo mock: { cliente, motivos }
+    oportunidades: (salvo?.oportunidades ?? [])
+      .filter(item => codigos.has(item.codigo))
+      .map(item => ({
+        cliente: {
+          codigo_cliente: item.codigo,
+          nome_cliente: item.nome,
+          consultor: item.consultor,
+          segmento: item.segmento,
+          faturamento: item.faturamento
+        },
+        motivos: item.motivos ?? []
+      }))
   }
 })
 
@@ -646,15 +691,6 @@ const formatarMoedaInteira = valor => {
   })
 }
 
-const formatarData = valor => {
-  if (!valor) {
-    return '—'
-  }
-
-  const [ano, mes, dia] = valor.split('-')
-  return `${dia}/${mes}/${ano}`
-}
-
 const limparFiltros = () => {
   filtroSegmento.value = 'Todos'
   filtroNivel.value = 'Todos'
@@ -669,48 +705,8 @@ const exportarPDF = () => {
   window.print()
 }
 
-// Exporta a base filtrada como CSV. Usa ; como separador de coluna (não ,)
-// porque o Excel em português usa a vírgula como separador decimal — com
-// vírgula separando colunas, o Excel BR não reconhece e joga tudo numa
-// coluna só ao abrir o arquivo. Aspas em volta de cada valor evitam o
-// mesmo problema que o parser de upload tem com ; dentro de campos (ex.:
-// serviços separados por ;); o BOM é pra o Excel reconhecer acentuação
-// em UTF-8 corretamente.
-const exportarCSV = () => {
-  const cabecalho = [
-    'Código', 'Cliente', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Data da contratação', 'Serviço'
-  ]
-
-  const escapar = valor => `"${String(valor ?? '').replace(/"/g, '""')}"`
-
-  // Ponto decimal -> vírgula, pro Excel BR reconhecer como número e não como texto
-  const formatarNumeroCsv = valor => {
-    return valor === null || valor === undefined ? '' : String(valor).replace('.', ',')
-  }
-
-  const linhas = clientesFiltrados.value.map(cliente => [
-    cliente.codigo_cliente || '',
-    cliente.nome_cliente,
-    cliente.consultor || '',
-    cliente.segmento,
-    formatarNumeroCsv(cliente.faturamento),
-    cliente.nivel_cliente,
-    formatarData(cliente.data_contratacao),
-    cliente.servico || ''
-  ].map(escapar).join(';'))
-
-  const csv = [cabecalho.map(escapar).join(';'), ...linhas].join('\n')
-
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `cti-insights-clientes-${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-
-  URL.revokeObjectURL(url)
-}
+// Exporta a base filtrada (mesmos filtros da tela) como CSV
+const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 </script>
 
 <template>
@@ -737,7 +733,11 @@ const exportarCSV = () => {
           </h1>
 
           <p class="mt-2 text-sm text-gray-500">
-            Visão geral de performance comercial e recomendações em tempo real.
+            Faturamento, clientes e oportunidades da carteira, calculados a partir da última planilha importada.
+          </p>
+
+          <p v-if="origemDosDados" class="mt-1 text-xs font-medium text-gray-500">
+            {{ origemDosDados }}
           </p>
 
         </div>
@@ -931,74 +931,10 @@ const exportarCSV = () => {
         class="grid grid-cols-1 gap-5 @sm:grid-cols-2 @xl:grid-cols-4"
       >
 
-        <!-- Total -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Faturamento Total
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ formatarMoedaInteira(faturamentoTotal) }}
-          </p>
-
-        </div>
-
-
-        <!-- Total de clientes -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Clientes na base
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ totalClientes }}
-          </p>
-
-        </div>
-
-
-        <!-- Serviços contratados -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Serviços Contratados
-          </p>
-
-          <p
-            class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]"
-          >
-            {{ totalServicos }}
-          </p>
-
-        </div>
-
-
-        <!-- Ticket -->
-
-        <div
-          class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <p class="text-xs text-gray-500">
-            Ticket Médio
-          </p>
-
-          <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
-            {{ formatarMoedaInteira(ticketMedio) }}
-          </p>
-
-        </div>
+        <CardIndicador titulo="Faturamento Total" :valor="formatarMoedaInteira(faturamentoTotal)" />
+        <CardIndicador titulo="Clientes na base" :valor="totalClientes" />
+        <CardIndicador titulo="Serviços Contratados" :valor="totalServicos" />
+        <CardIndicador titulo="Ticket Médio" :valor="formatarMoedaInteira(ticketMedio)" />
 
       </div>
 
@@ -1011,15 +947,17 @@ const exportarCSV = () => {
 
         <!-- GRÁFICO DE ROSCA: SEGMENTO -->
 
-        <div class="flex flex-col rounded-lg border border-gray-200 bg-white p-6">
+        <!-- @container: a legenda vai para o lado só quando o PRÓPRIO cartão
+             é largo; em tablet/celular fica embaixo, sem cortar os nomes -->
+        <div class="@container flex flex-col rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Faturamento por segmento
           </h2>
 
-          <div class="mt-5 flex flex-1 items-center gap-6 @xl:@max-3xl:gap-4">
+          <div class="mt-5 flex flex-1 flex-col items-center gap-6 @md:flex-row">
 
-            <div class="relative h-44 w-44 @xl:@max-3xl:h-36 @xl:@max-3xl:w-36 flex-shrink-0">
+            <div class="relative h-44 w-44 flex-shrink-0">
 
               <Doughnut
                 :data="graficoDonutData"
@@ -1037,7 +975,7 @@ const exportarCSV = () => {
 
             </div>
 
-            <div class="min-w-0 flex-1 space-y-2.5">
+            <div class="w-full min-w-0 flex-1 space-y-2.5">
 
               <div
                 v-for="item in legendaSegmentos"
@@ -1068,7 +1006,7 @@ const exportarCSV = () => {
         </div>
 
 
-        <!-- GRÁFICO DE LINHA: EVOLUÇÃO DAS CONTRATAÇÕES -->
+        <!-- GRÁFICO DE BARRAS: EVOLUÇÃO DAS CONTRATAÇÕES -->
 
         <div class="rounded-lg border border-gray-200 bg-white p-6">
 
@@ -1077,12 +1015,12 @@ const exportarCSV = () => {
           </h2>
 
           <p class="mt-1 text-sm text-gray-500 @xl:@max-3xl:hidden">
-            Número de contratos fechados por período na base selecionada.
+            Contratos fechados por mês, pela data de contratação, na base selecionada.
           </p>
 
           <div class="mt-5 h-80 @xl:@max-3xl:h-56">
 
-            <Line
+            <Bar
               v-if="evolucaoContratacoes.length"
               :data="graficoLinhaData"
               :options="graficoLinhaOptions"
@@ -1110,7 +1048,7 @@ const exportarCSV = () => {
           </h2>
 
           <p class="mt-1 text-sm text-gray-500 @xl:@max-3xl:hidden">
-            Quantidade de clientes em cada classificação, na base selecionada.
+            Barras: clientes em cada nível. Linha: quanto do faturamento os níveis somam (curva ABC).
           </p>
 
           <div class="mt-5 h-80 @xl:@max-3xl:h-56">
@@ -1141,7 +1079,7 @@ const exportarCSV = () => {
             Cliente com mais de um serviço: faturamento dividido em partes iguais entre eles (estimativa).
           </p>
 
-          <div class="mt-5 h-80 overflow-y-auto @xl:@max-3xl:h-64">
+          <div class="mt-5 max-h-80 overflow-y-auto @xl:@max-3xl:max-h-64">
 
             <ul
               v-if="top5Servicos.length"
@@ -1200,6 +1138,15 @@ const exportarCSV = () => {
         <h2 class="text-lg font-bold text-[#292A2F]">
           Insights Inteligentes
         </h2>
+
+        <p
+          v-if="filtroAtivo && !USAR_MOCK"
+          role="note"
+          class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm text-[#03558c]"
+        >
+          Estes insights e o segmento com potencial são da <strong>carteira inteira</strong>: os filtros
+          não se aplicam a eles. Os indicadores, os gráficos e a lista de oportunidades acompanham os filtros.
+        </p>
 
         <div class="mt-5 grid grid-cols-1 gap-3 @2xl:grid-cols-2 @5xl:grid-cols-4">
 
@@ -1300,139 +1247,69 @@ const exportarCSV = () => {
       </div>
 
 
-      <!-- TABELA DE CLIENTES -->
+      <!-- TOP 10 CLIENTES POR FATURAMENTO (lista completa na tela Clientes) -->
 
       <div
         v-if="clientesFiltrados.length"
         class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white"
       >
 
-        <div
-          class="border-b border-gray-200 p-5"
-        >
+        <div class="flex flex-wrap items-end justify-between gap-3 border-b border-gray-200 p-5">
+          <div>
+            <h2 class="text-lg font-bold text-[#292A2F]">
+              Top 10 clientes por faturamento
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+              Os maiores clientes da base selecionada ({{ contar(clientesFiltrados.length, 'cliente', 'clientes') }} no total).
+            </p>
+          </div>
 
-          <h2 class="text-lg font-bold text-[#292A2F]">
-            Clientes
-          </h2>
-
-          <p class="mt-1 text-sm text-gray-500">
-            {{ clientesFiltrados.length }}
-            clientes encontrados.
-          </p>
-
+          <RouterLink
+            to="/relatorios"
+            class="text-sm font-semibold text-[#006EB7] hover:underline print:hidden"
+          >
+            Ver todos em Clientes →
+          </RouterLink>
         </div>
 
-
         <div class="overflow-x-auto">
-
           <table class="w-full text-sm">
-
             <thead class="bg-gray-50">
-
               <tr>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Cliente
-                </th>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Segmento
-                </th>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Faturamento
-                </th>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Nível
-                </th>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Data da contratação
-                </th>
-
-                <th class="p-4 text-left font-semibold text-gray-500">
-                  Serviço
-                </th>
-
+                <th class="w-10 p-4 text-left font-semibold text-gray-500">#</th>
+                <th class="p-4 text-left font-semibold text-gray-500">Cliente</th>
+                <th class="p-4 text-left font-semibold text-gray-500">Consultor</th>
+                <th class="p-4 text-left font-semibold text-gray-500">Segmento</th>
+                <th class="p-4 text-right font-semibold text-gray-500">Faturamento</th>
+                <th class="p-4 text-left font-semibold text-gray-500">Nível</th>
+                <th class="p-4 text-left font-semibold text-gray-500">Serviços</th>
               </tr>
-
             </thead>
-
-
             <tbody>
-
               <tr
-                v-for="cliente in clientesPaginados"
+                v-for="(cliente, posicao) in top10Clientes"
                 :key="cliente.codigo_cliente || cliente.nome_cliente"
                 class="border-t border-gray-200 transition-colors hover:bg-gray-50"
               >
-
-                <td class="p-4 font-medium text-[#292A2F]">
-                  {{ cliente.nome_cliente }}
-                </td>
-
-                <td class="p-4 text-gray-500">
-                  {{ cliente.segmento }}
-                </td>
-
-                <td class="p-4 text-gray-500">
+                <td class="p-4 text-gray-400">{{ posicao + 1 }}</td>
+                <td class="p-4 font-medium text-[#292A2F]">{{ cliente.nome_cliente }}</td>
+                <td class="p-4 text-gray-500">{{ cliente.consultor || '—' }}</td>
+                <td class="p-4 text-gray-500">{{ cliente.segmento }}</td>
+                <td class="whitespace-nowrap p-4 text-right text-gray-500">
                   {{ cliente.faturamento != null ? formatarMoeda(cliente.faturamento) : '—' }}
                 </td>
-
                 <td class="p-4">
                   <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#006EB7]">
                     {{ cliente.nivel_cliente }}
                   </span>
                 </td>
-
-                <td class="p-4 text-gray-500">
-                  {{ formatarData(cliente.data_contratacao) }}
-                </td>
-
-                <td class="p-4 text-gray-500">
-                  {{ cliente.servico || '—' }}
-                </td>
-
+                <td class="p-4 text-gray-500">{{ cliente.servico || '—' }}</td>
               </tr>
-
             </tbody>
-
           </table>
-
-        </div>
-
-        <div
-          v-if="totalPaginas > 1"
-          class="flex items-center justify-between border-t border-gray-200 px-6 py-4"
-        >
-          <p class="text-xs text-gray-500">
-            Página {{ paginaAtual }} de {{ totalPaginas }}
-          </p>
-
-          <div class="flex gap-2">
-            <button
-              type="button"
-              :disabled="paginaAtual === 1"
-              class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-gray-50"
-              @click="paginaAnterior"
-            >
-              Anterior
-            </button>
-
-            <button
-              type="button"
-              :disabled="paginaAtual === totalPaginas"
-              class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-gray-50"
-              @click="proximaPagina"
-            >
-              Próxima
-            </button>
-          </div>
         </div>
 
       </div>
-
 
       <!-- FILTROS SEM RESULTADO (base vazia já tem o aviso lá em cima) -->
 

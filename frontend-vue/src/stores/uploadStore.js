@@ -168,9 +168,15 @@ export const useUploadStore = defineStore('upload', {
         // Comparação com a carteira atual (pelo código do cliente). Cada
         // planilha enviada é a carteira completa: ao confirmar, ela substitui
         // a anterior, e quem não veio nela deixa de aparecer.
+        // No modo API, o Python descarta segmento fora da lista conhecida:
+        // esses clientes não contam como novos nem como "já na carteira".
+        const naoReconhecidos = segmentosNaoReconhecidos(validos)
+        const descartados = new Set(USAR_MOCK ? [] : naoReconhecidos.map(s => s.valor))
+        const entram = validos.filter(c => !descartados.has(c.segmento))
+
         const baseAtual = useClientesStore().lista
         const codigosAnteriores = new Set(baseAtual.map(c => c.codigo_cliente))
-        const codigosNovos = new Set(validos.map(c => c.codigo_cliente))
+        const codigosNovos = new Set(entram.map(c => c.codigo_cliente))
         const clientesNovos = [...codigosNovos].filter(c => !codigosAnteriores.has(c)).length
         const foraDaPlanilha = baseAtual.filter(c => !codigosNovos.has(c.codigo_cliente))
 
@@ -185,7 +191,8 @@ export const useUploadStore = defineStore('upload', {
           clientesNovos,
           clientesAtualizados: codigosNovos.size - clientesNovos,
           foraDaPlanilha,
-          segmentosNaoReconhecidos: segmentosNaoReconhecidos(validos),
+          segmentosNaoReconhecidos: naoReconhecidos,
+          entramNaCarteira: entram.length,
           baseAnterior: baseAtual.length,
           hashArquivo,
           importacaoAnterior: anterior
@@ -232,9 +239,13 @@ export const useUploadStore = defineStore('upload', {
           this.historico = [item, ...this.historico.filter(envio => envio.id !== item.id)]
           this.descartarArquivo()
           await useClientesStore().carregar().catch(() => {})
+          // A tela final separa os motivos: linhas com erro (vistas na
+          // revisão) e clientes descartados por segmento não reconhecido
           return {
             ...item,
-            linhasIgnoradas: item.linhasLidas - item.linhasImportadas
+            linhasIgnoradas: analise.linhasComErro.length,
+            descartadosSegmento: analise.validos.length - analise.entramNaCarteira,
+            clientesForaDaPlanilha: analise.foraDaPlanilha.length
           }
         }
 

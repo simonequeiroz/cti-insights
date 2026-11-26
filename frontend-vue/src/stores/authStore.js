@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { cadastrar, estaAutenticado, listarUsuarios, login, logout, nomeUsuario, papelUsuario, usuarioAtual } from '../services/api'
+import { cadastrar, estaAutenticado, listarUsuarios, login, logout, nomeUsuario, papelUsuario, precisaTrocarSenha, trocarSenha, usuarioAtual } from '../services/api'
 import { podeFazer, rotuloPapel, STATUS_CONTA } from '../utils/papeis'
 
 // Sessão do usuário. O services/api.js continua sendo quem guarda a sessão
@@ -14,6 +14,8 @@ export const useAuthStore = defineStore('auth', {
     email: usuarioAtual(),
     nome: nomeUsuario(),
     papel: papelUsuario(),
+    // Entrou com senha temporária: a guarda de rota leva para /trocar-senha
+    precisaTrocarSenha: precisaTrocarSenha(),
     // Contador do link "Usuários" na Sidebar (só o Administrador vê)
     cadastrosPendentes: 0
   }),
@@ -62,6 +64,12 @@ export const useAuthStore = defineStore('auth', {
       return conta
     },
 
+    // Lança erro se a senha atual não conferir ou a nova for inválida
+    async trocarSenha(senhaAtual, novaSenha) {
+      await trocarSenha(senhaAtual, novaSenha)
+      this.recarregarSessao()
+    },
+
     async sair() {
       try {
         await logout()
@@ -92,6 +100,7 @@ export const useAuthStore = defineStore('auth', {
       this.email = usuarioAtual()
       this.nome = nomeUsuario()
       this.papel = papelUsuario()
+      this.precisaTrocarSenha = precisaTrocarSenha()
     }
   }
 })

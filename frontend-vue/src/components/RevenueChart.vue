@@ -1,12 +1,15 @@
 <template>
   <!-- Bloco: Gráfico de Faturamento Consolidado -->
-  <section id="resultados" class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
+  <!-- Gráfico decorativo: não usa dados reais, por isso leva o selo
+       "Exemplo ilustrativo". Os números reais só aparecem no Dashboard,
+       depois do login. -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
     <div class="border border-[#CDDADF] bg-white/75 backdrop-blur-[8px] rounded-lg p-5 sm:p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
 
       <!-- Cabeçalho do Painel -->
       <div class="flex justify-between items-baseline mb-[18px] flex-wrap gap-2">
-        <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">FATURAMENTO CONSOLIDADO — 3º TRIMESTRE</span>
-        <span class="text-[13px] text-[#292930] font-semibold font-['IBM_Plex_Mono']">R$ 261.580 <span class="text-[#4D7C0F]">↑ 18,2%</span></span>
+        <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">CONTRATAÇÕES POR MÊS</span>
+        <span class="rounded border border-[#CDDADF] bg-[#FAFAF7] px-2 py-0.5 text-[11px] text-[#4A5D66] font-semibold font-['IBM_Plex_Mono']">EXEMPLO ILUSTRATIVO</span>
       </div>
 
       <!-- Traçado do Gráfico com Animação SVG -->
@@ -36,7 +39,7 @@
 
       <!-- Alerta / Sugestão -->
       <div class="text-[12px] text-[#A85700] text-left md:text-right font-['IBM_Plex_Mono'] font-medium mt-2 animate-fadeup opacity-0">
-        <span class="text-[#FF8F00]">●</span> ALERTA IDENTIFICADO — AÇÃO SUGERIDA: Focar conversão de Upsell no segmento Indústria (Nível B para A)
+        <span class="text-[#FF8F00]">●</span> OPORTUNIDADE DE UPSELL: clientes de Comércio têm 50% dos serviços, mas só 19% do faturamento
       </div>
 
     </div>

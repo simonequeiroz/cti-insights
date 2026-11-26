@@ -17,7 +17,7 @@
 
       <!-- Subtítulo -->
       <p class="mt-6 sm:mt-7 text-base sm:text-lg leading-[1.6] text-[#4A5D66] max-w-[580px]">
-        Importe suas planilhas comerciais, consolide faturamentos e centralize a gestão de clientes em um painel interativo — elimine inconsistências operacionais.
+        Envie a planilha da sua carteira de clientes e veja em minutos quanto fatura cada segmento, nível e consultor, e quais clientes podem contratar mais serviços.
       </p>
 
       <!-- Botões (textos do Figma): empilhados no mobile, lado a lado a

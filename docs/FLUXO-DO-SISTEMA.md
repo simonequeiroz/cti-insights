@@ -32,14 +32,14 @@ professora orientou que o projeto não trata isso.
  PostgreSQL (Neon) ───── cliente, consultor, servico, contrato, estatistica, insight
    ▲
    │ 8. GET /api/dashboard  (Spring lê o que o Python gravou)
- Vue ─────────────────── 9. Dashboard e Relatórios só desenham os números e frases
+ Vue ─────────────────── 9. Dashboard e Clientes só desenham os números e frases
 ```
 
 ## 3. O que cada parte faz (e o que não faz)
 
 | Parte | Faz | **Não** faz |
 |---|---|---|
-| **Vue + Pinia** (front) | Lê a planilha, valida cada linha, mostra os erros antes de enviar, envia as linhas válidas, desenha gráficos e tabelas com o que o back-end devolve, controla o que cada papel vê | Não calcula estatísticas nem upsell; não grava dados; não acessa o banco |
+| **Vue + Pinia** (front) | Lê a planilha, valida cada linha, mostra os erros antes de enviar, envia as linhas válidas, desenha gráficos e tabelas com o que o back-end devolve, mostra a cada papel só as telas e botões que ele pode usar | Não calcula estatísticas nem upsell; não grava dados; não acessa o banco |
 | **Spring Boot** (Java) | Login e papéis, revalida os dados (DTO + Service), grava cada envio, chama o Python, entrega os dados ao front (`/api/...`), aplica as permissões de cada papel em cada rota | Não calcula estatísticas; não confia só na validação do front |
 | **Python** (pandas + FastAPI) | Padroniza (ex.: `IND.` → `Indústria`), calcula média, mediana, desvio, agrupamentos e **oportunidades de upsell**, escreve as frases e grava o resultado | Não lê a planilha; não valida campo a campo de novo; não fala com o front |
 | **PostgreSQL** (Neon) | Guarda os dados tratados, o histórico de envios e os resultados | Não tem regra de negócio, só as regras de integridade (`CHECK`, chaves) |
@@ -58,7 +58,7 @@ professora orientou que o projeto não trata isso.
 | Spring → Python | `POST /etl` | `{ "telemetriaId", "recebidas", "linhas" }` | `{ "ok": true }` ou erro (o envio vira `ERRO_ETL`) |
 | Front → Spring | `GET /api/uploads` | — | histórico de envios com o status |
 | Front → Spring | `GET /api/dashboard` | — | estatísticas, gráficos, upsell e frases do envio mais recente |
-| Front → Spring | `GET /api/clientes` | — | a carteira do envio mais recente (tela Relatórios) |
+| Front → Spring | `GET /api/clientes` | — | a carteira do envio mais recente (tela Clientes) |
 
 Detalhes de cada rota: `frontend-vue/API-CONTRATO.md`. Tabelas:
 `database/README.md`.

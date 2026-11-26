@@ -55,7 +55,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/*").hasAnyRole("CONSULTOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/clientes/*").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/clientes", "/api/clientes/*", "/api/dashboard").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/logout", "/api/auth/senha").authenticated()
                         .anyRequest().denyAll())
                 .build();
     }

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useClientesStore } from '../../stores/clientesStore'
 import { useUploadStore } from '../../stores/uploadStore'
 import { contar, formatarDataHora } from '../../utils/datas'
-import { formatarTamanho, TAMANHO_MAXIMO_MB } from '../../utils/etl'
+import { formatarTamanho, SEGMENTOS_VALIDOS, TAMANHO_MAXIMO_MB } from '../../utils/etl'
 import { baixarModelo } from '../../utils/modeloPlanilha'
 
 // Etapa 1: escolher o arquivo e pedir a análise. Nada é salvo aqui.
@@ -21,7 +21,7 @@ const COLUNAS_OBRIGATORIAS = [
   ['Código do cliente', 'codigo_cliente', 'sem repetir'],
   ['Nome do cliente', 'nome_cliente', ''],
   ['Consultor', 'consultor', ''],
-  ['Segmento', 'segmento', ''],
+  ['Segmento', 'segmento', `um destes: ${SEGMENTOS_VALIDOS.join(', ')}. Grafias como "IND." ou "comercio" são corrigidas sozinhas`],
   ['Nível', 'nivel_cliente', 'A, B ou C'],
   ['Faturamento anual', 'faturamento_anual', 'número, sem valor negativo'],
   ['Serviços contratados', 'servicos_contratados', 'se forem vários, separe com ";"'],

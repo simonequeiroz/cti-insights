@@ -6,7 +6,7 @@ import { contar, formatarNumero } from '../../utils/datas'
 import { gerarInsights } from '../../utils/insights'
 
 // Etapa 4: confirma o que entrou e já mostra os primeiros insights.
-defineProps({
+const props = defineProps({
   registro: { type: Object, required: true }
 })
 
@@ -14,6 +14,21 @@ const emit = defineEmits(['nova'])
 const clientes = useClientesStore()
 
 const insights = computed(() => USAR_MOCK ? gerarInsights(clientes.lista) : [])
+
+const avisos = computed(() => {
+  const r = props.registro
+  const lista = []
+  if (r.linhasIgnoradas) {
+    lista.push(r.linhasIgnoradas === 1 ? '1 linha com erro ficou de fora.' : `${formatarNumero(r.linhasIgnoradas)} linhas com erro ficaram de fora.`)
+  }
+  if (r.descartadosSegmento) {
+    lista.push(r.descartadosSegmento === 1 ? '1 cliente com segmento não reconhecido foi descartado.' : `${formatarNumero(r.descartadosSegmento)} clientes com segmento não reconhecido foram descartados.`)
+  }
+  if (r.clientesForaDaPlanilha) {
+    lista.push(r.clientesForaDaPlanilha === 1 ? '1 cliente da carteira anterior não estava na planilha e saiu da carteira.' : `${formatarNumero(r.clientesForaDaPlanilha)} clientes da carteira anterior não estavam na planilha e saíram da carteira.`)
+  }
+  return lista
+})
 </script>
 
 <template>
@@ -29,13 +44,11 @@ const insights = computed(() => USAR_MOCK ? gerarInsights(clientes.lista) : [])
         </h2>
         <p class="mt-1 text-sm text-gray-500">
           {{ registro.nomeArquivo }} · o Dashboard já está atualizado.
-          <template v-if="registro.linhasIgnoradas">
-            {{ registro.linhasIgnoradas === 1 ? '1 linha com erro ficou de fora.' : `${formatarNumero(registro.linhasIgnoradas)} linhas com erro ficaram de fora.` }}
-          </template>
-          <template v-if="registro.clientesForaDaPlanilha">
-            {{ registro.clientesForaDaPlanilha === 1 ? '1 cliente da carteira anterior não estava na planilha e saiu da carteira.' : `${formatarNumero(registro.clientesForaDaPlanilha)} clientes da carteira anterior não estavam na planilha e saíram da carteira.` }}
-          </template>
         </p>
+        <!-- Um aviso por linha: cada motivo de ficar de fora é diferente -->
+        <ul v-if="avisos.length" class="mt-2 space-y-1 text-sm text-amber-800">
+          <li v-for="aviso in avisos" :key="aviso">{{ aviso }}</li>
+        </ul>
       </div>
     </header>
 

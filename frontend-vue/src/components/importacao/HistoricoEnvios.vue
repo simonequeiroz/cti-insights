@@ -25,9 +25,27 @@ const alternarDetalhes = id => {
   detalhesAbertos.value = abertos
 }
 
+// O histórico registra planilhas e também as alterações feitas na tela
+// Clientes (o Spring informa o tipo em tipoOperacao)
+const ALTERACOES_MANUAIS = {
+  CRIACAO_CLIENTE: 'Cliente incluído',
+  EDICAO_CLIENTE: 'Cliente editado',
+  EXCLUSAO_CLIENTE: 'Cliente excluído'
+}
+
+const ehManual = item => Boolean(ALTERACOES_MANUAIS[item.tipoOperacao])
+
+const origem = item => ehManual(item)
+  ? { titulo: ALTERACOES_MANUAIS[item.tipoOperacao], detalhe: 'Alteração na tela Clientes' }
+  : { titulo: item.nomeArquivo, detalhe: 'Planilha' }
+
 const statusInfo = item => {
   if (item.status === 'PROCESSANDO') {
     return { texto: 'Processando...', classe: 'bg-orange-50 text-[#A85700]' }
+  }
+
+  if (item.status === 'NORMALIZADO' && ehManual(item)) {
+    return { texto: '✓ Atualizada', classe: 'bg-green-50 text-green-600' }
   }
 
   if (item.status === 'NORMALIZADO') {
@@ -53,9 +71,9 @@ const statusInfo = item => {
         aria-controls="historico-conteudo"
         @click="aberto = !aberto"
       >
-        <span class="text-base font-bold text-[#292A2F]">Histórico de importações</span>
+        <span class="text-base font-bold text-[#292A2F]">Histórico da carteira</span>
         <span class="text-xs text-gray-500">
-          {{ upload.historico.length }} {{ upload.historico.length === 1 ? 'arquivo' : 'arquivos' }}
+          {{ contar(upload.historico.length, 'registro', 'registros') }}
           <span aria-hidden="true">{{ aberto ? '▴' : '▾' }}</span>
         </span>
       </button>
@@ -71,14 +89,14 @@ const statusInfo = item => {
 
       <div v-else class="relative overflow-x-auto">
         <table class="w-full min-w-[760px] text-left text-xs">
-          <caption class="sr-only">Planilhas enviadas, da mais recente para a mais antiga</caption>
+          <caption class="sr-only">Planilhas enviadas e alterações na carteira, da mais recente para a mais antiga</caption>
 
           <thead class="bg-gray-50 text-gray-500">
             <tr>
-              <th scope="col" class="px-6 py-3 font-semibold">Arquivo</th>
-              <th scope="col" class="px-6 py-3 font-semibold">Enviado em</th>
-              <th scope="col" class="px-6 py-3 font-semibold">Enviado por</th>
-              <th scope="col" class="px-6 py-3 font-semibold">Importados</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Origem</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Data</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Responsável</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Clientes na carteira</th>
               <th scope="col" class="px-6 py-3 font-semibold">Situação</th>
               <th scope="col" class="px-6 py-3 font-semibold"><span class="sr-only">Ações</span></th>
             </tr>
@@ -87,7 +105,10 @@ const statusInfo = item => {
           <tbody>
             <template v-for="item in upload.historico" :key="item.id">
               <tr class="border-t border-gray-100 transition-colors hover:bg-gray-50">
-                <th scope="row" class="px-6 py-4 font-medium text-[#292A2F]">{{ item.nomeArquivo }}</th>
+                <th scope="row" class="px-6 py-4 font-medium text-[#292A2F]">
+                  {{ origem(item).titulo }}
+                  <span class="mt-0.5 block text-[11px] font-normal text-gray-400">{{ origem(item).detalhe }}</span>
+                </th>
 
                 <td class="px-6 py-4 text-gray-500">
                   <time :datetime="item.dataHora">{{ formatarDataHora(item.dataHora) }}</time>
@@ -157,8 +178,12 @@ const statusInfo = item => {
                     :problemas="item.problemas"
                     :total="item.totalProblemas"
                   />
-                  <p v-else class="rounded-md border border-red-200 bg-white px-3 py-2 text-xs text-red-700">
-                    {{ item.mensagem }}
+                  <p
+                    v-else
+                    class="rounded-md border bg-white px-3 py-2 text-xs"
+                    :class="item.status === 'NORMALIZADO' ? 'border-green-200 text-green-700' : 'border-red-200 text-red-700'"
+                  >
+                    {{ item.mensagem.replace(/^ETL concluído/, 'Processamento concluído') }}
                   </p>
                 </td>
               </tr>

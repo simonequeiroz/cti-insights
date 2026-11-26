@@ -31,6 +31,14 @@ psql -v ON_ERROR_STOP=1 -d cti_insights -f database/schema.sql
 A aplicação é transacional. Registre a versão aplicada pelo commit ou pela
 tag da entrega. Evoluções devem ter scripts incrementais versionados.
 
+**Migrações** (pasta [`migracoes/`](migracoes/)). Bancos criados antes de cada
+versão precisam rodar o script dela. Bancos novos já recebem tudo pelo
+`schema.sql`.
+
+| Versão | Script | O que muda |
+|---|---|---|
+| V2 | `V2__trocar_senha.sql` | Coluna `usuario.trocar_senha`, para a senha temporária gerada pelo administrador |
+
 ## 3. Integração
 
 Aponte as configurações do Java e do Python para o mesmo banco e esquema.

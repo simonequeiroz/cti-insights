@@ -33,7 +33,9 @@ Todas as rotas abaixo usam o prefixo `/api`. Antes de uma escrita, obtenha o tok
 | `GET /health`, `GET /auth/csrf` | Públicas. Saúde do processo e token CSRF. |
 | `POST /auth/cadastro`, `POST /auth/login` | Públicas. Cadastro pendente ou login de conta aprovada. |
 | `POST /auth/logout` | Autenticado. Encerra a sessão. |
-| `GET /usuarios`, `PATCH /usuarios/{id}` | Administrador. Lista e avalia cadastros. |
+| `GET /usuarios`, `PATCH /usuarios/{id}` | Administrador. Lista usuários, aprova, recusa, bloqueia, reativa e troca o papel. Vale na hora, mesmo para quem está logado, porque a sessão é conferida a cada requisição. |
+| `POST /usuarios/{id}/senha-temporaria` | Administrador. Gera uma senha temporária (devolvida uma única vez). No próximo login, a resposta traz `trocarSenha: true`. |
+| `POST /auth/senha` | Autenticado. Troca a própria senha: `{ senhaAtual, novaSenha }` → `204`. |
 | `GET /uploads`, `POST /uploads` | Consultor ou administrador. Histórico e envio de carteira. |
 | `GET /clientes`, `GET /clientes/{id}`, `GET /dashboard` | Autenticado. Dados do último envio normalizado. |
 | `POST /clientes`, `PUT /clientes/{id}` | Consultor ou administrador. Inclusão e edição. |
@@ -46,5 +48,11 @@ Uma alteração manual gera uma nova revisão. Recarregue a lista de clientes de
 ## Testar
 
 Rode `./mvnw test` ou `.\mvnw.cmd test`. Para incluir a suíte HTTP com ETL simulado, configure `TEST_DB_URL`, `TEST_DB_USER` e `TEST_DB_PASSWORD` para um PostgreSQL de teste. O usuário precisa poder criar esquemas. A suíte cria e remove um esquema isolado.
+
+> **No Neon, use o endereço direto (sem `-pooler`) no `TEST_DB_URL`.** O pooler
+> não mantém o esquema escolhido entre transações: os testes falham com
+> `EmptyResultDataAccessException` e podem gravar dados de teste nas tabelas
+> reais (`public`). Exemplo: `jdbc:postgresql://ep-xxxx.REGIAO.aws.neon.tech/neondb?sslmode=require`.
+> A aplicação em si pode continuar usando o endereço com `-pooler`.
 
 Na validação anterior do PR, também foram executados o fluxo real com Spring, FastAPI e PostgreSQL 17 e o fluxo do Vue em Chromium. Consulte o [guia de estudo](GUIA-DE-ESTUDO.md) para acompanhar o caminho dos dados e preparar a apresentação.

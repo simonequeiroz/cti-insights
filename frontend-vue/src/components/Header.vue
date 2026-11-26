@@ -37,8 +37,8 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
            não fez login não deve conseguir "entrar" pelo menu. -->
       <nav aria-label="Seções da página" class="hidden md:flex gap-6 lg:gap-10 text-base text-[#4A5D66] font-medium">
         <a href="#inicio" class="hover:text-[#292930] transition-colors">Apresentação</a>
-        <a href="#resultados" class="hover:text-[#292930] transition-colors">Resultados</a>
-        <a href="#arquitetura" class="hover:text-[#292930] transition-colors">Arquitetura</a>
+        <a href="#como-funciona" class="hover:text-[#292930] transition-colors">Como funciona</a>
+        <a href="#seguranca" class="hover:text-[#292930] transition-colors">Segurança</a>
       </nav>
 
       <!-- Botão (desktop) -->
@@ -71,8 +71,8 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
         class="md:hidden absolute left-4 right-4 top-full z-50 flex flex-col rounded-lg border border-[#CDDADF] bg-white p-4 shadow-lg"
       >
         <a href="#inicio" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Apresentação</a>
-        <a href="#resultados" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Resultados</a>
-        <a href="#arquitetura" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Arquitetura</a>
+        <a href="#como-funciona" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Como funciona</a>
+        <a href="#seguranca" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Segurança</a>
         <router-link
           to="/login"
           @click="fecharMenu"

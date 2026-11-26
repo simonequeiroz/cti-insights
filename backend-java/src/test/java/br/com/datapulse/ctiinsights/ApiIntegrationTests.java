@@ -168,6 +168,67 @@ class ApiIntegrationTests {
         }
     }
 
+    @Test
+    void administratorChangesRoleBlocksAccessAndIssuesTemporaryPassword() throws Exception {
+        var admin = admin();
+        var anonymous = browser();
+        var created = send(anonymous, "POST", "/auth/cadastro",
+                "{\"nome\":\"Pessoa Consultora\",\"email\":\"consultora@example.test\",\"senha\":\"senha-original\",\"papel\":\"CONSULTOR\"}");
+        assertThat(created.statusCode()).isEqualTo(201);
+        long id = body(created).path("id").asLong();
+        String url = "/usuarios/" + id;
+        assertThat(send(admin, "PATCH", url, "{\"status\":\"APROVADO\",\"papel\":\"CONSULTOR\"}").statusCode())
+                .isEqualTo(200);
+
+        var user = browser();
+        var login = send(user, "POST", "/auth/login", credentials("consultora@example.test", "senha-original"));
+        assertThat(login.statusCode()).isEqualTo(200);
+        assertThat(body(login).path("trocarSenha").asBoolean()).isFalse();
+        assertThat(send(user, "GET", "/uploads", null).statusCode()).isEqualTo(200);
+
+        // Trocar o papel vale na hora, mesmo com a sessão aberta
+        assertThat(send(admin, "PATCH", url, "{\"status\":\"APROVADO\",\"papel\":\"GESTOR\"}").statusCode())
+                .isEqualTo(200);
+        assertThat(send(user, "GET", "/uploads", null).statusCode()).isEqualTo(403);
+
+        // Senha temporária: só o administrador gera, e não para si mesmo
+        assertThat(send(user, "POST", url + "/senha-temporaria", null).statusCode()).isEqualTo(403);
+        assertThat(send(admin, "POST", "/usuarios/1/senha-temporaria", null).statusCode()).isEqualTo(409);
+        var temporaria = send(admin, "POST", url + "/senha-temporaria", null);
+        assertThat(temporaria.statusCode()).isEqualTo(200);
+        String senhaTemporaria = body(temporaria).path("senhaTemporaria").asString();
+        assertThat(senhaTemporaria).hasSize(12);
+        assertThat(send(admin, "GET", "/usuarios", null).body()).doesNotContain(senhaTemporaria);
+
+        var depois = browser();
+        assertThat(send(depois, "POST", "/auth/login", credentials("consultora@example.test", "senha-original"))
+                .statusCode()).isEqualTo(401);
+        var comTemporaria = send(depois, "POST", "/auth/login", credentials("consultora@example.test", senhaTemporaria));
+        assertThat(comTemporaria.statusCode()).isEqualTo(200);
+        assertThat(body(comTemporaria).path("trocarSenha").asBoolean()).isTrue();
+
+        // Troca da senha: confere a atual, o tamanho e que a nova é diferente
+        assertThat(send(depois, "POST", "/auth/senha", troca("errada-123", "senha-nova-123")).statusCode()).isEqualTo(400);
+        assertThat(send(depois, "POST", "/auth/senha", troca(senhaTemporaria, "curta")).statusCode()).isEqualTo(400);
+        assertThat(send(depois, "POST", "/auth/senha", troca(senhaTemporaria, "senha-nova-123")).statusCode()).isEqualTo(204);
+        assertThat(send(anonymous, "POST", "/auth/senha", troca("x", "senha-nova-456")).statusCode()).isEqualTo(401);
+        var novaSessao = browser();
+        var comNova = send(novaSessao, "POST", "/auth/login", credentials("consultora@example.test", "senha-nova-123"));
+        assertThat(comNova.statusCode()).isEqualTo(200);
+        assertThat(body(comNova).path("trocarSenha").asBoolean()).isFalse();
+
+        // Bloquear o acesso derruba a sessão aberta na próxima requisição
+        assertThat(send(admin, "PATCH", url, "{\"status\":\"REJEITADO\",\"papel\":\"GESTOR\"}").statusCode())
+                .isEqualTo(200);
+        assertThat(send(novaSessao, "GET", "/clientes", null).statusCode()).isEqualTo(401);
+        assertThat(send(browser(), "POST", "/auth/login", credentials("consultora@example.test", "senha-nova-123"))
+                .statusCode()).isEqualTo(403);
+    }
+
+    private static String troca(String atual, String nova) {
+        return "{\"senhaAtual\":\"" + atual + "\",\"novaSenha\":\"" + nova + "\"}";
+    }
+
     private HttpClient admin() throws Exception {
         var client = browser();
         assertThat(send(client, "POST", "/auth/login", credentials("admin@example.test", "apenas-teste-local"))

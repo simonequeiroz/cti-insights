@@ -1,0 +1,8 @@
+# Front: npm run lint e npm run build (26/11/2026)
+> frontend-vue@0.0.0 lint
+> eslint .
+dist/index.html                   1.04 kB │ gzip:   0.56 kB
+dist/assets/index-DP68AyrM.css   43.08 kB │ gzip:   8.63 kB
+dist/assets/index-hpQkY2Cz.js   482.23 kB │ gzip: 165.12 kB
+dist/assets/xlsx-DR4W_luh.js    491.98 kB │ gzip: 160.32 kB
+✓ built in 641ms

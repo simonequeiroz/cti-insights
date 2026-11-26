@@ -13,10 +13,14 @@ def _virg(x) -> str:                                                            
     return str(x).replace(".", ",")                                                 # 25.0 vira "25,0"
 
 
+def _clientes(n) -> str:                                                            # _clientes: "1 cliente" ou "2 clientes"
+    return f"{n} cliente" if n == 1 else f"{n} clientes"                            # singular só para 1
+
+
 def gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, por_mes, correlacao) -> list[str]:  # gerar_insights: monta frases em português com os achados
     ins: list[str] = []                                                             # lista de frases
     top = por_segmento[0]                                                           # segmento com mais clientes
-    ins.append(f"O segmento {top['segmento']} concentra a maior carteira: {top['clientes']} clientes ({_virg(top['percentual'])}%).")  # frase do segmento
+    ins.append(f"O segmento {top['segmento']} concentra a maior carteira: {_clientes(top['clientes'])} ({_virg(top['percentual'])}%).")  # frase do segmento
 
     if resumo["media"] and resumo["mediana"] and resumo["media"] > resumo["mediana"] * 1.1:  # média bem maior que a mediana?
         ins.append(f"A média de faturamento ({brl(resumo['media'])}) é maior que a mediana ({brl(resumo['mediana'])}): "  # frase explicando
@@ -26,15 +30,16 @@ def gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, 
 
     a = next((n for n in por_nivel if n["nivel"] == "A"), None)                     # procura o nível A
     if a:                                                                           # se existe
-        ins.append(f"Os {a['clientes']} clientes nível A representam {_virg(a['percentualFaturamento'])}% do faturamento total, "  # frase do nível A
+        sujeito = "O único cliente nível A representa" if a["clientes"] == 1 else f"Os {a['clientes']} clientes nível A representam"  # singular ou plural
+        ins.append(f"{sujeito} {_virg(a['percentualFaturamento'])}% do faturamento total, "  # frase do nível A
                    f"com apenas {_virg(a['percentual'])}% dos clientes.")           # (continuação)
 
     maior = max(por_consultor, key=lambda c: c["faturamentoTotal"])                 # consultor com maior faturamento
-    ins.append(f"{maior['consultor']} é o consultor com maior faturamento sob gestão ({brl(maior['faturamentoTotal'])}, {maior['clientes']} clientes).")  # frase do consultor
+    ins.append(f"{maior['consultor']} é o consultor com maior faturamento sob gestão ({brl(maior['faturamentoTotal'])}, {_clientes(maior['clientes'])}).")  # frase do consultor
 
     if por_servico:                                                                 # se há serviços
         s = por_servico[0]                                                          # o mais contratado
-        ins.append(f"{s['servico']} é o serviço mais contratado: presente em {s['contratos']} clientes ({_virg(s['percentual'])}%).")  # frase do serviço
+        ins.append(f"{s['servico']} é o serviço mais contratado: presente em {_clientes(s['contratos'])} ({_virg(s['percentual'])}%).")  # frase do serviço
 
     if por_mes:                                                                     # se há meses
         pico = max(e["clientes"] for e in por_mes)                                  # maior número de contratações em um mês

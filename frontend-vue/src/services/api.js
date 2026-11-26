@@ -1,14 +1,16 @@
 // Camada de acesso a dados do front-end.
 //
 // Toda leitura/gravação de dados e de sessão passa por aqui — nenhuma tela
-// ou store deve tocar em localStorage nem chamar fetch diretamente. Assim,
+// ou store deve tocar em localStorage nem chamar a API diretamente. Assim,
 // ligar o back-end (Spring Boot) é trocar o corpo destas funções, sem mexer
 // nas telas.
 //
 // Modo mock (padrão): guarda tudo no localStorage deste navegador.
 // Modo API: defina VITE_USE_MOCK=false e VITE_API_URL no arquivo .env
-// (veja .env.example). Os endpoints estão em API-CONTRATO.md.
+// (veja .env.example). As chamadas usam axios, e os endpoints estão em
+// API-CONTRATO.md.
 
+import axios from 'axios'
 import { STATUS_CONTA } from '../utils/papeis'
 
 export const USAR_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
@@ -18,6 +20,8 @@ const CHAVE_AUTH = 'ctiAuth'
 const CHAVE_USUARIO = 'ctiUsuario'
 const CHAVE_NOME = 'ctiNome'
 const CHAVE_PAPEL = 'ctiPapel'
+// 'true' quando a pessoa entrou com uma senha temporária e precisa criar outra
+const CHAVE_TROCAR_SENHA = 'ctiTrocarSenha'
 const CHAVE_CLIENTES = 'ctiClientes'
 const CHAVE_TELEMETRIA = 'ctiTelemetria'
 const CHAVE_CONTAS = 'ctiContas'
@@ -34,6 +38,36 @@ const lerJson = (chave, padrao) => {
 // não aprovado, 409 = e-mail já cadastrado.
 const erroComStatus = (mensagem, status, codigo = '') => Object.assign(new Error(mensagem), { status, codigo })
 
+// Cliente axios da API do Spring Boot. withCredentials envia o cookie da
+// sessão. O timeout cobre o processamento da planilha: o Spring espera o
+// Python por até 60 s.
+const cliente = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  timeout: 90000
+})
+
+// Mensagem que o usuário entende para cada tipo de falha. O Spring manda o
+// motivo em "mensagem" (ex.: e-mail já cadastrado). Sem isso, o texto
+// depende do que aconteceu: servidor fora do ar, demora ou erro interno.
+const mensagemDoErro = (erro, caminho) => {
+  if (erro.code === 'ECONNABORTED' || erro.code === 'ETIMEDOUT') {
+    return 'O servidor demorou para responder. Tente de novo em instantes.'
+  }
+
+  if (!erro.response) {
+    return 'Não foi possível falar com o servidor. Confira a sua conexão e tente de novo.'
+  }
+
+  const { status, data } = erro.response
+
+  if (data?.mensagem) return data.mensagem
+  if (status >= 500) return 'O servidor encontrou um problema. Tente de novo em instantes.'
+  if (status === 403) return 'Você não tem permissão para esta ação.'
+  if (status === 404) return 'Informação não encontrada.'
+  return `Não foi possível concluir a operação (erro ${status} em ${caminho}).`
+}
+
 const http = async (caminho, { method = 'GET', body } = {}) => {
   const headers = {}
   if (method !== 'GET') {
@@ -42,28 +76,26 @@ const http = async (caminho, { method = 'GET', body } = {}) => {
     headers['Content-Type'] = 'application/json'
   }
 
-  const resposta = await fetch(`${API_URL}${caminho}`, {
-    method, body, headers, credentials: 'same-origin'
-  })
+  try {
+    const resposta = await cliente.request({ url: caminho, method, data: body, headers })
+    return resposta.status === 204 || resposta.data === '' ? null : resposta.data
+  } catch (erro) {
+    const status = erro.response?.status ?? 0
 
-  if (!resposta.ok) {
     // Sessão expirada no Spring (30 min sem uso): o localStorage ainda diz
     // "logado", então limpa e volta ao login. As rotas /auth/* (ex.: senha
     // errada no login) tratam o 401 na própria tela.
-    if (resposta.status === 401 && !caminho.startsWith('/auth/')) {
+    if (status === 401 && !caminho.startsWith('/auth/')) {
       limparSessaoLocal()
 
       if (window.location.pathname !== '/login') {
         const destino = window.location.pathname + window.location.search
-        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}`)
+        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}&motivo=sessao`)
       }
     }
 
-    const corpo = await resposta.json().catch(() => ({}))
-    throw erroComStatus(corpo.mensagem || `Erro ${resposta.status} em ${caminho}`, resposta.status, corpo.codigo)
+    throw erroComStatus(mensagemDoErro(erro, caminho), status, erro.response?.data?.codigo)
   }
-
-  return resposta.status === 204 ? null : resposta.json()
 }
 
 // ---------- Sessão ----------
@@ -92,12 +124,19 @@ const limparSessaoLocal = () => {
   localStorage.removeItem(CHAVE_USUARIO)
   localStorage.removeItem(CHAVE_NOME)
   localStorage.removeItem(CHAVE_PAPEL)
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
 }
 
 const salvarSessao = usuario => {
   localStorage.setItem(CHAVE_AUTH, 'true')
   localStorage.setItem(CHAVE_USUARIO, usuario.email)
   localStorage.setItem(CHAVE_PAPEL, usuario.papel)
+
+  if (usuario.trocarSenha) {
+    localStorage.setItem(CHAVE_TROCAR_SENHA, 'true')
+  } else {
+    localStorage.removeItem(CHAVE_TROCAR_SENHA)
+  }
 
   if (usuario.nome) {
     localStorage.setItem(CHAVE_NOME, usuario.nome)
@@ -117,6 +156,8 @@ const nomeAPartirDoEmail = email => {
     .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
     .join(' ')
 }
+
+export const precisaTrocarSenha = () => localStorage.getItem(CHAVE_TROCAR_SENHA) === 'true'
 
 export const nomeUsuario = () => {
   return localStorage.getItem(CHAVE_NOME) || nomeAPartirDoEmail(usuarioAtual())
@@ -296,6 +337,48 @@ export const avaliarUsuario = async (id, { status, papel }, avaliadoPor) => {
   return semSenha(atualizada)
 }
 
+// ---------- Senha ----------
+
+// Troca a própria senha (confirma a atual). Também é o passo obrigatório de
+// quem entrou com uma senha temporária.
+// API: POST /auth/senha  { senhaAtual, novaSenha } -> 204
+export const trocarSenha = async (senhaAtual, novaSenha) => {
+  if (!USAR_MOCK) {
+    await http('/auth/senha', { method: 'POST', body: JSON.stringify({ senhaAtual, novaSenha }) })
+  } else {
+    const contas = lerContas()
+    const conta = contas.find(item => item.email === usuarioAtual())
+
+    if (!conta || conta.senha !== await resumoSenha(senhaAtual)) {
+      throw erroComStatus('A senha atual não confere.', 400)
+    }
+    if (novaSenha === senhaAtual) {
+      throw erroComStatus('A senha nova deve ser diferente da atual.', 400)
+    }
+
+    const senha = await resumoSenha(novaSenha)
+    salvarContas(contas.map(item => (item.email === conta.email ? { ...item, senha, trocarSenha: false } : item)))
+  }
+
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
+}
+
+// O administrador gera uma senha temporária para quem esqueceu a sua. Ela
+// volta uma única vez; o usuário cria uma nova no próximo acesso.
+// API: POST /usuarios/{id}/senha-temporaria -> { senhaTemporaria }
+export const gerarSenhaTemporaria = async id => {
+  if (!USAR_MOCK) {
+    return (await http(`/usuarios/${id}/senha-temporaria`, { method: 'POST' })).senhaTemporaria
+  }
+
+  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const numeros = crypto.getRandomValues(new Uint32Array(12))
+  const temporaria = [...numeros].map(n => alfabeto[n % alfabeto.length]).join('')
+  const senha = await resumoSenha(temporaria)
+  salvarContas(lerContas().map(item => (item.id === id ? { ...item, senha, trocarSenha: true } : item)))
+  return temporaria
+}
+
 // API: POST /auth/logout
 export const logout = async () => {
   limparSessaoLocal()
@@ -316,6 +399,53 @@ export const listarClientes = async () => {
   return lerJson(CHAVE_CLIENTES, [])
 }
 
+// Inclui (original = null) ou edita um cliente da carteira atual.
+// API: POST /clientes ou PUT /clientes/{id}. O Spring monta uma nova versão
+// da carteira e o Python recalcula os indicadores; os ids mudam, então quem
+// chama deve recarregar a lista. 409 = código já existe; 502 = falha no ETL.
+export const salvarCliente = async (original, dados) => {
+  if (!USAR_MOCK) {
+    const corpo = JSON.stringify({
+      codigo_cliente: dados.codigo_cliente,
+      nome_cliente: dados.nome_cliente,
+      consultor: dados.consultor,
+      segmento: dados.segmento,
+      nivel_cliente: dados.nivel_cliente,
+      faturamento_anual: dados.faturamento,
+      data_contratacao: dados.data_contratacao,
+      servicos_contratados: dados.servicos.join(';'),
+      cidade: dados.cidade,
+      uf: dados.uf
+    })
+
+    return original
+      ? http(`/clientes/${original.id}`, { method: 'PUT', body: corpo })
+      : http('/clientes', { method: 'POST', body: corpo })
+  }
+
+  // Mock: a carteira fica no localStorage; o código identifica o cliente
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  const outros = lista.filter(cliente => cliente.codigo_cliente !== original?.codigo_cliente)
+
+  if (outros.some(cliente => cliente.codigo_cliente === dados.codigo_cliente)) {
+    throw erroComStatus('Código de cliente já existe na carteira.', 409)
+  }
+
+  const cliente = { ...dados, servico: dados.servicos.join(', ') }
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify([...outros, cliente]))
+  return cliente
+}
+
+// API: DELETE /clientes/{id}  (só Administrador)
+export const excluirCliente = async cliente => {
+  if (!USAR_MOCK) {
+    return http(`/clientes/${cliente.id}`, { method: 'DELETE' })
+  }
+
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify(lista.filter(item => item.codigo_cliente !== cliente.codigo_cliente)))
+}
+
 // Mock: o front trata a planilha e guarda o resultado aqui.
 // API: a base é gravada pelo back-end ao receber a planilha
 // (POST /uploads); esta função deixa de ser necessária.
@@ -328,6 +458,12 @@ export const salvarClientes = async clientes => {
 }
 
 // ---------- Histórico de processamento (telemetria) ----------
+
+// O Spring devolve em "enviadoPor" só o nome (texto); as telas usam
+// { nome, email }, como no modo mock.
+const comResponsavel = envio => (typeof envio?.enviadoPor === 'string'
+  ? { ...envio, enviadoPor: { nome: envio.enviadoPor } }
+  : envio)
 
 // API: GET /uploads -> [RegistroUpload]
 export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/uploads', {
@@ -348,7 +484,7 @@ export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/
       uf: cliente.uf
     }))
   })
-})
+}).then(comResponsavel)
 
 export const lerDashboard = async () => {
   try {
@@ -361,7 +497,7 @@ export const lerDashboard = async () => {
 
 export const listarHistorico = async () => {
   if (!USAR_MOCK) {
-    return http('/uploads')
+    return (await http('/uploads')).map(comResponsavel)
   }
 
   return lerJson(CHAVE_TELEMETRIA, [])

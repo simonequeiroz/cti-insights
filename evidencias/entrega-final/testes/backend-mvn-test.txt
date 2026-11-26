@@ -1,0 +1,10 @@
+# Back-end: ./mvnw test (26/11/2026), com a suíte de integração num esquema temporário do Neon
+suite br.com.datapulse.ctiinsights.ApiIntegrationTests: 3 testes
+  [OK] readsOnlyNormalizedPortfolioAndPreservesHistoryOnFailedUploadAndCrud
+  [OK] administratorChangesRoleBlocksAccessAndIssuesTemporaryPassword
+  [OK] enforcesAuthenticationApprovalAndRoles
+suite br.com.datapulse.ctiinsights.ValidadorImportacaoTests: 3 testes
+  [OK] normalizesBrazilianFormattingAndOptionalUf
+  [OK] rejectsNegativeOrOverflowingMoneyInvalidDateUfAndServices
+  [OK] rejectsDuplicateOrMissingRows
+Resumo: 6 testes, 0 falhas, 0 erros

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import PainelInstitucional from '../components/PainelInstitucional.vue'
@@ -17,46 +17,85 @@ const papel = ref('')
 const senha = ref('')
 const confirmarSenha = ref('')
 const mostrarSenha = ref(false)
+// erro: mensagem geral (ex.: resposta do servidor). errosCampo: um texto
+// por campo, mostrado embaixo dele
 const erro = ref('')
+const errosCampo = ref({})
 const enviando = ref(false)
+
+// Quem se cadastra escolhe entre Consultor e Gestor. Administrador é
+// definido por outro administrador, na tela Usuários.
+const PAPEIS_CADASTRO = PAPEIS.filter(item => item.valor !== 'ADMINISTRADOR')
+
+// Mesma ideia da regra do Spring (algo@algo), exigindo também um ponto no
+// domínio, para pegar erros comuns como "ana@" ou "ana@empresa"
+const EMAIL_VALIDO = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+
+// Só caminhos internos (mesma regra do login)
+const destinoSeguro = destino => (typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//') && !destino.startsWith('/\\')
+  ? destino
+  : '/dashboard')
 
 // Conta criada que ficou aguardando aprovação: troca o formulário pela
 // mensagem de "cadastro enviado"
 const contaPendente = ref(null)
 
-const descricaoPapel = computed(() => PAPEIS.find(item => item.valor === papel.value)?.descricao || '')
+const descricaoPapel = computed(() => PAPEIS_CADASTRO.find(item => item.valor === papel.value)?.descricao || '')
 
-// Confere o formulário e devolve a mensagem do primeiro problema
-// (ou '' se estiver tudo certo).
+// Confere o formulário e devolve { campo: mensagem } (vazio = tudo certo)
 const validar = () => {
-  if (!nome.value.trim() || !email.value || !papel.value || !senha.value || !confirmarSenha.value) {
-    return 'Preencha todos os campos.'
+  const erros = {}
+  const nomeLimpo = nome.value.trim()
+
+  if (!nomeLimpo) {
+    erros.nome = 'Digite seu nome e sobrenome.'
+  } else if (nomeLimpo.split(/\s+/).length < 2) {
+    // Nome e sobrenome: é o que aparece no menu e no histórico de envios
+    erros.nome = 'Digite também o sobrenome.'
   }
 
-  // Nome e sobrenome: é o que aparece na Sidebar e no histórico de envios
-  if (nome.value.trim().split(/\s+/).length < 2) {
-    return 'Digite seu nome e sobrenome.'
+  if (!email.value.trim()) {
+    erros.email = 'Digite seu e-mail.'
+  } else if (!EMAIL_VALIDO.test(email.value.trim())) {
+    erros.email = 'Digite um e-mail válido, como nome.sobrenome@empresa.com.'
   }
 
-  if (!email.value.includes('@')) {
-    return 'Digite um e-mail válido.'
+  if (!papel.value) {
+    erros.papel = 'Escolha o seu papel.'
   }
 
-  if (senha.value.length < SENHA_MINIMA) {
-    return `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`
+  if (!senha.value) {
+    erros.senha = 'Crie uma senha.'
+  } else if (senha.value.length < SENHA_MINIMA) {
+    erros.senha = `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`
   }
 
-  if (senha.value !== confirmarSenha.value) {
-    return 'As senhas não conferem.'
+  if (!confirmarSenha.value) {
+    erros['confirmar-senha'] = 'Repita a senha.'
+  } else if (senha.value && senha.value !== confirmarSenha.value) {
+    erros['confirmar-senha'] = 'As senhas não conferem.'
   }
 
-  return ''
+  return erros
 }
 
-const criarConta = async () => {
-  erro.value = validar()
+const classeCampo = campo => errosCampo.value[campo]
+  ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10'
+  : 'border-gray-300 focus:border-[#006EB7] focus:ring-[#006EB7]/10'
 
-  if (erro.value || enviando.value) {
+const criarConta = async () => {
+  erro.value = ''
+  errosCampo.value = validar()
+
+  // Leva o cursor ao primeiro campo com problema
+  const primeiro = ['nome', 'email', 'papel', 'senha', 'confirmar-senha'].find(campo => errosCampo.value[campo])
+  if (primeiro) {
+    await nextTick()
+    document.getElementById(primeiro)?.focus()
+    return
+  }
+
+  if (enviando.value) {
     return
   }
 
@@ -72,7 +111,7 @@ const criarConta = async () => {
   } catch (falha) {
     erro.value = falha.status === 409
       ? 'Este e-mail já tem cadastro. Faça login para entrar.'
-      : 'Não foi possível criar a conta. Tente novamente.'
+      : falha.message || 'Não foi possível criar a conta. Tente novamente.'
     return
   } finally {
     enviando.value = false
@@ -83,7 +122,7 @@ const criarConta = async () => {
     return
   }
 
-  router.push(route.query.redirect || '/dashboard')
+  router.push(destinoSeguro(route.query.redirect))
 }
 </script>
 
@@ -141,7 +180,12 @@ const criarConta = async () => {
           <p class="mt-3 text-sm leading-relaxed text-gray-600">
             Sua conta de <strong>{{ rotuloPapel(contaPendente.papel) }}</strong>
             ({{ contaPendente.email }}) está <strong>aguardando aprovação</strong>
-            de um administrador. Você poderá entrar assim que ela for aprovada.
+            de um administrador.
+          </p>
+
+          <p class="mt-3 text-sm leading-relaxed text-gray-600">
+            <strong>Avise o administrador da sua equipe</strong> para agilizar. O sistema não envia
+            e-mail: depois da aprovação, é só entrar com o seu e-mail e a sua senha.
           </p>
 
           <RouterLink
@@ -186,8 +230,12 @@ const criarConta = async () => {
                 type="text"
                 autocomplete="name"
                 placeholder="Nome e sobrenome"
-                class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+                :aria-invalid="Boolean(errosCampo['nome'])"
+                :aria-describedby="errosCampo['nome'] ? 'erro-nome' : undefined"
+                class="w-full rounded-md border px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:ring-2"
+                :class="classeCampo('nome')"
               />
+              <p v-if="errosCampo['nome']" id="erro-nome" class="mt-1 text-xs font-medium text-red-600">{{ errosCampo['nome'] }}</p>
 
             </div>
 
@@ -208,8 +256,12 @@ const criarConta = async () => {
                 type="email"
                 autocomplete="email"
                 placeholder="nome.sobrenome@empresa.com"
-                class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+                :aria-invalid="Boolean(errosCampo['email'])"
+                :aria-describedby="errosCampo['email'] ? 'erro-email' : undefined"
+                class="w-full rounded-md border px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:ring-2"
+                :class="classeCampo('email')"
               />
+              <p v-if="errosCampo['email']" id="erro-email" class="mt-1 text-xs font-medium text-red-600">{{ errosCampo['email'] }}</p>
 
             </div>
 
@@ -228,13 +280,14 @@ const criarConta = async () => {
               <select
                 id="papel"
                 v-model="papel"
-                aria-describedby="dica-papel"
-                class="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
-                :class="papel ? 'text-gray-700' : 'text-gray-400'"
+                :aria-describedby="errosCampo.papel ? 'erro-papel dica-papel' : 'dica-papel'"
+                :aria-invalid="Boolean(errosCampo.papel)"
+                class="w-full rounded-md border bg-white px-4 py-3 text-sm outline-none transition focus:ring-2"
+                :class="[papel ? 'text-gray-700' : 'text-gray-400', classeCampo('papel')]"
               >
                 <option value="" disabled>Selecione seu papel</option>
                 <option
-                  v-for="item in PAPEIS"
+                  v-for="item in PAPEIS_CADASTRO"
                   :key="item.valor"
                   :value="item.valor"
                   class="text-gray-700"
@@ -248,7 +301,9 @@ const criarConta = async () => {
                 class="mt-2 text-xs text-gray-500"
               >
                 {{ descricaoPapel || 'O papel define o que você pode fazer no sistema.' }}
+                O administrador confirma o seu papel ao aprovar o cadastro.
               </p>
+              <p v-if="errosCampo.papel" id="erro-papel" class="mt-1 text-xs font-medium text-red-600">{{ errosCampo.papel }}</p>
 
             </div>
 
@@ -270,9 +325,11 @@ const criarConta = async () => {
                   v-model="senha"
                   :type="mostrarSenha ? 'text' : 'password'"
                   autocomplete="new-password"
-                  aria-describedby="dica-senha"
+                  :aria-describedby="errosCampo.senha ? 'erro-senha dica-senha' : 'dica-senha'"
+                  :aria-invalid="Boolean(errosCampo.senha)"
                   placeholder="Crie uma senha"
-                  class="w-full rounded-md border border-gray-300 px-4 py-3 pr-11 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+                  class="w-full rounded-md border px-4 py-3 pr-11 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:ring-2"
+                  :class="classeCampo('senha')"
                 />
 
                 <button
@@ -326,6 +383,7 @@ const criarConta = async () => {
               >
                 Mínimo de {{ SENHA_MINIMA }} caracteres.
               </p>
+              <p v-if="errosCampo.senha" id="erro-senha" class="mt-1 text-xs font-medium text-red-600">{{ errosCampo.senha }}</p>
 
             </div>
 
@@ -346,8 +404,12 @@ const criarConta = async () => {
                 :type="mostrarSenha ? 'text' : 'password'"
                 autocomplete="new-password"
                 placeholder="Repita a senha"
-                class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+                :aria-invalid="Boolean(errosCampo['confirmar-senha'])"
+                :aria-describedby="errosCampo['confirmar-senha'] ? 'erro-confirmar-senha' : undefined"
+                class="w-full rounded-md border px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:ring-2"
+                :class="classeCampo('confirmar-senha')"
               />
+              <p v-if="errosCampo['confirmar-senha']" id="erro-confirmar-senha" class="mt-1 text-xs font-medium text-red-600">{{ errosCampo['confirmar-senha'] }}</p>
 
             </div>
 
@@ -356,7 +418,7 @@ const criarConta = async () => {
             <div
               v-if="erro"
               role="alert"
-              class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-600"
+              class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
             >
               {{ erro }}
             </div>
