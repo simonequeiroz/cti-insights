@@ -159,6 +159,7 @@ const entrar = async () => {
               v-model="email"
               type="email"
               autocomplete="email"
+              placeholder="nome.sobrenome@empresa.com"
               class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
             />
 
