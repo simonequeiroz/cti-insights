@@ -36,6 +36,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 
 | Arquivo | Resultado |
 |---|---|
+| `passada-geral.txt` | **Resumo de todos os testes** rodados juntos antes da entrega |
 | `h01-padronizacao.txt` | H01: 100 registros com erros de grafia → 94 de 94 grafias previstas padronizadas |
 | `h02-tempo-dashboard.txt` | H02: dashboard completo em cerca de 0,25 s (meta: até 10 s) |
 | `front-chrome.txt` | Front contra a API real: 8 de 8 |

@@ -3,12 +3,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Cadastro from '../views/Cadastro.vue'
-import UploadView from '../views/UploadView.vue'
-import Dashboard from '../views/Dashboard.vue'
-import Relatorios from '../views/Relatorios.vue'
-import Usuarios from '../views/Usuarios.vue'
-import TrocarSenha from '../views/TrocarSenha.vue'
 import { useAuthStore } from '../stores/authStore'
+
+// Telas internas carregadas só quando abertas (import dinâmico): a página
+// inicial e o login baixam menos código, e o Chart.js só vem com o Dashboard
+const UploadView = () => import('../views/UploadView.vue')
+const Dashboard = () => import('../views/Dashboard.vue')
+const Relatorios = () => import('../views/Relatorios.vue')
+const Usuarios = () => import('../views/Usuarios.vue')
+const TrocarSenha = () => import('../views/TrocarSenha.vue')
 
 const routes = [
   {
