@@ -13,14 +13,13 @@
 
       <div>
         <h4 class="font-['Space_Grotesk'] text-base mb-5 text-white">Plataforma</h4>
-        <!-- "Dashboard Analítico" e "Motor de Upload" existem nesta página
-             (rolam até a seção); os dois últimos são telas do sistema
-             contratado, por isso levam ao login, não direto à tela. -->
+        <!-- Os dois primeiros rolam até a seção desta página; os dois
+             últimos são telas do sistema, por isso levam ao login. -->
         <ul class="list-none p-0 m-0 space-y-3 text-sm text-[#A5A5A5]">
-          <li><a href="#resultados" class="hover:text-[#FF8F00] transition-colors">Dashboard Analítico</a></li>
-          <li><a href="#arquitetura" class="hover:text-[#FF8F00] transition-colors">Motor de Upload (ETL)</a></li>
-          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Gestão de
-              Consultores</router-link></li>
+          <li><a href="#como-funciona" class="hover:text-[#FF8F00] transition-colors">Como funciona</a></li>
+          <li><a href="#seguranca" class="hover:text-[#FF8F00] transition-colors">Segurança dos dados</a></li>
+          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Oportunidades de
+              upsell</router-link></li>
           <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Relatórios de
               Clientes</router-link></li>
         </ul>
