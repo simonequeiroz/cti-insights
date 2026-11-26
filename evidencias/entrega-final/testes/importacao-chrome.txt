@@ -5,3 +5,9 @@
 [OK   ] detalhe de sucesso em verde, não vermelho Processamento concluído: 32 clientes tratados.
 [OK   ] detalhe sem o termo ETL 
 [OK   ] ajuda lista os segmentos aceitos 
+[OK   ] prévia marca o cliente que será descartado 
+[OK   ] outros clientes sem a marca 
+[OK   ] aviso de tempo durante o processamento 
+[OK   ] tela final separa os motivos ✓ 2 clientes importados carteira-cliente.csv · o Dashboard já está atualizado. 3 linhas com erro ficaram de fora. 1 cliente com segmento não reconhecido foi descartado. 32 clientes da carteira anterior não estavam na planilha e saíram da carteira. Importar out
+[OK   ] sem erros de JavaScript 
+Resumo: 11 OK, 0 FALHA
