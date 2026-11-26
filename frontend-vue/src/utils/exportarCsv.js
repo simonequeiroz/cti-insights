@@ -4,8 +4,9 @@
 // colunas, o Excel BR joga tudo numa coluna só. Aspas em volta de cada valor
 // protegem o ; dentro dos campos, e o BOM faz o Excel reconhecer acentos.
 
+// Mesmos nomes e ordem das colunas da tela Clientes
 const CABECALHO = [
-  'Código', 'Cliente', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Data da contratação', 'Serviço'
+  'Código', 'Empresa', 'Consultor', 'Segmento', 'Faturamento', 'Nível', 'Serviços', 'Data da contratação'
 ]
 
 const escapar = valor => `"${String(valor ?? '').replace(/"/g, '""')}"`
@@ -28,8 +29,8 @@ export const exportarClientesCsv = clientes => {
     cliente.segmento,
     numeroCsv(cliente.faturamento),
     cliente.nivel_cliente,
-    dataCsv(cliente.data_contratacao),
-    cliente.servico || (cliente.servicos || []).join(', ')
+    cliente.servico || (cliente.servicos || []).join(', '),
+    dataCsv(cliente.data_contratacao)
   ].map(escapar).join(';'))
 
   const csv = [CABECALHO.map(escapar).join(';'), ...linhas].join('\n')

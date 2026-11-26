@@ -90,7 +90,7 @@ testar com a carteira verdadeira da CTI.
 
 | Disciplina | Entrega |
 |---|---|
-| **Frameworks Front-end** | Vue 3, Tailwind e Chart.js. Telas de upload (validação no navegador, revisão e confirmação), dashboard com KPIs, 4 gráficos, insights e upsell, tela de clientes com exportação CSV, inclusão, edição e exclusão. Layout responsivo testado em 1366 px e 390 px. Chamadas à API com axios e mensagens de erro amigáveis. |
+| **Frameworks Front-end** | Vue 3, Tailwind e Chart.js. Telas de upload (validação no navegador, revisão e confirmação), dashboard com KPIs, 4 gráficos, insights e upsell, tela de clientes com busca, filtros, ordenação, selo de upsell, exportação CSV, inclusão, edição e exclusão. Layout responsivo testado em 1366 px e 390 px. Chamadas à API com axios e mensagens de erro amigáveis. |
 | **Desenvolvimento Back-end** | Spring Boot 4 e Java 21. API REST (`/api/uploads`, `/api/clientes` com CRUD, `/api/dashboard`, `/api/usuarios`), login por sessão com CSRF, três papéis, revalidação das linhas e chamada ao Python. |
 | **Ciência de Dados** | pandas e SciPy. Padronização, média, mediana, desvio padrão, quartis e coeficiente de variação por segmento e nível, curva ABC, upsell e insights em texto. Teste estatístico: correlação de Pearson e Spearman entre faturamento e número de serviços, com valor-p. |
 | **Computação em Nuvem** | Banco PostgreSQL no Neon (plano gratuito), conexão com SSL e credenciais em variáveis de ambiente. <!-- ATUALIZAR: Vercel (front) e Render (Spring e Python). --> |

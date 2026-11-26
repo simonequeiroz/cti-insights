@@ -194,7 +194,7 @@ da planilha".
 | `/login` e `/cadastro` | Login e Cadastro | Acesso e pedido de conta |
 | `/dashboard` | Dashboard | KPIs, gráficos por segmento, nível (curva ABC), período e serviço, upsell, insights, filtros e exportação CSV/PDF |
 | `/upload` | Importar | Envio em etapas (enviar, revisar, confirmar e concluir) e histórico de envios |
-| `/relatorios` | Clientes | Carteira de clientes com busca, período, exportação CSV e inclusão, edição e exclusão de cliente |
+| `/relatorios` | Clientes | Carteira com busca, filtros (segmento, nível, consultor, período), ordenação, selo de upsell, exportação CSV e inclusão, edição e exclusão de cliente |
 | `/usuarios` | Usuários | Só administrador: aprova ou recusa cadastros e define papéis |
 
 A interface é responsiva. No celular, o menu lateral vira um menu hambúrguer.

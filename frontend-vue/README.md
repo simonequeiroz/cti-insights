@@ -91,7 +91,7 @@ botão de limpar dados em **Clientes** (Administrador).
 | `/cadastro` | Cadastro (primeiro acesso) | Pública |
 | `/upload` | Importar: envio da planilha em etapas e histórico de importações | Consultor e Administrador |
 | `/dashboard` | Dashboard executivo (KPIs, gráficos, insights, filtros por segmento, nível e período, exportação CSV/PDF) | Requer login |
-| `/relatorios` | Base de clientes detalhada, com busca, filtro por período, exportação CSV e inclusão/edição/exclusão de cliente | Requer login |
+| `/relatorios` | Clientes: busca por empresa, código ou consultor; filtros de segmento, nível, consultor e período; ordenação; selo de upsell; exportação CSV; inclusão, edição e exclusão | Requer login |
 | `/usuarios` | Aprovação de cadastros e papel de cada usuário | Administrador |
 
 ## Estrutura de `src/`
