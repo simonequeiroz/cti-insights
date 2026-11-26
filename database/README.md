@@ -174,14 +174,36 @@ Ainda em aberto (não impedem de começar):
 | A | `Contrato.valor` é o faturamento do cliente ou o valor do contrato? | Deixar opcional (pode ficar vazio) até o grupo decidir. |
 | B | O código do cliente segue um formato fixo (ex.: `CTI001`)? | Hoje aceita qualquer texto (o modelo usa `CLI-001`). Confirmar com o professor antes de pôr regra. |
 
-## 6. Neon (depois que funcionar na sua máquina)
+## 6. Neon (banco do grupo)
 
-1. Crie uma conta em <https://neon.tech> (o plano gratuito basta) e um
-   projeto. O Neon já cria um banco PostgreSQL chamado `neondb`.
-2. No painel, clique em **Connect** e copie os dados de conexão: host
-   (termina com `.neon.tech`), banco, usuário e senha. A conexão exige SSL
-   (`sslmode=require`).
-3. Combine a aplicação do esquema com Ryan. Use `schema.sql` para um banco vazio.
-4. Passe ao Ricardo (Java) e ao Miguel (Python) os dados de conexão **por
-   mensagem privada**. Eles vão no arquivo `.env` de cada um, que não vai para o
-   Git. **Nunca** coloque senha no `schema.sql`, no README ou num commit.
+O banco do grupo já foi criado no Neon pelo Ryan (projeto com o banco
+`neondb`, usuário `neondb_owner`). Para usar esse banco no lugar do PostgreSQL
+local:
+
+1. Peça ao Ryan os dados de conexão **por mensagem privada**. No painel do
+   Neon, eles ficam em **Connect** (host terminando com `.neon.tech`, banco,
+   usuário e senha).
+2. Se o esquema ainda não estiver aplicado no Neon, rode o `schema.sql` uma
+   única vez:
+
+   ```bash
+   psql "postgresql://neondb_owner:SENHA@HOST/neondb?sslmode=require" -v ON_ERROR_STOP=1 -f database/schema.sql
+   ```
+
+3. No `backend-java/.env` (Java), use a URL JDBC **sem usuário e senha** e
+   informe os dois separados:
+
+   ```properties
+   DB_URL=jdbc:postgresql://HOST/neondb?sslmode=require&channel_binding=require
+   DB_USER=neondb_owner
+   DB_PASSWORD=senha-do-neon
+   ```
+
+4. No `analytics-python/.env` (Python), preencha `DB_HOST`, `DB_NAME=neondb`,
+   `DB_USER`, `DB_PASSWORD` e `DB_SSLMODE=require`. Confira com
+   `python testar_conexao.py`.
+
+**Nunca** coloque a senha no `application.properties`, no `schema.sql`, no
+README ou num commit: o repositório é público. Os arquivos `.env` não vão para
+o Git. Se uma senha for enviada por engano, troque-a no painel do Neon
+(**Roles → Reset password**) antes de qualquer outra coisa.
