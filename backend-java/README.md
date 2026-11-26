@@ -47,4 +47,10 @@ Uma alteração manual gera uma nova revisão. Recarregue a lista de clientes de
 
 Rode `./mvnw test` ou `.\mvnw.cmd test`. Para incluir a suíte HTTP com ETL simulado, configure `TEST_DB_URL`, `TEST_DB_USER` e `TEST_DB_PASSWORD` para um PostgreSQL de teste. O usuário precisa poder criar esquemas. A suíte cria e remove um esquema isolado.
 
+> **No Neon, use o endereço direto (sem `-pooler`) no `TEST_DB_URL`.** O pooler
+> não mantém o esquema escolhido entre transações: os testes falham com
+> `EmptyResultDataAccessException` e podem gravar dados de teste nas tabelas
+> reais (`public`). Exemplo: `jdbc:postgresql://ep-xxxx.REGIAO.aws.neon.tech/neondb?sslmode=require`.
+> A aplicação em si pode continuar usando o endereço com `-pooler`.
+
 Na validação anterior do PR, também foram executados o fluxo real com Spring, FastAPI e PostgreSQL 17 e o fluxo do Vue em Chromium. Consulte o [guia de estudo](GUIA-DE-ESTUDO.md) para acompanhar o caminho dos dados e preparar a apresentação.
