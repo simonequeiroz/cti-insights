@@ -24,6 +24,8 @@ Esperado no `/testar` com `amostras/clientes.json`: 2 clientes, média 1135000.0
 
 Conexão com o banco: `python testar_conexao.py` deve mostrar `Conectou!`.
 
+Hipótese H01 da Sprint 1: `python teste_h01.py` envia 100 registros com erros de grafia ao `/testar` e confere a padronização (não grava nada).
+
 ## Arquivos
 ```
 api.py              recebe o POST /etl (e o /testar) e chama o main.py

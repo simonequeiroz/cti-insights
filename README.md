@@ -205,6 +205,7 @@ A interface é responsiva. No celular, o menu lateral vira um menu hambúrguer.
 |---|---|
 | Back-End | `cd backend-java` e `.\mvnw.cmd test`. A suíte HTTP precisa de `TEST_DB_URL`. No Neon, use o endereço **sem** `-pooler` ([detalhes](backend-java/README.md#testar)). |
 | Python, sem banco | Com o ETL ligado, abra http://localhost:8000/docs e rode `/testar` com [`amostras/clientes.json`](analytics-python/amostras/clientes.json). O esperado é 2 clientes com média e mediana de 1.135.000. |
+| Hipótese H01 (100 registros com erros de grafia) | Com o ETL ligado: `cd analytics-python` e `python teste_h01.py` |
 | Front-End | `cd frontend-vue` e `npm run lint` e `npm run build` |
 | Fluxo completo | Login, importação de uma planilha, conferência no Dashboard e em Relatórios, e logout |
 
@@ -212,6 +213,7 @@ Os prints dos testes estão em [`evidencias/`](evidencias/).
 
 ## Segurança e dados
 
+- Detalhes em [docs/CONFIDENCIALIDADE-E-LGPD.md](docs/CONFIDENCIALIDADE-E-LGPD.md).
 - Os dados usados nos testes são **fictícios**. Nenhum dado real de cliente
   da CTI está no repositório.
 - Senhas e chaves ficam só nos arquivos `.env`, que não vão para o Git. O
@@ -254,6 +256,8 @@ por Pull Request. O histórico está em
 
 ## Documentação
 
+- **Relatório final:** [docs/RELATORIO-FINAL.md](docs/RELATORIO-FINAL.md)
+- **Confidencialidade e LGPD:** [docs/CONFIDENCIALIDADE-E-LGPD.md](docs/CONFIDENCIALIDADE-E-LGPD.md)
 - Fluxo do sistema: [docs/FLUXO-DO-SISTEMA.md](docs/FLUXO-DO-SISTEMA.md)
 - Front-End e formato da planilha: [frontend-vue/README.md](frontend-vue/README.md)
 - Contrato da API: [frontend-vue/API-CONTRATO.md](frontend-vue/API-CONTRATO.md)
