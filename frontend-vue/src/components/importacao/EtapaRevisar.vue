@@ -183,7 +183,10 @@ const trocarArquivo = () => {
       <p class="mb-3 mt-1 text-xs text-gray-500">
         Total: {{ contar(upload.totalClientes, 'cliente', 'clientes') }} · Nível A: {{ formatarNumero(upload.clientesNivelA) }}
       </p>
-      <PreviaClientes :clientes="analise.validos" />
+      <PreviaClientes
+        :clientes="analise.validos"
+        :segmentos-descartados="USAR_MOCK ? [] : analise.segmentosNaoReconhecidos.map(s => s.valor)"
+      />
     </div>
 
     <!-- Avisos que impedem continuar -->

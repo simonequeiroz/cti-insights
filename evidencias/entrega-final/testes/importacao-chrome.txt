@@ -1,0 +1,7 @@
+# Importação no Chrome (26/11/2026): histórico, segmentos aceitos, prévia, aviso de tempo e tela final (confirmação simulada, sem gravar)
+[OK   ] histórico com colunas novas 
+[OK   ] alterações manuais identificadas 
+[OK   ] planilha identificada 
+[OK   ] detalhe de sucesso em verde, não vermelho Processamento concluído: 32 clientes tratados.
+[OK   ] detalhe sem o termo ETL 
+[OK   ] ajuda lista os segmentos aceitos 

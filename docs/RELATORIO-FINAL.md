@@ -79,6 +79,10 @@ tabela dinâmica.
   serviços (ex.: "Faturamento acima da mediana do segmento, com poucos
   serviços: 1 contra média de 1,5").
 
+Com a planilha de aula do professor (32 clientes fictícios), o sistema apontou
+7 clientes com oportunidade, cada um com o motivo. Ex.: "71% do segmento
+Indústria tem Firewall; este cliente não tem".
+
 **Conclusão:** confirmada com dados fictícios. A utilidade real depende de
 testar com a carteira verdadeira da CTI.
 
@@ -119,6 +123,8 @@ não forçou uma implementação que não existe.
 | Front no Chrome: servidor fora do ar, senha errada, login, gráficos, celular a 390 px e logout | 8 de 8 |
 | Inclusão, edição e exclusão de cliente com recálculo do dashboard | 11 de 11 |
 | H01: 100 registros com erros propositais (`analytics-python/teste_h01.py`) | 94 de 94 grafias previstas padronizadas |
+| Planilha de aula do professor (`dados.xlsx`, 36 linhas com erros intencionais) | 25 linhas corrigidas sozinhas, os 4 erros intencionais recusados com o motivo, 32 clientes importados |
+| Importação: histórico, prévia, aviso de tempo e tela final | 11 de 11 |
 | Back-end (`mvnw test`, com a suíte de integração no Neon) | 5 de 5 |
 | Front (`npm run lint` e `npm run build`) | Sem erros |
 

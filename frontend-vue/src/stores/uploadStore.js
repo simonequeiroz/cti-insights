@@ -239,9 +239,13 @@ export const useUploadStore = defineStore('upload', {
           this.historico = [item, ...this.historico.filter(envio => envio.id !== item.id)]
           this.descartarArquivo()
           await useClientesStore().carregar().catch(() => {})
+          // A tela final separa os motivos: linhas com erro (vistas na
+          // revisão) e clientes descartados por segmento não reconhecido
           return {
             ...item,
-            linhasIgnoradas: item.linhasLidas - item.linhasImportadas
+            linhasIgnoradas: analise.linhasComErro.length,
+            descartadosSegmento: analise.validos.length - analise.entramNaCarteira,
+            clientesForaDaPlanilha: analise.foraDaPlanilha.length
           }
         }
 

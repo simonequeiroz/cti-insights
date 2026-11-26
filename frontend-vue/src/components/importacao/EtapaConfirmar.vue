@@ -139,5 +139,14 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
         {{ upload.carregando ? 'Importando...' : `${analise.importacaoAnterior ? 'Reimportar' : 'Importar'} ${contar(analise.entramNaCarteira, 'cliente', 'clientes')}` }}
       </button>
     </footer>
+
+    <p
+      v-if="upload.carregando"
+      role="status"
+      class="text-right text-xs text-gray-500"
+    >
+      Padronizando, calculando os indicadores e gravando a carteira. Isso pode levar alguns segundos,
+      um pouco mais no primeiro acesso do dia.
+    </p>
   </section>
 </template>

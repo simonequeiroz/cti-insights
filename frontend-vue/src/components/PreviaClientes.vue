@@ -5,7 +5,10 @@ import { ESTILO_NIVEL, temRegistroEtl } from '../utils/resumoEtl'
 // Tabela paginada da base tratada. Células que o tratamento alterou ficam
 // sublinhadas, com o valor original logo abaixo (visível também no celular).
 const props = defineProps({
-  clientes: { type: Array, required: true }
+  clientes: { type: Array, required: true },
+  // Segmentos que o Python descarta (modo API): a linha ganha o aviso
+  // "será descartado", para a prévia não prometer o que não vai entrar
+  segmentosDescartados: { type: Array, default: () => [] }
 })
 
 const ITENS_POR_PAGINA = 10
@@ -143,6 +146,10 @@ const formatarData = iso => {
                 v-if="corrigido(cliente, 'segmento')"
                 class="mt-0.5 block text-[11px] text-gray-500"
               >era: {{ cliente.etl_original.segmento }}</span>
+              <span
+                v-if="segmentosDescartados.includes(cliente.segmento)"
+                class="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800"
+              >será descartado</span>
             </td>
 
             <td class="px-4 py-3">

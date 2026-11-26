@@ -3,7 +3,8 @@
 Prints e resultados de testes do CTI Insights rodando de ponta a ponta:
 Vue 3, Spring Boot, Python (FastAPI e pandas) e PostgreSQL no Neon.
 Todos os prints foram tirados em 26/11/2026, no Chrome, com **dados
-fictícios**. Desktop em 1366 px e celular em 390 px.
+fictícios**: a carteira é a planilha de aula do professor (`dados.xlsx`, 32
+clientes). Desktop em 1366 px e celular em 390 px.
 
 ## Telas
 
@@ -35,6 +36,8 @@ fictícios**. Desktop em 1366 px e celular em 390 px.
 | `h02-tempo-dashboard.txt` | H02: dashboard completo em cerca de 0,25 s (meta: até 10 s) |
 | `front-chrome.txt` | Front contra a API real: 8 de 8 |
 | `login-chrome.txt` | Tela de login: 11 de 11 |
+| `importacao-chrome.txt` | Importação: histórico, segmentos aceitos, prévia, aviso de tempo e tela final: 11 de 11 |
+| `planilha-professor.txt` | Planilha de aula do professor: 36 linhas lidas, 25 corrigidas sozinhas, os 4 erros intencionais recusados, 32 clientes |
 | `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |
 | `edicao-cliente-chrome.txt` | Inclusão, edição e exclusão de cliente com recálculo do dashboard: 11 de 11 |
 | `front-lint-build.txt` | `npm run lint` sem erros e `npm run build` concluído |

@@ -1,3 +1,5 @@
+import { SEGMENTOS_VALIDOS } from './etl'
+
 // Gera o modelo de planilha que o consultor baixa antes do primeiro envio.
 export const COLUNAS_MODELO = [
   'consultor',
@@ -24,7 +26,7 @@ export const baixarModelo = async () => {
     ['consultor', 'Sim', 'Nome do consultor responsável', 'Maria Souza'],
     ['codigo_cliente', 'Sim', 'Código único do cliente', 'CLI-001'],
     ['nome_cliente', 'Sim', 'Razão social ou nome fantasia', 'Empresa Exemplo Ltda'],
-    ['segmento', 'Sim', 'Ex.: Indústria, Comércio, Serviços', 'Indústria'],
+    ['segmento', 'Sim', `Um destes: ${SEGMENTOS_VALIDOS.join(', ')}. Outro segmento é descartado na importação.`, 'Indústria'],
     ['nivel_cliente', 'Sim', 'Somente A, B ou C', 'A'],
     ['data_contratacao', 'Sim', 'Data no formato dd/mm/aaaa', '15/03/2026'],
     ['servicos_contratados', 'Sim', 'Um ou mais serviços; se forem vários, separe com ";"', 'Link Dedicado;Firewall'],

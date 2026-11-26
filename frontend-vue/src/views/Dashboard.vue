@@ -533,7 +533,20 @@ const upsell = computed(() => {
   const codigos = new Set(clientesFiltrados.value.map(cliente => cliente.codigo_cliente))
   return {
     segmentoPotencial: salvo?.segmentoPotencial ?? null,
-    oportunidades: (salvo?.oportunidades ?? []).filter(item => codigos.has(item.codigo))
+    // O Python devolve { codigo, nome, consultor, segmento, faturamento,
+    // motivos }; a tabela usa o mesmo formato do modo mock: { cliente, motivos }
+    oportunidades: (salvo?.oportunidades ?? [])
+      .filter(item => codigos.has(item.codigo))
+      .map(item => ({
+        cliente: {
+          codigo_cliente: item.codigo,
+          nome_cliente: item.nome,
+          consultor: item.consultor,
+          segmento: item.segmento,
+          faturamento: item.faturamento
+        },
+        motivos: item.motivos ?? []
+      }))
   }
 })
 
