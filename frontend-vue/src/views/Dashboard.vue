@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { lerDashboard, USAR_MOCK } from '../services/api'
 import Sidebar from '../components/Sidebar.vue'
 import CardIndicador from '../components/CardIndicador.vue'
+import ListaInsights from '../components/ListaInsights.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useClientesStore } from '../stores/clientesStore'
 import { contar, formatarDataHora } from '../utils/datas'
@@ -953,7 +954,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
       <!-- KPIs -->
 
       <div
-        class="grid grid-cols-2 gap-3 @sm:gap-5 @xl:grid-cols-4"
+        class="grid grid-cols-2 gap-3 @sm:gap-5 @4xl:grid-cols-4"
       >
 
         <CardIndicador titulo="Faturamento Total" :valor="formatarMoedaInteira(faturamentoTotal)" />
@@ -1199,31 +1200,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           não se aplicam a eles. Os indicadores, os gráficos e a lista de oportunidades acompanham os filtros.
         </p>
 
-        <div class="mt-5 grid grid-cols-1 gap-3 @2xl:grid-cols-2 @5xl:grid-cols-4">
-
-          <div
-            v-for="insight in insights"
-            :key="insight.titulo || insight.descricao"
-            class="flex gap-3 rounded-lg bg-white p-4 shadow-md shadow-gray-200/60 ring-1 ring-gray-100"
-          >
-
-            <span class="w-1.5 flex-shrink-0 rounded-full bg-cti-laranja"></span>
-
-            <div class="min-w-0">
-
-              <p v-if="insight.titulo" class="text-sm font-bold text-cti-azul">
-                {{ insight.titulo }}
-              </p>
-
-              <p class="mt-1 text-sm text-gray-500">
-                {{ insight.descricao }}
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
+        <ListaInsights :insights="insights" class="mt-5" />
 
         <!-- OPORTUNIDADES DE UPSELL: regras em utils/upsell.js -->
 
