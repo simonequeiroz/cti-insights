@@ -15,7 +15,7 @@ const contagem = async () => Number((await resumo()).match(/^(\d+) de/)?.[1] ?? 
 console.log('resumo inicial:', await resumo())
 confere('resumo com faturamento total e upsell', /32 de 32 clientes · R\$\s?72,4\s?mi em faturamento · 7 com oportunidade de upsell/.test(await resumo()), await resumo())
 confere('7 selos "Upsell" no total', true)
-const busca = p.getByPlaceholder('Empresa, código ou consultor')
+const busca = p.getByPlaceholder('Empresa, código, consultor, serviço ou cidade')
 for (const [t, esperado] of [['Ana Souza', 9], ['ana souza', 9], ['CTI010', 1], ['cti010', 1], ['metalurgica', 1]]) {
   await busca.fill(t); await p.waitForTimeout(250)
   const n = await contagem(); confere(`busca "${t}" acha ${esperado}`, n === esperado, `-> ${n}`)
