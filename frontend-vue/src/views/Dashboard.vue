@@ -772,7 +772,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <div
           v-if="clientes.length"
-          class="no-print flex flex-wrap items-center gap-3"
+          class="no-print grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center"
         >
 
           <label
@@ -785,11 +785,11 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <select
             id="filtro-segmento"
             v-model="filtroSegmento"
-            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul"
+            class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul sm:w-auto"
           >
 
             <option value="Todos">
-              Todos os segmentos
+              Segmento: todos
             </option>
 
             <option
@@ -812,11 +812,11 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <select
             id="filtro-nivel"
             v-model="filtroNivel"
-            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul"
+            class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul sm:w-auto"
           >
 
             <option value="Todos">
-              Todos os níveis
+              Nível: todos
             </option>
 
             <option value="A">
@@ -837,27 +837,27 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           <label
             for="filtro-data-inicio"
-            class="flex items-center gap-2 text-sm text-gray-600"
+            class="flex min-w-0 items-center gap-2 text-sm text-gray-600"
           >
             De
             <input
               id="filtro-data-inicio"
               v-model="dataInicio"
               type="date"
-              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul"
+              class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul sm:w-auto sm:px-3"
             />
           </label>
 
           <label
             for="filtro-data-fim"
-            class="flex items-center gap-2 text-sm text-gray-600"
+            class="flex min-w-0 items-center gap-2 text-sm text-gray-600"
           >
             Até
             <input
               id="filtro-data-fim"
               v-model="dataFim"
               type="date"
-              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul"
+              class="w-full min-w-0 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul sm:w-auto sm:px-3"
             />
           </label>
 
@@ -865,7 +865,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
             v-if="filtroSegmento !== 'Todos' || filtroNivel !== 'Todos' || periodoAtivo"
             type="button"
             @click="limparFiltros"
-            class="text-sm text-cti-azul transition hover:underline"
+            class="col-span-2 text-left text-sm text-cti-azul transition hover:underline sm:col-span-1"
           >
             Limpar
           </button>
@@ -953,7 +953,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
       <!-- KPIs -->
 
       <div
-        class="grid grid-cols-1 gap-5 @sm:grid-cols-2 @xl:grid-cols-4"
+        class="grid grid-cols-2 gap-3 @sm:gap-5 @xl:grid-cols-4"
       >
 
         <CardIndicador titulo="Faturamento Total" :valor="formatarMoedaInteira(faturamentoTotal)" />
@@ -1240,7 +1240,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
             v-if="upsell.segmentoPotencial"
             class="mt-1 text-sm text-gray-500"
           >
-            Na empresa, <span class="font-semibold text-cti-grafite">{{ upsell.segmentoPotencial.segmento }}</span>
+            Na carteira, <span class="font-semibold text-cti-grafite">{{ upsell.segmentoPotencial.segmento }}</span>
             tem {{ upsell.segmentoPotencial.participacaoServicos.toFixed(0) }}% dos serviços contratados,
             mas só {{ upsell.segmentoPotencial.participacaoFaturamento.toFixed(0) }}% do faturamento.
           </p>
