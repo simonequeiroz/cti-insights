@@ -70,11 +70,15 @@ const entrar = async () => {
   try {
     await auth.entrar(email.value, senha.value)
   } catch (falha) {
-    // 401 = senha errada; 403 = cadastro não aprovado. Qualquer outra falha
-    // (servidor fora do ar, erro interno) mostra o motivo real, para não
-    // parecer que a senha está errada.
-    if (falha.status === 403) {
-      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
+    // 401 = senha errada; 403 com código PENDENTE/REJEITADO = cadastro não
+    // aprovado. Um 403 sem esse código é outra recusa do servidor (ex.:
+    // endereço não autorizado pelo CORS ou token CSRF vencido): não pode
+    // parecer "aguardando aprovação". Qualquer outra falha (servidor fora do
+    // ar, erro interno) mostra o motivo real.
+    if (falha.status === 403 && MENSAGENS_NAO_APROVADO[falha.codigo]) {
+      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo]
+    } else if (falha.status === 403) {
+      erro.value = 'O servidor recusou o pedido de login. Recarregue a página e tente de novo. Se continuar, avise o administrador do sistema.'
     } else if (falha.status === 401) {
       erro.value = 'E-mail ou senha inválidos.'
     } else {
