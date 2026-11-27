@@ -72,7 +72,7 @@
 | 2 | **Gráficos de dispersão, histograma e boxplot**, calculados no Python (`analise.py` → `estatistica.resultado`) e desenhados no Dashboard. | Crítico (Ciência de Dados) | Miguel + Thyphanny |
 | 3 | **Back-end**: 3 exceções próprias tratadas no `ErrosApi`, classes de domínio (Cliente, Consultor, Contrato…) e CORS. | Itens da UC de Back-end | Ricardo |
 | 4 | **Divisão de tarefas com prazos e Kanban** (GitHub Projects ou Trello). | Crítico (Relações Humanas) | Simone |
-| 5 | **Documento de Automação**: HTTP/REST × Modbus ou OPC-UA, e a planilha como "coleta de dados". O relatório já registra o que não se aplica. | Desejável | Todos |
+| 5 | ✅ **Feito em 27/11** (`docs/AUTOMACAO-INDUSTRIAL.md`, com Modbus). **Documento de Automação**: HTTP/REST × Modbus ou OPC-UA, e a planilha como "coleta de dados". O relatório já registra o que não se aplica. | Desejável | Todos |
 | 6 | **Frases dos insights** (`analytics-python/insights.py`): "o consultor" para consultoras, "correlação fraca positiva" quando o p-valor mostra que não há correlação, empates em "maior carteira" e "VoIP" virando "Voip". | Crítico (sem conclusões enganosas) | Miguel |
 | 7 | **Relatório**: preencher os `<!-- ATUALIZAR -->` (link da Vercel e documento de Automação). | Crítico | Simone |
 | 8 | **Vídeo pitch** e **ensaio** da apresentação. Cada integrante precisa explicar a própria parte, um item crítico. | Crítico | Todos |

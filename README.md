@@ -277,6 +277,7 @@ por Pull Request. O histórico está em
 
 - **Relatório final:** [docs/RELATORIO-FINAL.md](docs/RELATORIO-FINAL.md)
 - **Confidencialidade e LGPD:** [docs/CONFIDENCIALIDADE-E-LGPD.md](docs/CONFIDENCIALIDADE-E-LGPD.md)
+- **Automação Industrial (HTTP/REST × Modbus):** [docs/AUTOMACAO-INDUSTRIAL.md](docs/AUTOMACAO-INDUSTRIAL.md)
 - Fluxo do sistema: [docs/FLUXO-DO-SISTEMA.md](docs/FLUXO-DO-SISTEMA.md)
 - Front-End e formato da planilha: [frontend-vue/README.md](frontend-vue/README.md)
 - Contrato da API: [frontend-vue/API-CONTRATO.md](frontend-vue/API-CONTRATO.md)

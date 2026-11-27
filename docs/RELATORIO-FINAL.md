@@ -94,7 +94,7 @@ testar com a carteira verdadeira da CTI.
 | **Desenvolvimento Back-end** | Spring Boot 4 e Java 21. API REST (`/api/uploads`, `/api/clientes` com CRUD, `/api/dashboard`, `/api/usuarios`), login por sessão com CSRF, três papéis, bloqueio de acesso e troca de papel que valem na hora, senha temporária com troca obrigatória, revalidação das linhas e chamada ao Python. |
 | **Ciência de Dados** | pandas e SciPy. Padronização, média, mediana, desvio padrão, quartis e coeficiente de variação por segmento e nível, curva ABC, upsell e insights em texto. Teste estatístico: correlação de Pearson e Spearman entre faturamento e número de serviços, com valor-p. |
 | **Computação em Nuvem** | Banco PostgreSQL no Neon (plano gratuito), conexão com SSL e credenciais em variáveis de ambiente. <!-- ATUALIZAR: Vercel (front) e Render (Spring e Python). --> |
-| **Automação Industrial** | Ver a seção 5. |
+| **Automação Industrial** | Comparação entre HTTP/REST e Modbus, planilha como coleta de dados e dashboard como monitoramento, em [AUTOMACAO-INDUSTRIAL.md](AUTOMACAO-INDUSTRIAL.md). Resumo na seção 5. |
 | **Relações Humanas e Cidadania** | Divisão de tarefas com prazos e responsáveis, trabalho em branches com Pull Request e registro de confidencialidade e LGPD em [CONFIDENCIALIDADE-E-LGPD.md](CONFIDENCIALIDADE-E-LGPD.md). |
 
 ## 5. Automação Industrial: o que se aplica e o que não se aplica
@@ -113,7 +113,9 @@ e o envio de sinais ao CLP. O projeto trabalha com dados comerciais em
 planilha, não com sinais físicos de uma planta industrial. Por isso, o grupo
 não forçou uma implementação que não existe.
 
-<!-- ATUALIZAR: link do documento que compara HTTP/REST com Modbus ou OPC-UA. -->
+A comparação completa entre o protocolo do projeto (HTTP/REST) e o Modbus,
+com a ponte que ligaria máquinas ao sistema, está em
+[AUTOMACAO-INDUSTRIAL.md](AUTOMACAO-INDUSTRIAL.md).
 
 ## 6. Testes e evidências
 
