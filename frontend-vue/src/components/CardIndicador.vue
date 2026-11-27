@@ -9,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
     <p class="text-xs text-gray-500">
       {{ titulo }}
     </p>
@@ -17,5 +17,5 @@ defineProps({
     <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
       {{ valor }}
     </p>
-  </div>
+  </article>
 </template>

@@ -33,6 +33,8 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `21-cadastro-validacao.png` | Cadastro no celular: erro embaixo de cada campo |
 | `22-kanban.png` | Kanban no GitHub Projects: Backlog, A Fazer, Em Andamento e Concluído |
 | `23-kanban-tabela.png` | Kanban em tabela: responsável, prazo, área e sprint de cada tarefa |
+| `24-estatistica-graficos.png` | Dashboard: dispersão (com r de Pearson e p-valor), histograma e boxplot do faturamento |
+| `25-estatistica-celular.png` | Os mesmos gráficos no celular, sem rolagem lateral |
 
 ## Testes ([`testes/`](testes/))
 

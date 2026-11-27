@@ -40,6 +40,39 @@ testar_conexao.py   confere a conexão com o banco
 amostras/           JSON de exemplo para testar sem backend e sem banco
 ```
 
+## Gráficos de estatística (bloco `graficos`)
+O Dashboard mostra três gráficos do faturamento: **dispersão**, **histograma**
+e **boxplot**. Enquanto o `analise.py` não envia o bloco `graficos`, o front
+calcula com a lista de clientes ([`utils/estatistica.js`](../frontend-vue/src/utils/estatistica.js)),
+com o mesmo método do pandas e do scipy (conferido: diferença menor que 10⁻¹²).
+Com filtro ligado, o front sempre calcula, como no resto da tela.
+
+Para o Python passar a enviar esses números, acrescente ao JSON de
+`calcular()` (os valores são números simples, sem formatação):
+
+```json
+"graficos": {
+  "dispersao": [{ "nome": "Hospital Vida", "servicos": 3, "faturamento": 6900000.0 }],
+  "histograma": [{ "de": 0, "ate": 2000000, "clientes": 20 }],
+  "boxplot": {
+    "minimo": 390000.0, "q1": 862500.0, "mediana": 1500000.0, "q3": 3150000.0, "maximo": 7200000.0,
+    "limiteInferior": -2568750.0, "limiteSuperior": 6581250.0,
+    "bigodeInferior": 390000.0, "bigodeSuperior": 5400000.0,
+    "outliers": [{ "nome": "Hospital Vida", "faturamento": 6900000.0 }]
+  }
+}
+```
+
+Regras, iguais às do front:
+- **Quartis:** `Series.quantile()` (método linear, o padrão do pandas).
+- **Outliers:** abaixo de `Q1 − 1,5 × IQR` ou acima de `Q3 + 1,5 × IQR`. Os
+  bigodes vão até o último cliente dentro desses limites.
+- **Histograma:** faixas de tamanho "redondo" (1, 2, 2,5 ou 5 × 10ⁿ). O número
+  de faixas segue a regra de Sturges (`1 + log₂ n`), entre 3 e 10. Cada faixa
+  inclui o início e exclui o fim; a última inclui também o fim.
+- **Correlação:** o gráfico usa o bloco `correlacao`, que já existe. Se
+  `p ≥ 0,05`, a tela escreve "Sem relação clara".
+
 ## Deploy
 Comando: `uvicorn api:app --host 0.0.0.0 --port $PORT` (rode dentro da pasta `analytics-python`).
 Variáveis: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSLMODE=require`, `ETL_API_KEY`.

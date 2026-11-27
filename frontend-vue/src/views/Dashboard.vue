@@ -9,6 +9,10 @@ import { contar, formatarDataHora } from '../utils/datas'
 import { dentroDoPeriodo, periodoInvertido } from '../utils/periodo'
 import { analisarUpsell } from '../utils/upsell'
 import { exportarClientesCsv } from '../utils/exportarCsv'
+import { correlacaoPearson, faixasHistograma, pontosDispersao, resumoBoxplot } from '../utils/estatistica'
+import GraficoDispersao from '../components/graficos/GraficoDispersao.vue'
+import GraficoHistograma from '../components/graficos/GraficoHistograma.vue'
+import GraficoBoxplot from '../components/graficos/GraficoBoxplot.vue'
 import {
   Chart,
   LineElement,
@@ -115,6 +119,27 @@ const clientesFiltrados = computed(() => {
     return segmento && nivel && periodo
   })
 })
+
+// Estatística da carteira (dispersão, histograma e boxplot). Mesma regra do
+// resto da tela: sem filtro, usa o que o Python calculou (bloco "graficos"
+// do JSON, quando existir); com filtro, calcula com os clientes filtrados.
+const graficosPython = computed(() => estatisticas.value?.graficos ?? null)
+
+const pontosDispersaoTela = computed(() =>
+  graficosPython.value?.dispersao ?? pontosDispersao(clientesFiltrados.value))
+
+const correlacaoTela = computed(() => {
+  const doPython = estatisticas.value?.correlacao
+  return doPython && doPython.pearson !== null && doPython.pearson !== undefined
+    ? doPython
+    : correlacaoPearson(pontosDispersaoTela.value)
+})
+
+const faixasHistogramaTela = computed(() =>
+  graficosPython.value?.histograma ?? faixasHistograma(clientesFiltrados.value))
+
+const boxplotTela = computed(() =>
+  graficosPython.value?.boxplot ?? resumoBoxplot(clientesFiltrados.value))
 
 // "Top 10 clientes por faturamento" (a lista completa fica na tela Clientes)
 const top10Clientes = computed(() => [...clientesFiltrados.value]
@@ -949,7 +974,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <!-- @container: a legenda vai para o lado só quando o PRÓPRIO cartão
              é largo; em tablet/celular fica embaixo, sem cortar os nomes -->
-        <div class="@container flex flex-col rounded-lg border border-gray-200 bg-white p-6">
+        <section class="@container flex flex-col rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Faturamento por segmento
@@ -1003,12 +1028,12 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           </div>
 
-        </div>
+        </section>
 
 
         <!-- GRÁFICO DE BARRAS: EVOLUÇÃO DAS CONTRATAÇÕES -->
 
-        <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <section class="rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Evolução das contratações
@@ -1036,12 +1061,12 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           </div>
 
-        </div>
+        </section>
 
 
         <!-- GRÁFICO DE NÍVEL A/B/C -->
 
-        <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <section class="rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Distribuição por nível A/B/C
@@ -1060,12 +1085,12 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           </div>
 
-        </div>
+        </section>
 
 
         <!-- TOP 5 SERVIÇOS POR FATURAMENTO -->
 
-        <div class="rounded-lg border border-gray-200 bg-white p-6">
+        <section class="rounded-lg border border-gray-200 bg-white p-6">
 
           <h2 class="text-lg font-bold text-[#292A2F]">
             Top 5 serviços por faturamento
@@ -1124,16 +1149,42 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           </div>
 
-        </div>
+        </section>
 
       </div>
+
+
+      <!-- ESTATÍSTICA DA CARTEIRA: dispersão, histograma e boxplot.
+           Sem filtro: números do Python (estatisticas.graficos), quando ele
+           manda; com filtro, ou sem esse bloco: calculados aqui
+           (utils/estatistica.js), com o mesmo método. -->
+
+      <section aria-labelledby="titulo-estatistica" class="space-y-5">
+
+        <div>
+          <h2 id="titulo-estatistica" class="text-lg font-bold text-[#292A2F]">
+            Estatística da carteira
+          </h2>
+          <p class="mt-1 text-sm text-gray-500">
+            Como o faturamento se distribui entre os clientes da base selecionada.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 @xl:grid-cols-2">
+          <GraficoDispersao :pontos="pontosDispersaoTela" :correlacao="correlacaoTela" />
+          <GraficoHistograma :faixas="faixasHistogramaTela" />
+        </div>
+
+        <GraficoBoxplot :resumo="boxplotTela" />
+
+      </section>
 
       </div>
 
 
       <!-- INSIGHTS INTELIGENTES -->
 
-      <div class="rounded-lg border border-gray-200 bg-white p-6">
+      <section class="rounded-lg border border-gray-200 bg-white p-6">
 
         <h2 class="text-lg font-bold text-[#292A2F]">
           Insights Inteligentes
@@ -1242,14 +1293,14 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         </div>
 
-      </div>
+      </section>
 
       </div>
 
 
       <!-- TOP 10 CLIENTES POR FATURAMENTO (lista completa na tela Clientes) -->
 
-      <div
+      <section
         v-if="clientesFiltrados.length"
         class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white"
       >
@@ -1309,7 +1360,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           </table>
         </div>
 
-      </div>
+      </section>
 
       <!-- FILTROS SEM RESULTADO (base vazia já tem o aviso lá em cima) -->
 
