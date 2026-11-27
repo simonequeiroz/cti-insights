@@ -68,6 +68,7 @@ class ApiIntegrationTests {
         properties.add("cti.etl.url", () -> "http://127.0.0.1:" + etl.getAddress().getPort());
         properties.add("cti.etl.key", () -> "etl-local-teste");
         properties.add("server.servlet.session.cookie.secure", () -> false);
+        properties.add("cti.cors.allowed-origins", () -> "https://front-cti.example.test");
     }
 
     @AfterAll
@@ -133,8 +134,15 @@ class ApiIntegrationTests {
         assertThat(clients.get(0).path("servicos").get(0).asString()).isEqualTo("Firewall");
         assertThat(send(admin, "GET", "/clientes/" + id, null).statusCode()).isEqualTo(200);
 
+        var bad = send(admin, "POST", "/uploads", "{}");
+        assertThat(bad.statusCode()).isEqualTo(400);
+        assertThat(body(bad).path("codigo").asString()).isEqualTo("EXCEL_INVALIDO");
+        var missing = send(admin, "POST", "/uploads", upload(1, ROW.replace("Alfa Ltda", "")));
+        assertThat(missing.statusCode()).isEqualTo(400);
+        assertThat(body(missing).path("codigo").asString()).isEqualTo("COLUNA_OBRIGATORIA");
         var rejected = send(admin, "POST", "/uploads", upload(2, ROW + "," + ROW));
         assertThat(rejected.statusCode()).isEqualTo(400);
+        assertThat(body(rejected).path("codigo").asString()).isEqualTo("CLIENTE_DUPLICADO");
         var failed = send(admin, "POST", "/uploads", upload(99, ROW));
         assertThat(failed.statusCode()).isEqualTo(502);
         assertThat(body(failed).path("status").asString()).isEqualTo("ERRO_ETL");
@@ -149,7 +157,9 @@ class ApiIntegrationTests {
         assertThat(dashboard.path("insights").get(0).asString()).isEqualTo("Insight do ETL");
         assertThat(body(send(admin, "GET", "/clientes", null))).isEqualTo(clients);
 
-        assertThat(send(admin, "POST", "/clientes", ROW).statusCode()).isEqualTo(409);
+        var duplicado = send(admin, "POST", "/clientes", ROW);
+        assertThat(duplicado.statusCode()).isEqualTo(409);
+        assertThat(body(duplicado).path("codigo").asString()).isEqualTo("CLIENTE_DUPLICADO");
         var edit = send(admin, "PUT", "/clientes/" + id, ROW.replace("Alfa Ltda", "Alfa Nova"));
         assertThat(edit.statusCode()).isEqualTo(200);
         var changed = body(send(admin, "GET", "/clientes", null)).get(0);
@@ -223,6 +233,24 @@ class ApiIntegrationTests {
         assertThat(send(novaSessao, "GET", "/clientes", null).statusCode()).isEqualTo(401);
         assertThat(send(browser(), "POST", "/auth/login", credentials("consultora@example.test", "senha-nova-123"))
                 .statusCode()).isEqualTo(403);
+    }
+
+    @Test
+    void corsAllowsOnlyConfiguredOrigin() throws Exception {
+        var uri = URI.create("http://127.0.0.1:" + port + "/api/uploads");
+        var allowed = browser().send(HttpRequest.newBuilder(uri)
+                .header("Origin", "https://front-cti.example.test")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "content-type,x-csrf-token")
+                .method("OPTIONS", HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(allowed.statusCode()).isEqualTo(200);
+        assertThat(allowed.headers().firstValue("Access-Control-Allow-Origin")).contains("https://front-cti.example.test");
+        assertThat(allowed.headers().firstValue("Access-Control-Allow-Credentials")).contains("true");
+        var denied = browser().send(HttpRequest.newBuilder(uri)
+                .header("Origin", "https://outro.example.test")
+                .header("Access-Control-Request-Method", "POST")
+                .method("OPTIONS", HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(denied.statusCode()).isEqualTo(403);
     }
 
     private static String troca(String atual, String nova) {

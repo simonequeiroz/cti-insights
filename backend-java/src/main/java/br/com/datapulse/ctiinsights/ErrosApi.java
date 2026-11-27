@@ -28,6 +28,11 @@ class ErrosApi {
         }
     }
 
+    @ExceptionHandler({ExcelInvalidoException.class, ColunaObrigatoriaException.class, ClienteDuplicadoException.class})
+    ResponseEntity<Map<String, String>> handleImportacao(Failure error) {
+        return handle(error);
+    }
+
     @ExceptionHandler(Failure.class)
     ResponseEntity<Map<String, String>> handle(Failure error) {
         var body = new LinkedHashMap<String, String>();

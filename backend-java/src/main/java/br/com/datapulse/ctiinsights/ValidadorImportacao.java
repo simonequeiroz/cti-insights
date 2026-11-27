@@ -42,10 +42,10 @@ class ValidadorImportacao {
     }
 
     List<Row> rows(Upload upload) {
-        if (upload.nomeArquivo() == null || upload.nomeArquivo().isBlank() || upload.linhas() == null
+        if (upload == null || upload.nomeArquivo() == null || upload.nomeArquivo().isBlank() || upload.linhas() == null
                 || upload.linhas().isEmpty() || upload.linhasLidas() == null
                 || upload.linhasLidas() < upload.linhas().size()) {
-            throw invalid("Informe o arquivo, as linhas válidas e o total de linhas lidas.");
+            throw new ExcelInvalidoException("Informe o arquivo, as linhas válidas e o total de linhas lidas.");
         }
         var codes = new HashSet<String>();
         var result = new ArrayList<Row>();
@@ -53,11 +53,15 @@ class ValidadorImportacao {
             try {
                 Row row = row(upload.linhas().get(i));
                 if (!codes.add(row.codigo_cliente())) {
-                    throw invalid("Código de cliente duplicado.");
+                    throw new ClienteDuplicadoException(HttpStatus.BAD_REQUEST, "Código de cliente duplicado.");
                 }
                 result.add(row);
+            } catch (ClienteDuplicadoException error) {
+                throw new ClienteDuplicadoException(HttpStatus.BAD_REQUEST, "Linha enviada " + (i + 1) + ": " + error.getMessage());
+            } catch (ColunaObrigatoriaException error) {
+                throw new ColunaObrigatoriaException("Linha enviada " + (i + 1) + ": " + error.getMessage());
             } catch (Failure error) {
-                throw invalid("Linha enviada " + (i + 1) + ": " + error.getMessage());
+                throw new ExcelInvalidoException("Linha enviada " + (i + 1) + ": " + error.getMessage());
             }
         }
         return result;
@@ -75,6 +79,20 @@ class ValidadorImportacao {
         var normalized = new Input(code, clean(input.nome_cliente()), clean(input.consultor()),
                 clean(input.segmento()), level, input.faturamento_anual(),
                 clean(input.data_contratacao()), services, city, uf);
+        var obrigatorias = new ArrayList<String>();
+        if (code.isEmpty()) obrigatorias.add("codigo_cliente");
+        if (normalized.nome_cliente().isEmpty()) obrigatorias.add("nome_cliente");
+        if (normalized.consultor().isEmpty()) obrigatorias.add("consultor");
+        if (normalized.segmento().isEmpty()) obrigatorias.add("segmento");
+        if (level.isEmpty()) obrigatorias.add("nivel_cliente");
+        if (normalized.faturamento_anual() == null || normalized.faturamento_anual().isNull()
+                || (normalized.faturamento_anual().isTextual() && normalized.faturamento_anual().asString().isBlank()))
+            obrigatorias.add("faturamento_anual");
+        if (normalized.data_contratacao().isEmpty()) obrigatorias.add("data_contratacao");
+        if (services.isEmpty()) obrigatorias.add("servicos_contratados");
+        if (!obrigatorias.isEmpty()) {
+            throw new ColunaObrigatoriaException("Campos obrigatórios ausentes: " + String.join(", ", obrigatorias) + ".");
+        }
         var fields = validator.validate(normalized).stream()
                 .map(v -> v.getPropertyPath().toString()).sorted().toList();
         if (!fields.isEmpty()) {
