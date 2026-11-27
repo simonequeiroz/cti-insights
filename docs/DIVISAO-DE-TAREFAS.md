@@ -30,7 +30,7 @@ Cada tarefa tem **responsável, área, sprint e prazo**. Há duas visões:
 
 | Integrante | Área | Pasta |
 |---|---|---|
-| Justino Ricardo Jairi Silvestre | Back-end (Java/Spring Boot) | `backend-java/` |
+| Ricardo Justino Jairi Silvestre | Back-end (Java/Spring Boot) | `backend-java/` |
 | Thyphanny Katherine Silva Franca | Front-end (Vue 3 / Tailwind CSS) | `frontend-vue/` |
 | Miguel Herculano Viana | Ciência de Dados (Python/pandas) | `analytics-python/` |
 | Ryan Vinicius da Silva | Banco de dados e nuvem (PostgreSQL/Neon, deploy) | `database/` |

@@ -1,7 +1,7 @@
 # Relatório final: Sistema CTI Insights
 
 **Projeto Integrador II** · SENAI "Roberto Mange" · ADS, Turma B (CSTADS126N2)
-**Grupo Data Pulse:** Simone Queiroz Batista, Justino Ricardo Jairi Silvestre,
+**Grupo Data Pulse:** Simone Queiroz Batista, Ricardo Justino Jairi Silvestre,
 Thyphanny Katherine Silva Franca, Miguel Herculano Viana e Ryan Vinicius da Silva
 **Entrega:** 03/12/2026 · **Repositório:** https://github.com/simonequeiroz/cti-insights
 
@@ -169,7 +169,7 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](../evide
 | Integrante | Área | Principais contribuições |
 |---|---|---|
 | Simone Queiroz Batista | Gestão, SAGA e QA | Organização do repositório e das sprints, revisão e integração dos Pull Requests, telas de importação e cadastro no Vue, testes de ponta a ponta, documentação e entrega final. |
-| Justino Ricardo Jairi Silvestre | Back-end | API Spring Boot, autenticação e papéis, CRUD de clientes, integração JDBC com o banco e chamada ao ETL em Python. |
+| Ricardo Justino Jairi Silvestre | Back-end | API Spring Boot, autenticação e papéis, CRUD de clientes, integração JDBC com o banco e chamada ao ETL em Python. |
 | Thyphanny Katherine Silva Franca | Front-end | Criação do projeto Vue, Home, dashboard e identidade visual. |
 | Miguel Herculano Viana | Ciência de Dados | ETL em pandas, planilha de correção, linhas rejeitadas e testes do tratamento. |
 | Ryan Vinicius da Silva | Banco e nuvem | Projeto PostgreSQL no Neon e configuração da conexão. |

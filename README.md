@@ -256,7 +256,7 @@ Grupo **Data Pulse**, ADS Turma B (CSTADS126N2).
 
 | Integrante | Responsabilidade |
 |---|---|
-| Justino Ricardo Jairi Silvestre | Back-End (Java/Spring Boot) |
+| Ricardo Justino Jairi Silvestre | Back-End (Java/Spring Boot) |
 | Thyphanny Katherine Silva Franca | Front-End (Vue 3 / Tailwind CSS) |
 | Miguel Herculano Viana | Ciência de Dados (Python/pandas) |
 | Ryan Vinicius da Silva | Banco de dados e nuvem (PostgreSQL/Neon) |
