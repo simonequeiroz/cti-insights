@@ -326,7 +326,7 @@ Resultado calculado pelo Python para o envio mais recente com status
       "segmentoPotencial": { "segmento": "Educação", "participacaoServicos": 11.5, "participacaoFaturamento": 5.9, "diferenca": 5.6 }
     }
   },
-  "insights": ["O segmento Comércio concentra a maior carteira: ..."]
+  "insights": ["Comércio é o segmento com mais clientes: ..."]
 }
 ```
 

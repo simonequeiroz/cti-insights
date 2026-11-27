@@ -1,0 +1,9 @@
+# Nunca levar senhas para dentro da imagem
+.env
+.env.*
+!.env.example
+# Arquivos gerados e de editor
+target/
+.idea/
+.vscode/
+*.iml

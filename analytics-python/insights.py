@@ -17,10 +17,28 @@ def _clientes(n) -> str:                                                        
     return f"{n} cliente" if n == 1 else f"{n} clientes"                            # singular só para 1
 
 
+def _juntar(nomes: list[str]) -> str:                                               # _juntar: ["A", "B", "C"] vira "A, B e C"
+    return nomes[0] if len(nomes) == 1 else ", ".join(nomes[:-1]) + " e " + nomes[-1]  # um nome sozinho fica igual
+
+
+def _empatados(lista: list[dict], campo: str) -> list[dict]:                        # _empatados: todos os itens com o maior valor do campo
+    maior = max(x[campo] for x in lista)                                            # o maior valor
+    return [x for x in lista if x[campo] == maior]                                  # todos que têm esse valor (empate = mais de um)
+
+
+def _p(p) -> str:                                                                   # _p: valor-p para a frase ("p = 0,048" ou "p < 0,001")
+    return "p < 0,001" if p < 0.001 else f"p = {_virg(f'{p:.3f}')}"                 # p muito pequeno vira "< 0,001"
+
+
 def gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, por_mes, correlacao) -> list[str]:  # gerar_insights: monta frases em português com os achados
     ins: list[str] = []                                                             # lista de frases
-    top = por_segmento[0]                                                           # segmento com mais clientes
-    ins.append(f"O segmento {top['segmento']} concentra a maior carteira: {_clientes(top['clientes'])} ({_virg(top['percentual'])}%).")  # frase do segmento
+    segs = _empatados(por_segmento, "clientes")                                     # segmento(s) com mais clientes (pode haver empate)
+    top = segs[0]                                                                   # o primeiro deles (os números são iguais em caso de empate)
+    if len(segs) == 1:                                                              # um segmento só na frente
+        ins.append(f"{top['segmento']} é o segmento com mais clientes: {_clientes(top['clientes'])} ({_virg(top['percentual'])}%).")  # frase do segmento
+    else:                                                                           # empate
+        ins.append(f"{_juntar([s['segmento'] for s in segs])} empatam como segmentos com mais clientes: "  # frase do empate
+                   f"{_clientes(top['clientes'])} cada ({_virg(top['percentual'])}%).")  # (continuação)
 
     if resumo["media"] and resumo["mediana"] and resumo["media"] > resumo["mediana"] * 1.1:  # média bem maior que a mediana?
         ins.append(f"A média de faturamento ({brl(resumo['media'])}) é maior que a mediana ({brl(resumo['mediana'])}): "  # frase explicando
@@ -31,15 +49,25 @@ def gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, 
     a = next((n for n in por_nivel if n["nivel"] == "A"), None)                     # procura o nível A
     if a:                                                                           # se existe
         sujeito = "O único cliente nível A representa" if a["clientes"] == 1 else f"Os {a['clientes']} clientes nível A representam"  # singular ou plural
+        apenas = "apenas " if a["percentual"] < a["percentualFaturamento"] else ""  # "apenas" só quando são poucos clientes para muito faturamento
         ins.append(f"{sujeito} {_virg(a['percentualFaturamento'])}% do faturamento total, "  # frase do nível A
-                   f"com apenas {_virg(a['percentual'])}% dos clientes.")           # (continuação)
+                   f"com {apenas}{_virg(a['percentual'])}% dos clientes.")          # (continuação)
 
-    maior = max(por_consultor, key=lambda c: c["faturamentoTotal"])                 # consultor com maior faturamento
-    ins.append(f"{maior['consultor']} é o consultor com maior faturamento sob gestão ({brl(maior['faturamentoTotal'])}, {_clientes(maior['clientes'])}).")  # frase do consultor
+    cons = _empatados(por_consultor, "faturamentoTotal")                            # consultor(es) com maior faturamento (pode haver empate)
+    maior = cons[0]                                                                 # o primeiro deles
+    if len(cons) == 1:                                                              # frase neutra: não supõe o gênero pelo nome
+        ins.append(f"{maior['consultor']} tem o maior faturamento sob gestão: {brl(maior['faturamentoTotal'])} em {_clientes(maior['clientes'])}.")  # frase do consultor
+    else:                                                                           # empate
+        ins.append(f"{_juntar([c['consultor'] for c in cons])} empatam no maior faturamento sob gestão: {brl(maior['faturamentoTotal'])} cada.")  # frase do empate
 
     if por_servico:                                                                 # se há serviços
-        s = por_servico[0]                                                          # o mais contratado
-        ins.append(f"{s['servico']} é o serviço mais contratado: presente em {_clientes(s['contratos'])} ({_virg(s['percentual'])}%).")  # frase do serviço
+        servs = _empatados(por_servico, "contratos")                                # serviço(s) mais contratado(s) (pode haver empate)
+        s = servs[0]                                                                # o primeiro deles
+        if len(servs) == 1:                                                         # um serviço só na frente
+            ins.append(f"{s['servico']} é o serviço mais contratado: presente em {_clientes(s['contratos'])} ({_virg(s['percentual'])}%).")  # frase do serviço
+        else:                                                                       # empate
+            ins.append(f"{_juntar([x['servico'] for x in servs])} empatam como serviço mais contratado: "  # frase do empate
+                       f"presentes em {_clientes(s['contratos'])} cada ({_virg(s['percentual'])}%).")  # (continuação)
 
     if por_mes:                                                                     # se há meses
         pico = max(e["clientes"] for e in por_mes)                                  # maior número de contratações em um mês
@@ -50,5 +78,6 @@ def gerar_insights(resumo, por_segmento, por_nivel, por_consultor, por_servico, 
             ins.append(f"As contratações ficaram distribuídas ao longo do tempo: no máximo {pico} por mês, repetido em {len(meses)} meses.")  # frase de distribuição
 
     if correlacao["pearson"] is not None:                                           # se a correlação foi calculada
-        ins.append(correlacao["interpretacao"].rstrip(".") + f" (r de Pearson = {_virg(correlacao['pearson'])}).")  # frase da correlação
+        p = f"; {_p(correlacao['p'])}" if correlacao["p"] is not None else ""      # valor-p, quando existe
+        ins.append(correlacao["interpretacao"].rstrip(".") + f" (r de Pearson = {_virg(correlacao['pearson'])}{p}).")  # frase da correlação
     return ins                                                                      # devolve as frases

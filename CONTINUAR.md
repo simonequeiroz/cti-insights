@@ -84,7 +84,7 @@
 
 | # | Item | Rubrica | Dono original |
 |---|---|---|---|
-| 1 | **Frases dos insights** (`analytics-python/insights.py`): "segmento com mais clientes" no lugar de "concentra a maior carteira"; "o consultor" para consultoras; "correlação fraca" quando p ≥ 0,05 deve virar "sem relação clara"; empates; "VoIP" virando "Voip" (`limpeza.py`, linha 75). Mensagem enviada ao Miguel em 27/11; se ele não fizer até 28/11, a Simone faz com o Claude. A lista de insights do Dashboard (`utils/destaqueInsight.js`) já reconhece essas variações. | Crítico (sem conclusões enganosas) | Miguel |
+| 1 | ✅ **Feito em 27/11 pela Gestão** (avisar o Miguel). **Frases dos insights** (`analytics-python/insights.py`): "segmento com mais clientes" no lugar de "concentra a maior carteira"; "o consultor" para consultoras; "correlação fraca" quando p ≥ 0,05 deve virar "sem relação clara"; empates; "VoIP" virando "Voip" (`limpeza.py`, linha 75). Mensagem enviada ao Miguel em 27/11; se ele não fizer até 28/11, a Simone faz com o Claude. A lista de insights do Dashboard (`utils/destaqueInsight.js`) já reconhece essas variações. | Crítico (sem conclusões enganosas) | Miguel |
 | 2 | **Deploy**: front na Vercel; Spring e Python no Render; Neon. Rodar a migração V2 no banco do deploy. `CORS_ALLOWED_ORIGINS` com o domínio da Vercel (ou proxy `/api`). | Crítico (apresentação) + desejável (Nuvem) | Ryan (prazo 29/11) |
 | 3 | **Relatório e README**: preencher os `<!-- ATUALIZAR -->` com o link publicado. | Crítico | Simone |
 | 4 | **Ensaio** (30/11) e **pré-apresentação** (01/12). Cada integrante explica a própria parte, um item crítico. | Crítico | Todos |

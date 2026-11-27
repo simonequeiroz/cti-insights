@@ -151,8 +151,12 @@ Os prints e a saída dos testes estão em [`evidencias/entrega-final/`](../evide
   o gestor só consulta), mas não quais clientes cada um vê.
 
 **Limitações dos insights** (encontradas pelo próprio grupo):
-- Algumas frases precisam de ajuste. Ex.: "correlação fraca positiva" quando
-  o valor-p mostra que não há correlação, e "o consultor" para uma consultora.
+- As frases são montadas por regras fixas. Elas não escrevem análises novas,
+  só descrevem os números calculados.
+- **Corrigido em 27/11:** a correlação só é chamada de "fraca", "moderada" ou
+  "forte" com valor-p < 0,05; acima disso, a frase diz "sem relação clara".
+  A frase do consultor ficou neutra (não supõe o gênero pelo nome), os
+  empates aparecem com todos os nomes e "VoIP" não vira mais "Voip".
 
 **Melhorias futuras realistas:**
 1. Sugerir a correção de erros de digitação próximos de um segmento conhecido
