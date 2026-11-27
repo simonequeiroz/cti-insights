@@ -95,7 +95,7 @@ testar com a carteira verdadeira da CTI.
 | **Ciência de Dados** | pandas e SciPy. Padronização, média, mediana, desvio padrão, quartis e coeficiente de variação por segmento e nível, curva ABC, upsell e insights em texto. Teste estatístico: correlação de Pearson e Spearman entre faturamento e número de serviços, com valor-p. |
 | **Computação em Nuvem** | Banco PostgreSQL no Neon (plano gratuito), conexão com SSL e credenciais em variáveis de ambiente. <!-- ATUALIZAR: Vercel (front) e Render (Spring e Python). --> |
 | **Automação Industrial** | Comparação entre HTTP/REST e Modbus, planilha como coleta de dados e dashboard como monitoramento, em [AUTOMACAO-INDUSTRIAL.md](AUTOMACAO-INDUSTRIAL.md). Resumo na seção 5. |
-| **Relações Humanas e Cidadania** | Divisão de tarefas com prazos e responsáveis, trabalho em branches com Pull Request e registro de confidencialidade e LGPD em [CONFIDENCIALIDADE-E-LGPD.md](CONFIDENCIALIDADE-E-LGPD.md). |
+| **Relações Humanas e Cidadania** | Divisão de tarefas com prazos e responsáveis num [Kanban público](https://github.com/users/simonequeiroz/projects/1) (papéis e sprints em [DIVISAO-DE-TAREFAS.md](DIVISAO-DE-TAREFAS.md)), trabalho em branches com Pull Request e registro de confidencialidade e LGPD em [CONFIDENCIALIDADE-E-LGPD.md](CONFIDENCIALIDADE-E-LGPD.md). |
 
 ## 5. Automação Industrial: o que se aplica e o que não se aplica
 

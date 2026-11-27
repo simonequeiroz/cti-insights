@@ -31,6 +31,8 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `19-senha-temporaria.png` | Senha temporária gerada, mostrada uma única vez |
 | `20-troca-obrigatoria.png` | Quem entra com senha temporária precisa criar uma senha nova |
 | `21-cadastro-validacao.png` | Cadastro no celular: erro embaixo de cada campo |
+| `22-kanban.png` | Kanban no GitHub Projects: Backlog, A Fazer, Em Andamento e Concluído |
+| `23-kanban-tabela.png` | Kanban em tabela: responsável, prazo, área e sprint de cada tarefa |
 
 ## Testes ([`testes/`](testes/))
 

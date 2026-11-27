@@ -71,7 +71,7 @@
 | 1 | **Deploy**: front na Vercel; Spring e Python no Render; Neon. Link funcionando na apresentação. Rodar a migração V2 no banco do deploy. CORS no Spring para o domínio da Vercel (ou proxy `/api` pela Vercel). | Crítico (apresentação) + desejável (Nuvem) | Ryan |
 | 2 | **Gráficos de dispersão, histograma e boxplot**, calculados no Python (`analise.py` → `estatistica.resultado`) e desenhados no Dashboard. | Crítico (Ciência de Dados) | Miguel + Thyphanny |
 | 3 | **Back-end**: 3 exceções próprias tratadas no `ErrosApi`, classes de domínio (Cliente, Consultor, Contrato…) e CORS. | Itens da UC de Back-end | Ricardo |
-| 4 | **Divisão de tarefas com prazos e Kanban** (GitHub Projects ou Trello). | Crítico (Relações Humanas) | Simone |
+| 4 | ✅ **Feito em 27/11** ([quadro](https://github.com/users/simonequeiroz/projects/1) e `docs/DIVISAO-DE-TAREFAS.md`). **Divisão de tarefas com prazos e Kanban** (GitHub Projects ou Trello). | Crítico (Relações Humanas) | Simone |
 | 5 | ✅ **Feito em 27/11** (`docs/AUTOMACAO-INDUSTRIAL.md`, com Modbus). **Documento de Automação**: HTTP/REST × Modbus ou OPC-UA, e a planilha como "coleta de dados". O relatório já registra o que não se aplica. | Desejável | Todos |
 | 6 | **Frases dos insights** (`analytics-python/insights.py`): "o consultor" para consultoras, "correlação fraca positiva" quando o p-valor mostra que não há correlação, empates em "maior carteira" e "VoIP" virando "Voip". | Crítico (sem conclusões enganosas) | Miguel |
 | 7 | **Relatório**: preencher os `<!-- ATUALIZAR -->` (link da Vercel e documento de Automação). | Crítico | Simone |
