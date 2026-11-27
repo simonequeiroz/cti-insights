@@ -9,12 +9,12 @@ defineProps({
 </script>
 
 <template>
-  <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <article class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
     <p class="text-xs text-gray-500">
       {{ titulo }}
     </p>
 
-    <p class="mt-2 text-base font-bold whitespace-nowrap text-cti-grafite">
+    <p class="mt-2 text-lg font-bold tracking-tight whitespace-nowrap text-cti-grafite sm:text-2xl">
       {{ valor }}
     </p>
   </article>

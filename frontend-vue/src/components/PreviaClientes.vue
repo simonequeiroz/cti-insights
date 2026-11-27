@@ -96,6 +96,7 @@ const formatarData = iso => {
       v-else
       class="overflow-x-auto"
     >
+      <p class="sticky left-0 px-4 py-2 text-xs text-gray-500 sm:hidden" aria-hidden="true">Arraste para o lado para ver todas as colunas →</p>
       <table class="w-full min-w-[960px] text-left text-xs">
         <thead class="bg-gray-50">
           <tr>

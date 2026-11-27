@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Sidebar from '../components/Sidebar.vue'
 import AppToast from '../components/AppToast.vue'
 import { avaliarUsuario, gerarSenhaTemporaria, listarUsuarios } from '../services/api'
@@ -58,7 +58,8 @@ const ehVoce = usuario => usuario.email === auth.email
 const SITUACOES = {
   PENDENTE: { texto: 'Aguardando', classe: 'bg-amber-50 text-amber-700' },
   APROVADO: { texto: 'Com acesso', classe: 'bg-green-50 text-green-600' },
-  REJEITADO: { texto: 'Sem acesso', classe: 'bg-red-50 text-red-500' }
+  // O banco guarda uma situação só para recusado e bloqueado (REJEITADO)
+  REJEITADO: { texto: 'Recusado ou bloqueado', classe: 'bg-red-50 text-red-500' }
 }
 
 const papelMudou = usuario => papelEscolhido.value[usuario.id] !== usuario.papel
@@ -116,6 +117,29 @@ const gerarSenha = async usuario => {
   }
 }
 
+// Janela da senha: ao abrir, o foco vai para "Copiar senha"; Esc fecha e o
+// foco volta ao botão que abriu a janela (acessibilidade pelo teclado)
+const botaoCopiar = ref(null)
+let focoAnterior = null
+
+watch(senhaGerada, async aberta => {
+  if (!aberta) return
+  focoAnterior = document.activeElement
+  await nextTick()
+  botaoCopiar.value?.focus()
+})
+
+const fecharSenha = () => {
+  senhaGerada.value = null
+  focoAnterior?.focus?.()
+}
+
+const aoTeclar = evento => {
+  if (evento.key === 'Escape' && senhaGerada.value) fecharSenha()
+}
+onMounted(() => window.addEventListener('keydown', aoTeclar))
+onBeforeUnmount(() => window.removeEventListener('keydown', aoTeclar))
+
 const copiarSenha = async () => {
   try {
     await navigator.clipboard.writeText(senhaGerada.value.senha)
@@ -127,7 +151,6 @@ const copiarSenha = async () => {
 
 const avaliadoPor = usuario => {
   if (usuario.avaliadoPor) return `${usuario.avaliadoPor.nome} · ${formatarDataHora(usuario.avaliadoEm)}`
-  if (usuario.status === STATUS_CONTA.APROVADO) return 'automático (primeira conta)'
   return '—'
 }
 
@@ -191,9 +214,10 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                   <p class="mt-0.5 text-xs text-gray-400">Cadastrado em {{ formatarDataHora(usuario.criadoEm) }}</p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="w-full md:w-auto">
+                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center md:justify-end">
                   <label class="sr-only" :for="`papel-${usuario.id}`">Papel de {{ usuario.nome }}</label>
-                  <select :id="`papel-${usuario.id}`" v-model="papelEscolhido[usuario.id]" :class="classeSelect">
+                  <select :id="`papel-${usuario.id}`" v-model="papelEscolhido[usuario.id]" :class="[classeSelect, 'col-span-2 w-full sm:w-auto']">
                     <option v-for="papel in PAPEIS" :key="papel.valor" :value="papel.valor">
                       {{ papel.rotulo }}{{ papel.valor === usuario.papelSolicitado ? ' (pedido)' : '' }}
                     </option>
@@ -215,6 +239,13 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                   >
                     Recusar
                   </button>
+                </div>
+                <p
+                    v-if="papelEscolhido[usuario.id] === 'ADMINISTRADOR'"
+                    class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 md:text-right"
+                  >
+                    Atenção: administrador pode excluir clientes, aprovar cadastros e gerenciar acessos.
+                  </p>
                 </div>
               </li>
             </ul>
@@ -250,7 +281,8 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                     <span class="rounded-full px-2.5 py-0.5 font-semibold" :class="SITUACOES[usuario.status].classe">
                       {{ SITUACOES[usuario.status].texto }}
                     </span>
-                    <span>Avaliado por {{ avaliadoPor(usuario) }}</span>
+                    <span v-if="!usuario.avaliadoPor && usuario.status === STATUS_CONTA.APROVADO">Conta criada automaticamente (primeiro administrador)</span>
+                    <span v-else>Avaliado por {{ avaliadoPor(usuario) }}</span>
                   </p>
                 </div>
 
@@ -270,6 +302,12 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                     >
                       <option v-for="papel in PAPEIS" :key="papel.valor" :value="papel.valor">{{ papel.rotulo }}</option>
                     </select>
+                    <p
+                    v-if="papelEscolhido[usuario.id] === 'ADMINISTRADOR' && papelMudou(usuario)"
+                    class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                  >
+                    Atenção: administrador pode excluir clientes, aprovar cadastros e gerenciar acessos.
+                  </p>
                   </template>
                 </div>
 
@@ -353,11 +391,12 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
           <button
             type="button"
             class="rounded-md border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-            @click="senhaGerada = null"
+            @click="fecharSenha"
           >
             Fechar
           </button>
           <button
+            ref="botaoCopiar"
             type="button"
             class="rounded-md bg-cti-azul px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cti-azul-escuro"
             @click="copiarSenha"

@@ -5,7 +5,7 @@
        Mobile-first: no celular o painel fica compacto (marca + título), para
        o formulário aparecer sem rolar; descrição e rodapé só a partir de md. -->
   <div
-    class="relative flex flex-col justify-between overflow-hidden bg-[#0B2545] px-6 py-6 text-white sm:px-8 md:w-1/2 md:px-16 md:py-14 bg-[linear-gradient(to_right,#15335A_1px,transparent_1px),linear-gradient(to_bottom,#15335A_1px,transparent_1px)] bg-[size:40px_40px]"
+    class="relative flex flex-col justify-between overflow-hidden bg-cti-marinho px-6 py-6 text-white sm:px-8 md:w-1/2 md:px-16 md:py-14 bg-[linear-gradient(to_right,var(--color-cti-marinho-linha)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-cti-marinho-linha)_1px,transparent_1px)] bg-[size:40px_40px]"
   >
 
     <RouterLink

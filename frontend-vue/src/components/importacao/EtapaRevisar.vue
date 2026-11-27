@@ -35,9 +35,13 @@ const rotuloContinuar = computed(() => {
     : `Continuar sem as ${formatarNumero(totalComErro.value)} linhas com erro`
 })
 
+const descartadosSegmento = computed(() => upload.totalClientes - analise.value.entramNaCarteira)
+
 const indicadores = computed(() => [
   { rotulo: 'Linhas lidas', valor: formatarNumero(analise.value.linhasLidas), classe: 'bg-gray-50 text-cti-grafite' },
-  { rotulo: 'Prontas para importar', valor: formatarNumero(upload.totalClientes), classe: 'bg-green-50 text-green-700' },
+  // Quem tem segmento não reconhecido é descartado no processamento: não conta
+  { rotulo: 'Prontas para importar', valor: formatarNumero(analise.value.entramNaCarteira), classe: 'bg-green-50 text-green-700',
+    nota: descartadosSegmento.value ? `+${formatarNumero(descartadosSegmento.value)} ${descartadosSegmento.value === 1 ? 'descartado' : 'descartados'} (segmento)` : '' },
   { rotulo: 'Corrigidas automaticamente', valor: formatarNumero(correcoes.value.clientesCorrigidos), classe: 'bg-blue-50 text-cti-azul' },
   { rotulo: 'Com erro', valor: formatarNumero(totalComErro.value), classe: totalComErro.value ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500' }
 ])
@@ -110,6 +114,7 @@ const trocarArquivo = () => {
       >
         <dt class="text-xs">{{ item.rotulo }}</dt>
         <dd class="mt-1 text-2xl font-bold">{{ item.valor }}</dd>
+        <dd v-if="item.nota" class="text-xs text-amber-700">{{ item.nota }}</dd>
       </div>
     </dl>
 
@@ -181,7 +186,7 @@ const trocarArquivo = () => {
     <div v-if="upload.temDados">
       <h3 class="text-sm font-bold text-cti-grafite">Prévia do que será importado</h3>
       <p class="mb-3 mt-1 text-xs text-gray-500">
-        Total: {{ contar(upload.totalClientes, 'cliente', 'clientes') }} · Nível A: {{ formatarNumero(upload.clientesNivelA) }}
+        Entram na carteira: {{ contar(analise.entramNaCarteira, 'cliente', 'clientes') }}<template v-if="descartadosSegmento"> ({{ formatarNumero(descartadosSegmento) }} na lista abaixo {{ descartadosSegmento === 1 ? 'será descartado' : 'serão descartados' }})</template> · Nível A: {{ formatarNumero(upload.clientesNivelA) }}
       </p>
       <PreviaClientes
         :clientes="analise.validos"

@@ -16,6 +16,18 @@
   --color-cti-cinza: #4A5D66;          /* textos secundários */
   --color-cti-linha: #CDDADF;          /* bordas e grade de fundo */
   --color-cti-fundo: #FAFAF7;          /* fundo claro */
+  --color-cti-marinho: #0B2545;        /* painel institucional do Login e do Cadastro */
+  --color-cti-marinho-linha: #15335A;  /* grade do painel marinho */
+}
+
+/* Fundo claro quadriculado da página inicial. Também é usado no Login e no
+   Cadastro, para as telas públicas terem a mesma cara. */
+@utility fundo-home {
+  background-color: var(--color-cti-fundo);
+  background-image:
+    linear-gradient(to right, var(--color-cti-linha) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-cti-linha) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 body {

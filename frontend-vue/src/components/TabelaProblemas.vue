@@ -10,7 +10,15 @@ defineProps({
 
 <template>
   <div class="overflow-hidden rounded-md border border-red-200 bg-white text-left">
-    <div class="max-h-64 overflow-y-auto">
+    <!-- Celular: um cartão por erro, sem cortar o texto -->
+    <ul class="max-h-80 divide-y divide-red-100 overflow-y-auto text-xs sm:hidden">
+      <li v-for="problema in problemas" :key="`m-${problema.linha}-${problema.campo}`" class="px-3 py-2">
+        <p class="font-semibold text-cti-grafite">Linha {{ problema.linha }} · {{ problema.campo }}</p>
+        <p class="mt-0.5 text-gray-600">{{ problema.descricao }}</p>
+      </li>
+    </ul>
+
+    <div class="hidden max-h-64 overflow-y-auto sm:block">
       <table class="w-full text-xs">
         <thead class="sticky top-0 bg-red-50 text-red-700">
           <tr>

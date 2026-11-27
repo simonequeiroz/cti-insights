@@ -56,6 +56,10 @@ const busca = ref('')
 const filtroSegmento = ref('')
 const filtroNivel = ref('')
 const filtroConsultor = ref('')
+// Só clientes com oportunidade de upsell (clique no resumo da carteira)
+const soUpsell = ref(false)
+// Celular: os filtros ficam recolhidos para a lista aparecer logo
+const filtrosAbertos = ref(false)
 
 // Período (data de contratação), como "aaaa-mm-dd"; vazio = sem limite.
 const dataInicio = ref('')
@@ -64,8 +68,12 @@ const dataFim = ref('')
 const periodoImpossivel = computed(() => periodoInvertido(dataInicio.value, dataFim.value))
 
 const filtrosAtivos = computed(() => Boolean(
-  busca.value.trim() || filtroSegmento.value || filtroNivel.value || filtroConsultor.value || dataInicio.value || dataFim.value
+  busca.value.trim() || filtroSegmento.value || filtroNivel.value || filtroConsultor.value || dataInicio.value || dataFim.value || soUpsell.value
 ))
+
+// Quantos filtros (fora a busca) estão ligados: aparece no botão "Filtros" do celular
+const quantosFiltros = computed(() => [filtroSegmento.value, filtroNivel.value, filtroConsultor.value, dataInicio.value || dataFim.value, soUpsell.value]
+  .filter(Boolean).length)
 
 const limparFiltros = () => {
   busca.value = ''
@@ -74,6 +82,7 @@ const limparFiltros = () => {
   filtroConsultor.value = ''
   dataInicio.value = ''
   dataFim.value = ''
+  soUpsell.value = false
 }
 
 // Opções dos filtros: só o que existe na carteira atual
@@ -89,14 +98,17 @@ const clientesFiltrados = computed(() => {
   const termo = normalizar(busca.value.trim())
 
   return clientes.value.filter(cliente => {
-    const textoBusca = !termo || [cliente.nome_cliente, cliente.codigo_cliente, cliente.consultor]
+    // Busca também por serviço, segmento e cidade (ex.: "Firewall", "Saúde", "Campinas")
+    const textoBusca = !termo || [cliente.nome_cliente, cliente.codigo_cliente, cliente.consultor,
+      cliente.segmento, cliente.cidade, cliente.servico, (cliente.servicos || []).join(' ')]
       .some(valor => normalizar(valor).includes(termo))
 
     return textoBusca &&
       (!filtroSegmento.value || cliente.segmento === filtroSegmento.value) &&
       (!filtroNivel.value || cliente.nivel_cliente === filtroNivel.value) &&
       (!filtroConsultor.value || cliente.consultor === filtroConsultor.value) &&
-      dentroDoPeriodo(cliente, dataInicio.value, dataFim.value)
+      dentroDoPeriodo(cliente, dataInicio.value, dataFim.value) &&
+      (!soUpsell.value || Boolean(motivosUpsell(cliente)))
   })
 })
 
@@ -106,7 +118,7 @@ const COLUNAS_ORDENAVEIS = {
   nome_cliente: { rotulo: 'Empresa', primeiraDirecao: 'asc' },
   faturamento: { rotulo: 'Faturamento', primeiraDirecao: 'desc' },
   nivel_cliente: { rotulo: 'Nível', primeiraDirecao: 'asc' },
-  data_contratacao: { rotulo: 'Data da contratação', primeiraDirecao: 'desc' }
+  data_contratacao: { rotulo: 'Contratação', primeiraDirecao: 'desc' }
 }
 
 const ordem = ref({ campo: 'nome_cliente', direcao: 'asc' })
@@ -177,7 +189,7 @@ const clientesPaginados = computed(() => {
 })
 
 // Mudou busca, filtro ou ordem: volta para a primeira página
-watch([busca, filtroSegmento, filtroNivel, filtroConsultor, dataInicio, dataFim, ordem], () => {
+watch([busca, filtroSegmento, filtroNivel, filtroConsultor, dataInicio, dataFim, soUpsell, ordem], () => {
   paginaAtual.value = 1
 })
 
@@ -294,12 +306,22 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               <input
                 v-model="busca"
                 type="search"
-                placeholder="Empresa, código ou consultor"
+                placeholder="Empresa, código, consultor, serviço ou cidade"
                 :class="[classeCampo, 'mt-1 w-full']"
               />
             </label>
 
-            <label class="text-xs font-semibold text-gray-500">
+            <button
+              type="button"
+              class="flex items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 sm:col-span-2 md:hidden"
+              :aria-expanded="filtrosAbertos"
+              @click="filtrosAbertos = !filtrosAbertos"
+            >
+              <span>Filtros<template v-if="quantosFiltros"> ({{ quantosFiltros }} {{ quantosFiltros === 1 ? 'ativo' : 'ativos' }})</template></span>
+              <span aria-hidden="true">{{ filtrosAbertos ? '▴' : '▾' }}</span>
+            </button>
+
+            <label class="text-xs font-semibold text-gray-500" :class="{ 'hidden md:block': !filtrosAbertos }">
               Segmento
               <select v-model="filtroSegmento" :class="[classeCampo, 'mt-1 w-full']">
                 <option value="">Todos</option>
@@ -307,7 +329,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               </select>
             </label>
 
-            <label class="text-xs font-semibold text-gray-500">
+            <label class="text-xs font-semibold text-gray-500" :class="{ 'hidden md:block': !filtrosAbertos }">
               Nível
               <select v-model="filtroNivel" :class="[classeCampo, 'mt-1 w-full']">
                 <option value="">Todos</option>
@@ -317,7 +339,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               </select>
             </label>
 
-            <label class="text-xs font-semibold text-gray-500 sm:col-span-2">
+            <label class="text-xs font-semibold text-gray-500 sm:col-span-2" :class="{ 'hidden md:block': !filtrosAbertos }">
               Consultor
               <select v-model="filtroConsultor" :class="[classeCampo, 'mt-1 w-full']">
                 <option value="">Todos</option>
@@ -325,12 +347,12 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               </select>
             </label>
 
-            <label class="text-xs font-semibold text-gray-500">
+            <label class="text-xs font-semibold text-gray-500" :class="{ 'hidden md:block': !filtrosAbertos }">
               Contratação de
               <input v-model="dataInicio" type="date" :class="[classeCampo, 'mt-1 w-full']" />
             </label>
 
-            <label class="text-xs font-semibold text-gray-500">
+            <label class="text-xs font-semibold text-gray-500" :class="{ 'hidden md:block': !filtrosAbertos }">
               até
               <input v-model="dataFim" type="date" :class="[classeCampo, 'mt-1 w-full']" />
             </label>
@@ -392,7 +414,16 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               <span class="font-semibold text-cti-grafite">{{ clientesFiltrados.length }} de {{ clientes.length }} clientes</span>
               · {{ formatarCompacto(faturamentoFiltrado) }} em faturamento
               <template v-if="comUpsell">
-                · <span class="font-semibold text-cti-laranja-texto">{{ comUpsell }} com oportunidade de upsell</span>
+                ·
+                <button
+                  type="button"
+                  :aria-pressed="soUpsell"
+                  class="font-semibold text-cti-laranja-texto underline decoration-dotted underline-offset-2 hover:decoration-solid"
+                  :title="soUpsell ? 'Mostrar todos os clientes' : 'Mostrar só os clientes com oportunidade de upsell'"
+                  @click="soUpsell = !soUpsell"
+                >
+                  {{ soUpsell ? `Mostrando só os ${comUpsell} com upsell · ver todos` : `${comUpsell} com oportunidade de upsell` }}
+                </button>
               </template>
             </p>
           </div>
@@ -455,6 +486,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                       :title="motivosUpsell(cliente).join(' · ')"
                       :aria-label="`Oportunidade de upsell: ${motivosUpsell(cliente).join('; ')}`"
                     >Upsell</span>
+                    <p v-if="motivosUpsell(cliente)" class="mt-1 max-w-xs text-xs font-normal text-cti-laranja-texto">{{ motivosUpsell(cliente)[0] }}</p>
                   </td>
 
                   <td class="p-4 text-gray-500">{{ cliente.consultor || '—' }}</td>

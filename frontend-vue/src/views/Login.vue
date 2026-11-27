@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { CONTA_DEMO } from '../services/api'
@@ -17,6 +17,9 @@ const mostrarAjudaSenha = ref(false)
 const mostrarSenha = ref(false)
 const erro = ref('')
 const entrando = ref(false)
+
+// Some o aviso de erro assim que a pessoa começa a corrigir
+watch([email, senha], () => { erro.value = '' })
 
 // O api.js manda para cá com ?motivo=sessao quando o Spring encerra a
 // sessão (30 min sem uso ou servidor reiniciado): a tela explica por que
@@ -67,11 +70,15 @@ const entrar = async () => {
   try {
     await auth.entrar(email.value, senha.value)
   } catch (falha) {
-    // 401 = senha errada; 403 = cadastro não aprovado. Qualquer outra falha
-    // (servidor fora do ar, erro interno) mostra o motivo real, para não
-    // parecer que a senha está errada.
-    if (falha.status === 403) {
-      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo] || MENSAGENS_NAO_APROVADO.PENDENTE
+    // 401 = senha errada; 403 com código PENDENTE/REJEITADO = cadastro não
+    // aprovado. Um 403 sem esse código é outra recusa do servidor (ex.:
+    // endereço não autorizado pelo CORS ou token CSRF vencido): não pode
+    // parecer "aguardando aprovação". Qualquer outra falha (servidor fora do
+    // ar, erro interno) mostra o motivo real.
+    if (falha.status === 403 && MENSAGENS_NAO_APROVADO[falha.codigo]) {
+      erro.value = MENSAGENS_NAO_APROVADO[falha.codigo]
+    } else if (falha.status === 403) {
+      erro.value = 'O servidor recusou o pedido de login. Recarregue a página e tente de novo. Se continuar, avise o administrador do sistema.'
     } else if (falha.status === 401) {
       erro.value = 'E-mail ou senha inválidos.'
     } else {
@@ -88,14 +95,14 @@ const entrar = async () => {
 
 <template>
 
-  <main class="min-h-screen flex flex-col md:flex-row">
+  <main class="min-h-screen flex flex-col md:flex-row font-['Inter',sans-serif]">
 
     <!-- Painel esquerdo: identidade e proposta de valor (público, sem formulário) -->
     <PainelInstitucional />
 
     <!-- Painel direito: formulário de login -->
 
-    <div class="flex flex-1 flex-col items-center justify-start bg-white px-6 py-8 sm:py-16 md:justify-center">
+    <div class="flex flex-1 flex-col items-center justify-start fundo-home px-6 py-8 sm:py-16 md:justify-center">
 
       <RouterLink
         to="/"
@@ -122,7 +129,7 @@ const entrar = async () => {
         class="w-full max-w-sm rounded-xl border-t-4 border-cti-laranja bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
       >
 
-        <h1 class="text-2xl font-bold text-cti-grafite">
+        <h1 class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-cti-grafite">
           Acesse sua conta
         </h1>
 
@@ -140,6 +147,7 @@ const entrar = async () => {
 
         <form
           @submit.prevent="entrar"
+          novalidate
           class="mt-8 space-y-5"
         >
 
@@ -284,7 +292,7 @@ const entrar = async () => {
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25" />
               <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
             </svg>
-            {{ entrando ? 'Entrando...' : 'Acessar Painel' }}
+            {{ entrando ? 'Entrando...' : 'Entrar no Sistema' }}
           </button>
 
         </form>

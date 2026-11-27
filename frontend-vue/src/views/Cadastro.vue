@@ -128,14 +128,14 @@ const criarConta = async () => {
 
 <template>
 
-  <main class="min-h-screen flex flex-col md:flex-row">
+  <main class="min-h-screen flex flex-col md:flex-row font-['Inter',sans-serif]">
 
     <!-- Painel esquerdo: identidade e proposta de valor (o mesmo do login) -->
     <PainelInstitucional />
 
     <!-- Painel direito: formulário de cadastro (primeiro acesso) -->
 
-    <div class="flex flex-1 flex-col items-center justify-center bg-white px-6 py-8 sm:py-16">
+    <div class="flex flex-1 flex-col items-center justify-center fundo-home px-6 py-8 sm:py-16">
 
       <RouterLink
         to="/"
@@ -173,7 +173,7 @@ const criarConta = async () => {
             ⏳
           </div>
 
-          <h1 class="mt-5 text-2xl font-bold text-cti-grafite">
+          <h1 class="mt-5 font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-cti-grafite">
             Cadastro enviado!
           </h1>
 
@@ -199,7 +199,7 @@ const criarConta = async () => {
 
         <template v-else>
 
-          <h1 class="text-2xl font-bold text-cti-grafite">
+          <h1 class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-cti-grafite">
             Primeiro acesso
           </h1>
 
