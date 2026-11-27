@@ -13,6 +13,29 @@ Optamos por HTTP/REST em vez de `ProcessBuilder` para integrar Java e Python por
 
 Definir `CORS_ALLOWED_ORIGINS` no backend publicado para a origem HTTPS exata do frontend Vercel, sem caminho nem barra final. Lista separada por vírgulas; não usar `*`. O Spring Security trata o preflight OPTIONS para `/api/**`, preservando sessão e CSRF. Para chamadas diretas entre sites distintos, `SESSION_COOKIE_SAME_SITE=none` e `SESSION_COOKIE_SECURE=true`; bloqueios de cookies de terceiros podem exigir proxy `/api` na mesma origem do frontend. Validar em navegador real após o deploy. O endereço oficial será informado pelo responsável de nuvem; não presumir domínio.
 
+## Login: sessão com cookie em vez de token JWT
+
+A aula de autenticação (Front-end, aula 11) mostra o login com **token JWT
+guardado no `localStorage`** e enviado no cabeçalho `Authorization: Bearer`.
+Nós usamos **sessão do Spring Security com cookie**, que é o outro modelo
+padrão de login em aplicações web. O motivo é segurança:
+
+| | Token JWT no `localStorage` (aula) | Sessão com cookie (nosso) |
+|---|---|---|
+| Onde fica a "prova do login" | No `localStorage`, que qualquer script da página consegue ler | Num cookie `HttpOnly`: o JavaScript **não consegue ler** |
+| Se um script malicioso entrar na página | Pode copiar o token e usá-lo de outro computador | Não consegue copiar a sessão |
+| Bloquear um usuário ou trocar o papel | Vale só quando o token expira | Vale **na hora**: o filtro `IdentidadeDaSessao` confere status e papel a cada pedido |
+| Sair do sistema | O token continua válido até expirar | O servidor encerra a sessão |
+| Proteção extra | — | Token CSRF em cada pedido que altera dados e cookie `SameSite` |
+
+No front, a diferença é pequena. O `services/api.js` usa o Axios com
+`withCredentials: true` em vez do interceptador que coloca o `Bearer`. O
+`authStore` (Pinia) continua guardando nome e papel para a tela, mas sem
+nenhuma senha ou token. As rotas protegidas (`meta: { requiresAuth: true }`
+e `router.beforeEach`) são as mesmas da aula. Como a aula também ensina, a
+checagem no Vue é só para a experiência do usuário: quem decide o acesso
+é sempre o back-end.
+
 ## Modelo orientado a objetos
 
 As seis classes `Cliente`, `Consultor`, `Servico`, `Contrato`, `Insight` e `Telemetria` herdam `Entidade`. Os campos são privados e finais, com getters e listas protegidas por `List.copyOf`. O cliente se relaciona com consultor e contrato, e o contrato agrega serviços. Cada classe sobrescreve `resumo()`; o serviço usa esse contrato polimórfico para produzir os nomes de serviços, consultor e descrições de insights. Os mapeadores JDBC instanciam os objetos e os convertem nos DTOs já usados pelo Vue. Não há mudança do esquema SQL nem do formato das respostas.
