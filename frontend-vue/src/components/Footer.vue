@@ -1,12 +1,12 @@
 <template>
   <!-- Footer: 1 coluna no mobile, 2 a partir de sm, 3 a partir de md -->
-  <footer class="bg-[#292930] text-[#FAFAF7] py-12 md:py-16 mt-auto">
+  <footer class="bg-cti-grafite-home text-cti-fundo py-12 md:py-16 mt-auto">
     <div
       class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr] gap-10">
 
       <div class="sm:col-span-2 md:col-span-1">
         <div class="font-['Space_Grotesk'] font-bold text-2xl text-white mb-4">CTI Insights<span
-            class="text-[#FF8F00]">.</span></div>
+            class="text-cti-laranja">.</span></div>
         <p class="text-[#A5A5A5] text-sm leading-[1.6] max-w-[320px] m-0">Transformando a gestão comercial do Provedor
           CTI através da automação de planilhas e inteligência de dados.</p>
       </div>
@@ -16,11 +16,11 @@
         <!-- Os dois primeiros rolam até a seção desta página; os dois
              últimos são telas do sistema, por isso levam ao login. -->
         <ul class="list-none p-0 m-0 space-y-3 text-sm text-[#A5A5A5]">
-          <li><a href="#como-funciona" class="hover:text-[#FF8F00] transition-colors">Como funciona</a></li>
-          <li><a href="#seguranca" class="hover:text-[#FF8F00] transition-colors">Segurança dos dados</a></li>
-          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Oportunidades de
+          <li><a href="#como-funciona" class="hover:text-cti-laranja transition-colors">Como funciona</a></li>
+          <li><a href="#seguranca" class="hover:text-cti-laranja transition-colors">Segurança dos dados</a></li>
+          <li><router-link to="/login" class="hover:text-cti-laranja transition-colors">Oportunidades de
               upsell</router-link></li>
-          <li><router-link to="/login" class="hover:text-[#FF8F00] transition-colors">Carteira de
+          <li><router-link to="/login" class="hover:text-cti-laranja transition-colors">Carteira de
               clientes</router-link></li>
         </ul>
       </div>

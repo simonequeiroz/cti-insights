@@ -87,7 +87,10 @@ class ApiIntegrationTests {
         var anonymous = browser();
         var admin = admin();
         assertThat(send(anonymous, "GET", "/health", null).statusCode()).isEqualTo(200);
-        assertThat(send(anonymous, "GET", "/clientes", null).statusCode()).isEqualTo(401);
+        var semLogin = send(anonymous, "GET", "/clientes", null);
+        assertThat(semLogin.statusCode()).isEqualTo(401);
+        // Texto exato com acentos: pega arquivo salvo com codificação errada
+        assertThat(body(semLogin).path("mensagem").asString()).isEqualTo("Autenticação necessária.");
         assertThat(raw(anonymous, "POST", "/auth/login", "{}", null).statusCode()).isEqualTo(403);
         var created = send(anonymous, "POST", "/auth/cadastro", """
                 {"nome":"Pessoa Gestora","email":"GESTOR@example.test","senha":"senha-de-teste","papel":"ADMINISTRADOR"}

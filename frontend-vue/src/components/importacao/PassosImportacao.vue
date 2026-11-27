@@ -21,7 +21,7 @@ const PASSOS = ['Enviar arquivo', 'Revisar dados', 'Confirmar', 'Concluído']
           :class="indice + 1 < etapaAtual
             ? 'border-green-600 bg-green-600 text-white'
             : indice + 1 === etapaAtual
-              ? 'border-[#006EB7] bg-[#006EB7] text-white'
+              ? 'border-cti-azul bg-cti-azul text-white'
               : 'border-gray-300 bg-white text-gray-400'"
           aria-hidden="true"
         >
@@ -30,7 +30,7 @@ const PASSOS = ['Enviar arquivo', 'Revisar dados', 'Confirmar', 'Concluído']
 
         <span
           class="hidden text-sm sm:inline"
-          :class="indice + 1 === etapaAtual ? 'font-semibold text-[#292A2F]' : indice + 1 < etapaAtual ? 'text-green-700' : 'text-gray-400'"
+          :class="indice + 1 === etapaAtual ? 'font-semibold text-cti-grafite' : indice + 1 < etapaAtual ? 'text-green-700' : 'text-gray-400'"
         >
           {{ titulo }}
         </span>

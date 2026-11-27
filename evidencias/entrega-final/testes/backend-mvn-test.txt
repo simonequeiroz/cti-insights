@@ -1,10 +1,14 @@
-# Back-end: ./mvnw test (26/11/2026), com a suíte de integração num esquema temporário do Neon
-suite br.com.datapulse.ctiinsights.ApiIntegrationTests: 3 testes
+# Back-end: ./mvnw test (27/11/2026), com a suíte de integração num esquema temporário do Neon
+suite br.com.datapulse.ctiinsights.ApiIntegrationTests: 4 testes
   [OK] readsOnlyNormalizedPortfolioAndPreservesHistoryOnFailedUploadAndCrud
   [OK] administratorChangesRoleBlocksAccessAndIssuesTemporaryPassword
   [OK] enforcesAuthenticationApprovalAndRoles
-suite br.com.datapulse.ctiinsights.ValidadorImportacaoTests: 3 testes
+  [OK] corsAllowsOnlyConfiguredOrigin
+suite br.com.datapulse.ctiinsights.DominioTests: 1 testes
+  [OK] encapsulamentoComposicaoEPolimorfismo
+suite br.com.datapulse.ctiinsights.ValidadorImportacaoTests: 4 testes
   [OK] normalizesBrazilianFormattingAndOptionalUf
   [OK] rejectsNegativeOrOverflowingMoneyInvalidDateUfAndServices
   [OK] rejectsDuplicateOrMissingRows
-Resumo: 6 testes, 0 falhas, 0 erros
+  [OK] distinguishesInvalidExcelAndMissingColumn
+Resumo: 9 testes, 0 falhas, 0 erros

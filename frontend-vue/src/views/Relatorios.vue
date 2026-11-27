@@ -250,7 +250,7 @@ const limparDados = async () => {
   await useUploadStore().limparDados()
 }
 
-const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]'
+const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul'
 </script>
 
 <template>
@@ -267,7 +267,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
 
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 class="text-3xl font-bold text-[#292A2F]">
+            <h1 class="text-3xl font-bold text-cti-grafite">
               Clientes
             </h1>
             <p class="mt-2 text-sm text-gray-500">
@@ -279,7 +279,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
             v-if="podeEditar"
             type="button"
             @click="abrirFormulario()"
-            class="rounded-md bg-[#006EB7] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+            class="rounded-md bg-cti-azul px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro"
           >
             + Novo cliente
           </button>
@@ -341,7 +341,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               v-if="filtrosAtivos"
               type="button"
               @click="limparFiltros"
-              class="text-sm font-medium text-[#006EB7] transition hover:underline"
+              class="text-sm font-medium text-cti-azul transition hover:underline"
             >
               Limpar filtros
             </button>
@@ -359,7 +359,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               v-if="clientesOrdenados.length"
               type="button"
               @click="exportarClientesCsv(clientesOrdenados)"
-              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#006EB7] hover:text-[#006EB7]"
+              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-cti-azul hover:text-cti-azul"
               title="Baixa os clientes desta lista (com a busca, os filtros e a ordem aplicados) para abrir no Excel"
             >
               Exportar CSV
@@ -383,16 +383,16 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
         >
 
           <div class="border-b border-gray-200 p-5">
-            <h2 id="carteira-titulo" class="text-lg font-bold text-[#292A2F]">
+            <h2 id="carteira-titulo" class="text-lg font-bold text-cti-grafite">
               Carteira atual
             </h2>
 
             <!-- Resumo do que está na tela (respeita busca e filtros) -->
             <p class="mt-1 text-sm text-gray-600" role="status">
-              <span class="font-semibold text-[#292A2F]">{{ clientesFiltrados.length }} de {{ clientes.length }} clientes</span>
+              <span class="font-semibold text-cti-grafite">{{ clientesFiltrados.length }} de {{ clientes.length }} clientes</span>
               · {{ formatarCompacto(faturamentoFiltrado) }} em faturamento
               <template v-if="comUpsell">
-                · <span class="font-semibold text-[#A85700]">{{ comUpsell }} com oportunidade de upsell</span>
+                · <span class="font-semibold text-cti-laranja-texto">{{ comUpsell }} com oportunidade de upsell</span>
               </template>
             </p>
           </div>
@@ -405,9 +405,9 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                   <th class="p-4 font-semibold text-gray-500">Código</th>
 
                   <th class="p-4 font-semibold text-gray-500" :aria-sort="ariaSort('nome_cliente')">
-                    <button type="button" class="inline-flex items-center gap-1 hover:text-[#006EB7]" @click="ordenarPor('nome_cliente')">
+                    <button type="button" class="inline-flex items-center gap-1 hover:text-cti-azul" @click="ordenarPor('nome_cliente')">
                       Empresa
-                      <span aria-hidden="true" :class="ordem.campo === 'nome_cliente' ? 'text-[#006EB7]' : 'text-gray-300'">{{ setaOrdem('nome_cliente') }}</span>
+                      <span aria-hidden="true" :class="ordem.campo === 'nome_cliente' ? 'text-cti-azul' : 'text-gray-300'">{{ setaOrdem('nome_cliente') }}</span>
                     </button>
                   </th>
 
@@ -420,18 +420,18 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                     class="p-4 font-semibold text-gray-500"
                     :aria-sort="ariaSort(campo)"
                   >
-                    <button type="button" class="inline-flex items-center gap-1 hover:text-[#006EB7]" @click="ordenarPor(campo)">
+                    <button type="button" class="inline-flex items-center gap-1 hover:text-cti-azul" @click="ordenarPor(campo)">
                       {{ COLUNAS_ORDENAVEIS[campo].rotulo }}
-                      <span aria-hidden="true" :class="ordem.campo === campo ? 'text-[#006EB7]' : 'text-gray-300'">{{ setaOrdem(campo) }}</span>
+                      <span aria-hidden="true" :class="ordem.campo === campo ? 'text-cti-azul' : 'text-gray-300'">{{ setaOrdem(campo) }}</span>
                     </button>
                   </th>
 
                   <th class="p-4 font-semibold text-gray-500">Serviços</th>
 
                   <th class="p-4 font-semibold text-gray-500" :aria-sort="ariaSort('data_contratacao')">
-                    <button type="button" class="inline-flex items-center gap-1 text-left hover:text-[#006EB7]" @click="ordenarPor('data_contratacao')">
+                    <button type="button" class="inline-flex items-center gap-1 text-left hover:text-cti-azul" @click="ordenarPor('data_contratacao')">
                       {{ COLUNAS_ORDENAVEIS.data_contratacao.rotulo }}
-                      <span aria-hidden="true" :class="ordem.campo === 'data_contratacao' ? 'text-[#006EB7]' : 'text-gray-300'">{{ setaOrdem('data_contratacao') }}</span>
+                      <span aria-hidden="true" :class="ordem.campo === 'data_contratacao' ? 'text-cti-azul' : 'text-gray-300'">{{ setaOrdem('data_contratacao') }}</span>
                     </button>
                   </th>
 
@@ -447,11 +447,11 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                 >
                   <td class="p-4 text-gray-500">{{ cliente.codigo_cliente || '—' }}</td>
 
-                  <td class="p-4 font-medium text-[#292A2F]">
+                  <td class="p-4 font-medium text-cti-grafite">
                     {{ cliente.nome_cliente }}
                     <span
                       v-if="motivosUpsell(cliente)"
-                      class="ml-1 inline-block cursor-help rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#A85700]"
+                      class="ml-1 inline-block cursor-help rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cti-laranja-texto"
                       :title="motivosUpsell(cliente).join(' · ')"
                       :aria-label="`Oportunidade de upsell: ${motivosUpsell(cliente).join('; ')}`"
                     >Upsell</span>
@@ -462,7 +462,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                   <td class="whitespace-nowrap p-4 text-gray-500">{{ cliente.faturamento != null ? formatarMoeda(cliente.faturamento) : '—' }}</td>
 
                   <td class="p-4">
-                    <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#006EB7]">{{ cliente.nivel_cliente }}</span>
+                    <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-cti-azul">{{ cliente.nivel_cliente }}</span>
                   </td>
 
                   <td class="p-4 text-gray-500">{{ cliente.servico || '—' }}</td>
@@ -473,7 +473,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
                       v-if="podeEditar"
                       type="button"
                       :aria-label="`Editar ${cliente.nome_cliente}`"
-                      class="rounded px-2 py-1 text-sm font-semibold text-[#006EB7] transition hover:bg-blue-50"
+                      class="rounded px-2 py-1 text-sm font-semibold text-cti-azul transition hover:bg-blue-50"
                       @click="abrirFormulario(cliente)"
                     >
                       Editar
@@ -520,33 +520,33 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
               >
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <p class="font-semibold text-[#292A2F]">
+                    <p class="font-semibold text-cti-grafite">
                       {{ cliente.nome_cliente }}
                       <span
                         v-if="motivosUpsell(cliente)"
-                        class="ml-1 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#A85700]"
+                        class="ml-1 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cti-laranja-texto"
                       >Upsell</span>
                     </p>
                     <p class="mt-0.5 text-xs text-gray-500">
                       {{ cliente.codigo_cliente }} · {{ cliente.segmento }} · {{ cliente.consultor || '—' }}
                     </p>
                   </div>
-                  <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-[#006EB7]">{{ cliente.nivel_cliente }}</span>
+                  <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-cti-azul">{{ cliente.nivel_cliente }}</span>
                 </div>
 
-                <p class="mt-2 text-sm font-semibold text-[#292A2F]">
+                <p class="mt-2 text-sm font-semibold text-cti-grafite">
                   {{ cliente.faturamento != null ? formatarMoeda(cliente.faturamento) : '—' }}
                   <span class="font-normal text-gray-500">· desde {{ formatarData(cliente.data_contratacao) }}</span>
                 </p>
                 <p class="mt-1 text-xs text-gray-500">{{ cliente.servico || '—' }}</p>
-                <p v-if="motivosUpsell(cliente)" class="mt-1 text-xs text-[#A85700]">{{ motivosUpsell(cliente)[0] }}</p>
+                <p v-if="motivosUpsell(cliente)" class="mt-1 text-xs text-cti-laranja-texto">{{ motivosUpsell(cliente)[0] }}</p>
 
                 <div v-if="mostrarAcoes" class="mt-3 flex gap-2">
                   <button
                     v-if="podeEditar"
                     type="button"
                     :aria-label="`Editar ${cliente.nome_cliente}`"
-                    class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-[#006EB7]"
+                    class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-cti-azul"
                     @click="abrirFormulario(cliente)"
                   >
                     Editar
@@ -603,7 +603,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
           v-else
           class="mt-6 rounded-lg border border-gray-200 bg-white p-8 text-center"
         >
-          <h2 class="font-bold text-[#292A2F]">
+          <h2 class="font-bold text-cti-grafite">
             {{ clientes.length ? 'Nenhum cliente com esses filtros.' : 'Nenhum cliente na carteira.' }}
           </h2>
 
@@ -627,7 +627,7 @@ const classeCampo = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-s
           <RouterLink
             v-if="!clientes.length && auth.pode('importarPlanilha')"
             to="/upload"
-            class="mt-6 inline-block rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+            class="mt-6 inline-block rounded-md bg-cti-azul px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro"
           >
             Importar planilha
           </RouterLink>

@@ -31,6 +31,10 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `19-senha-temporaria.png` | Senha temporária gerada, mostrada uma única vez |
 | `20-troca-obrigatoria.png` | Quem entra com senha temporária precisa criar uma senha nova |
 | `21-cadastro-validacao.png` | Cadastro no celular: erro embaixo de cada campo |
+| `22-kanban.png` | Kanban no GitHub Projects: Backlog, A Fazer, Em Andamento e Concluído |
+| `23-kanban-tabela.png` | Kanban em tabela: responsável, prazo, área e sprint de cada tarefa |
+| `24-estatistica-graficos.png` | Dashboard: dispersão (com r de Pearson e p-valor), histograma e boxplot do faturamento |
+| `25-estatistica-celular.png` | Os mesmos gráficos no celular, sem rolagem lateral |
 
 ## Testes ([`testes/`](testes/))
 
@@ -47,7 +51,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `clientes-chrome.txt` | Tela Clientes: busca, filtros, ordenação, resumo, upsell, CSV e celular: 21 de 21 |
 | `cadastro-chrome.txt` | Cadastro: papéis, erros por campo, e-mail, tela final e retorno seguro: 14 de 14 |
 | `usuarios-chrome.txt` | Usuários e troca de senha: 28 de 28 |
-| `backend-mvn-test.txt` | Back-end: 6 de 6, incluindo o teste de bloqueio, troca de papel e senha temporária |
+| `backend-mvn-test.txt` | Back-end: 9 de 9, incluindo bloqueio, troca de papel, senha temporária, exceções próprias e classes de domínio |
 | `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |
 | `edicao-cliente-chrome.txt` | Inclusão, edição e exclusão de cliente com recálculo do dashboard: 11 de 11 |
 | `front-lint-build.txt` | `npm run lint` sem erros e `npm run build` concluído |

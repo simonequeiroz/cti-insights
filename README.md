@@ -256,7 +256,7 @@ Grupo **Data Pulse**, ADS Turma B (CSTADS126N2).
 
 | Integrante | Responsabilidade |
 |---|---|
-| Justino Ricardo Jairi Silvestre | Back-End (Java/Spring Boot) |
+| Ricardo Justino Jairi Silvestre | Back-End (Java/Spring Boot) |
 | Thyphanny Katherine Silva Franca | Front-End (Vue 3 / Tailwind CSS) |
 | Miguel Herculano Viana | Ciência de Dados (Python/pandas) |
 | Ryan Vinicius da Silva | Banco de dados e nuvem (PostgreSQL/Neon) |
@@ -277,6 +277,8 @@ por Pull Request. O histórico está em
 
 - **Relatório final:** [docs/RELATORIO-FINAL.md](docs/RELATORIO-FINAL.md)
 - **Confidencialidade e LGPD:** [docs/CONFIDENCIALIDADE-E-LGPD.md](docs/CONFIDENCIALIDADE-E-LGPD.md)
+- **Automação Industrial (HTTP/REST × Modbus):** [docs/AUTOMACAO-INDUSTRIAL.md](docs/AUTOMACAO-INDUSTRIAL.md)
+- **Kanban e divisão de tarefas:** [quadro no GitHub Projects](https://github.com/users/simonequeiroz/projects/1) e [docs/DIVISAO-DE-TAREFAS.md](docs/DIVISAO-DE-TAREFAS.md)
 - Fluxo do sistema: [docs/FLUXO-DO-SISTEMA.md](docs/FLUXO-DO-SISTEMA.md)
 - Front-End e formato da planilha: [frontend-vue/README.md](frontend-vue/README.md)
 - Contrato da API: [frontend-vue/API-CONTRATO.md](frontend-vue/API-CONTRATO.md)

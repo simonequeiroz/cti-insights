@@ -24,8 +24,8 @@ const descartadasPorSegmento = computed(() => {
 
 const impacto = computed(() => [
   { rotulo: 'Novos clientes', valor: `+${formatarNumero(analise.value.clientesNovos)}`, classe: 'text-green-700' },
-  { rotulo: 'Já estavam na carteira', valor: formatarNumero(analise.value.clientesAtualizados), classe: 'text-[#292A2F]' },
-  { rotulo: 'Saem da carteira', valor: formatarNumero(analise.value.foraDaPlanilha.length), classe: analise.value.foraDaPlanilha.length ? 'text-[#A85700]' : 'text-[#292A2F]' }
+  { rotulo: 'Já estavam na carteira', valor: formatarNumero(analise.value.clientesAtualizados), classe: 'text-cti-grafite' },
+  { rotulo: 'Saem da carteira', valor: formatarNumero(analise.value.foraDaPlanilha.length), classe: analise.value.foraDaPlanilha.length ? 'text-cti-laranja-texto' : 'text-cti-grafite' }
 ])
 
 const MAX_NOMES = 10
@@ -44,7 +44,7 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
     class="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
   >
     <header>
-      <h2 id="confirmar-titulo" class="text-xl font-bold text-[#292A2F]">
+      <h2 id="confirmar-titulo" class="text-xl font-bold text-cti-grafite">
         Confirme a importação
       </h2>
       <p class="mt-1 text-sm text-gray-500">
@@ -129,7 +129,7 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
       <button
         type="button"
         :disabled="upload.carregando || !upload.podeConfirmar"
-        class="inline-flex items-center justify-center gap-2 rounded-md bg-[#FF8F00] px-6 py-2.5 text-sm font-semibold text-[#292A2F] shadow-sm transition hover:enabled:bg-[#E68100] disabled:cursor-not-allowed disabled:opacity-50"
+        class="inline-flex items-center justify-center gap-2 rounded-md bg-cti-laranja px-6 py-2.5 text-sm font-semibold text-cti-grafite shadow-sm transition hover:enabled:bg-cti-laranja-escuro disabled:cursor-not-allowed disabled:opacity-50"
         @click="emit('confirmar')"
       >
         <svg v-if="upload.carregando" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">

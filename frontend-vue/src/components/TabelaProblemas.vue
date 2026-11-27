@@ -29,7 +29,7 @@ defineProps({
             <td class="px-3 py-2 font-['IBM_Plex_Mono'] text-gray-500">
               {{ problema.linha }}
             </td>
-            <td class="px-3 py-2 font-medium text-[#292A2F]">
+            <td class="px-3 py-2 font-medium text-cti-grafite">
               {{ problema.campo }}
             </td>
             <td class="px-3 py-2 text-gray-600">

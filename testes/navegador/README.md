@@ -35,6 +35,7 @@ Os prints vão para `saida/`, que não vai para o Git.
 | `importacao.mjs` | Histórico, segmentos aceitos, prévia, aviso de tempo, tela final | Não (confirmação simulada) |
 | `clientes.mjs` | Busca, filtros, ordenação, resumo, upsell, CSV, celular | Não |
 | `dashboard.mjs` | Origem dos dados, filtros, aviso nos insights, Top 10, PDF | Não |
+| `estatistica.mjs` | Dispersão, histograma e boxplot: frase da correlação pelo p-valor, quartis iguais aos do Python, filtro, celular | Não |
 | `usuarios.mjs` | Gestão de acessos e troca de senha | **Troca a senha do admin e volta para a original** |
 | `cadastro.mjs` | Papéis, erros por campo, e-mail, tela final | Não (respostas simuladas) |
 | `edicao-cliente.mjs` | Incluir, editar e excluir cliente com recálculo | **Sim**: deixa 3 linhas "Alteração manual" no histórico |

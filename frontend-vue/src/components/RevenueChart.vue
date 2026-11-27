@@ -4,12 +4,12 @@
        "Exemplo ilustrativo". Os números reais só aparecem no Dashboard,
        depois do login. -->
   <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
-    <div class="border border-[#CDDADF] bg-white/75 backdrop-blur-[8px] rounded-lg p-5 sm:p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
+    <div class="border border-cti-linha bg-white/75 backdrop-blur-[8px] rounded-lg p-5 sm:p-7 relative overflow-hidden shadow-[0px_10px_30px_rgba(41,41,48,0.05)] mt-4">
 
       <!-- Cabeçalho do Painel -->
       <div class="flex justify-between items-baseline mb-[18px] flex-wrap gap-2">
         <span class="text-xs text-[#637A84] tracking-[0.05em] font-semibold font-['IBM_Plex_Mono']">CONTRATAÇÕES POR MÊS</span>
-        <span class="rounded border border-[#CDDADF] bg-[#FAFAF7] px-2 py-0.5 text-[11px] text-[#4A5D66] font-semibold font-['IBM_Plex_Mono']">EXEMPLO ILUSTRATIVO</span>
+        <span class="rounded border border-cti-linha bg-cti-fundo px-2 py-0.5 text-[11px] text-cti-cinza font-semibold font-['IBM_Plex_Mono']">EXEMPLO ILUSTRATIVO</span>
       </div>
 
       <!-- Traçado do Gráfico com Animação SVG -->
@@ -34,12 +34,12 @@
         <!-- Ponto de Alerta: fora do SVG, porque o SVG é esticado
              (preserveAspectRatio="none") e deformaria o círculo. Posição
              equivale a cx=960/1000 e cy=35 do traçado. -->
-        <span class="animate-pop opacity-0 absolute h-3.5 w-3.5 rounded-full bg-[#FF8F00] left-[96%] top-[35px] -ml-[7px] -mt-[7px]"></span>
+        <span class="animate-pop opacity-0 absolute h-3.5 w-3.5 rounded-full bg-cti-laranja left-[96%] top-[35px] -ml-[7px] -mt-[7px]"></span>
       </div>
 
       <!-- Alerta / Sugestão -->
-      <div class="text-[12px] text-[#A85700] text-left md:text-right font-['IBM_Plex_Mono'] font-medium mt-2 animate-fadeup opacity-0">
-        <span class="text-[#FF8F00]">●</span> OPORTUNIDADE DE UPSELL: clientes de Comércio têm 50% dos serviços, mas só 19% do faturamento
+      <div class="text-[12px] text-cti-laranja-texto text-left md:text-right font-['IBM_Plex_Mono'] font-medium mt-2 animate-fadeup opacity-0">
+        <span class="text-cti-laranja">●</span> OPORTUNIDADE DE UPSELL: clientes de Comércio têm 50% dos serviços, mas só 19% do faturamento
       </div>
 
     </div>

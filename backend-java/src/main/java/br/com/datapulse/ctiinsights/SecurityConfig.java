@@ -41,7 +41,7 @@ class SecurityConfig {
         var config = new CorsConfiguration();
         var allowed = Arrays.stream(origins.split(",")).map(String::strip).filter(x -> !x.isEmpty()).toList();
         if (allowed.stream().anyMatch(x -> x.contains("*"))) {
-            throw new IllegalArgumentException("CORS exige origens explÃ­citas, sem curingas.");
+            throw new IllegalArgumentException("CORS exige origens explícitas, sem curingas.");
         }
         config.setAllowedOrigins(allowed);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -62,7 +62,7 @@ class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, error) ->
-                                error(response, 401, "AutenticaÃ§Ã£o necessÃ¡ria."))
+                                error(response, 401, "Autenticação necessária."))
                         .accessDeniedHandler((request, response, error) ->
                                 error(response, 403, "Acesso negado.")))
                 .addFilterBefore(new IdentidadeDaSessao(usuarios), AuthorizationFilter.class)

@@ -12,14 +12,14 @@
       to="/"
       class="text-xl font-bold tracking-tight text-white md:text-2xl"
     >
-      CTI Insights<span class="text-[#FF8F00]">.</span>
+      CTI Insights<span class="text-cti-laranja">.</span>
     </RouterLink>
 
     <div class="mt-4 max-w-md md:mt-0">
 
       <p class="font-['Space_Grotesk'] text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-5xl">
         Transforme dados em
-        <span class="text-[#FF8F00]">decisões estratégicas</span>
+        <span class="text-cti-laranja">decisões estratégicas</span>
       </p>
 
       <p class="mt-6 hidden text-base leading-relaxed text-[#AFC2D8] md:block">

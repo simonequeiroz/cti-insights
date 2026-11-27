@@ -24,7 +24,7 @@ O grupo Data Pulse declara que:
 | Integrante | Ciente e de acordo |
 |---|---|
 | Simone Queiroz Batista | ☐ |
-| Justino Ricardo Jairi Silvestre | ☐ |
+| Ricardo Justino Jairi Silvestre | ☐ |
 | Thyphanny Katherine Silva Franca | ☐ |
 | Miguel Herculano Viana | ☐ |
 | Ryan Vinicius da Silva | ☐ |

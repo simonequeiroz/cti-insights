@@ -131,7 +131,7 @@ const avaliadoPor = usuario => {
   return '—'
 }
 
-const classeSelect = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7] disabled:opacity-60'
+const classeSelect = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul disabled:opacity-60'
 const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50'
 </script>
 
@@ -146,7 +146,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
       <main class="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
 
         <header>
-          <h1 class="text-3xl font-bold text-[#292A2F]">
+          <h1 class="text-3xl font-bold text-cti-grafite">
             Usuários
           </h1>
           <p class="mt-2 text-sm text-gray-500">
@@ -166,7 +166,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
 
           <section aria-labelledby="pendentes-titulo" class="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div class="border-b border-gray-200 p-5">
-              <h2 id="pendentes-titulo" class="flex items-center gap-2 text-lg font-bold text-[#292A2F]">
+              <h2 id="pendentes-titulo" class="flex items-center gap-2 text-lg font-bold text-cti-grafite">
                 Aguardando aprovação
                 <span class="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">{{ pendentes.length }}</span>
               </h2>
@@ -186,7 +186,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                 class="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between"
               >
                 <div class="min-w-0">
-                  <p class="font-semibold text-[#292A2F]">{{ usuario.nome }}</p>
+                  <p class="font-semibold text-cti-grafite">{{ usuario.nome }}</p>
                   <p class="break-all text-sm text-gray-500">{{ usuario.email }}</p>
                   <p class="mt-0.5 text-xs text-gray-400">Cadastrado em {{ formatarDataHora(usuario.criadoEm) }}</p>
                 </div>
@@ -202,7 +202,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                   <button
                     type="button"
                     :disabled="ocupado === usuario.id"
-                    class="rounded-md bg-[#006EB7] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:opacity-50"
+                    class="rounded-md bg-cti-azul px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro disabled:opacity-50"
                     @click="aprovar(usuario)"
                   >
                     Aprovar
@@ -224,7 +224,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
 
           <section aria-labelledby="todos-titulo" class="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div class="border-b border-gray-200 p-5">
-              <h2 id="todos-titulo" class="text-lg font-bold text-[#292A2F]">
+              <h2 id="todos-titulo" class="text-lg font-bold text-cti-grafite">
                 Equipe com cadastro avaliado
               </h2>
               <p class="mt-1 text-sm text-gray-500">
@@ -241,7 +241,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
               >
                 <!-- Quem é -->
                 <div class="min-w-0">
-                  <p class="font-semibold text-[#292A2F]">
+                  <p class="font-semibold text-cti-grafite">
                     {{ usuario.nome }}
                     <span v-if="ehVoce(usuario)" class="text-xs font-normal text-gray-500">(você)</span>
                   </p>
@@ -280,7 +280,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                       v-if="papelMudou(usuario)"
                       type="button"
                       :disabled="ocupado === usuario.id"
-                      :class="[classeBotao, 'border-[#006EB7] bg-[#006EB7] text-white hover:bg-[#03558c]']"
+                      :class="[classeBotao, 'border-cti-azul bg-cti-azul text-white hover:bg-cti-azul-escuro']"
                       @click="salvarPapel(usuario)"
                     >
                       Salvar papel
@@ -288,7 +288,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                     <button
                       type="button"
                       :disabled="ocupado === usuario.id"
-                      :class="[classeBotao, 'border-gray-300 bg-white text-gray-700 hover:border-[#006EB7] hover:text-[#006EB7]']"
+                      :class="[classeBotao, 'border-gray-300 bg-white text-gray-700 hover:border-cti-azul hover:text-cti-azul']"
                       @click="gerarSenha(usuario)"
                     >
                       Gerar senha temporária
@@ -307,7 +307,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
                     v-else
                     type="button"
                     :disabled="ocupado === usuario.id"
-                    :class="[classeBotao, 'border-[#006EB7] bg-white text-[#006EB7] hover:bg-blue-50']"
+                    :class="[classeBotao, 'border-cti-azul bg-white text-cti-azul hover:bg-blue-50']"
                     @click="reativar(usuario)"
                   >
                     Dar acesso como {{ rotuloPapel(papelEscolhido[usuario.id]) }}
@@ -334,12 +334,12 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
         aria-labelledby="senha-titulo"
         class="w-full max-w-md rounded-t-xl bg-white p-6 shadow-xl sm:rounded-xl"
       >
-        <h2 id="senha-titulo" class="text-lg font-bold text-[#292A2F]">Senha temporária gerada</h2>
+        <h2 id="senha-titulo" class="text-lg font-bold text-cti-grafite">Senha temporária gerada</h2>
         <p class="mt-1 text-sm text-gray-500">
-          Para <span class="font-semibold text-[#292A2F]">{{ senhaGerada.nome }}</span> ({{ senhaGerada.email }})
+          Para <span class="font-semibold text-cti-grafite">{{ senhaGerada.nome }}</span> ({{ senhaGerada.email }})
         </p>
 
-        <p class="mt-5 select-all rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-center font-['IBM_Plex_Mono'] text-xl tracking-wider text-[#292A2F]">
+        <p class="mt-5 select-all rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-center font-['IBM_Plex_Mono'] text-xl tracking-wider text-cti-grafite">
           {{ senhaGerada.senha }}
         </p>
 
@@ -359,7 +359,7 @@ const classeBotao = 'rounded-md border px-3 py-1.5 text-xs font-semibold transit
           </button>
           <button
             type="button"
-            class="rounded-md bg-[#006EB7] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#03558c]"
+            class="rounded-md bg-cti-azul px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cti-azul-escuro"
             @click="copiarSenha"
           >
             {{ copiada ? 'Copiada ✓' : 'Copiar senha' }}

@@ -3,14 +3,14 @@
        partir de lg. Sem números de exemplo: os valores reais só aparecem
        no Dashboard, calculados a partir da planilha enviada.
        As linhas entre os cards vêm do gap-px sobre o fundo cinza da grade. -->
-  <section class="border-t border-b border-[#CDDADF] bg-white mb-8 mt-8">
+  <section class="border-t border-b border-cti-linha bg-white mb-8 mt-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#CDDADF]">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-cti-linha">
 
         <div v-for="item in itens" :key="item.titulo" class="bg-white p-5 md:p-8">
-          <h3 class="text-[13px] text-[#4A5D66] mb-3 font-bold font-['IBM_Plex_Mono'] uppercase">{{ item.rotulo }}</h3>
-          <p class="font-['Space_Grotesk'] font-bold text-xl text-[#006EB7] m-0">{{ item.titulo }}</p>
-          <p class="text-sm mt-2 text-[#4A5D66] leading-[1.5]">{{ item.texto }}</p>
+          <h3 class="text-[13px] text-cti-cinza mb-3 font-bold font-['IBM_Plex_Mono'] uppercase">{{ item.rotulo }}</h3>
+          <p class="font-['Space_Grotesk'] font-bold text-xl text-cti-azul m-0">{{ item.titulo }}</p>
+          <p class="text-sm mt-2 text-cti-cinza leading-[1.5]">{{ item.texto }}</p>
         </div>
 
       </div>

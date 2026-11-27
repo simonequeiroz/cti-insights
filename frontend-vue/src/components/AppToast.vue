@@ -50,7 +50,7 @@ onBeforeUnmount(() => clearTimeout(temporizador))
         {{ tipo === 'erro' ? '!' : '✓' }}
       </span>
 
-      <p class="flex-1 text-[#292A2F]">
+      <p class="flex-1 text-cti-grafite">
         {{ mensagem }}
       </p>
 

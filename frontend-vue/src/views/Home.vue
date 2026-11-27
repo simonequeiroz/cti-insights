@@ -9,7 +9,7 @@ import Footer from '../components/Footer.vue'
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#FAFAF7] bg-[linear-gradient(to_right,#CDDADF_1px,transparent_1px),linear-gradient(to_bottom,#CDDADF_1px,transparent_1px)] bg-[size:40px_40px] text-[#292930] flex flex-col font-['Inter',sans-serif]">
+  <div class="min-h-screen bg-cti-fundo bg-[linear-gradient(to_right,#CDDADF_1px,transparent_1px),linear-gradient(to_bottom,#CDDADF_1px,transparent_1px)] bg-[size:40px_40px] text-cti-grafite-home flex flex-col font-['Inter',sans-serif]">
     
     <!-- Header -->
     <Header />
