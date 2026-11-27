@@ -49,7 +49,7 @@ Cada tarefa tem **responsável, área, sprint e prazo**. Há duas visões:
 
 | Tarefa | Responsável | Prazo |
 |---|---|---|
-| Gráficos de dispersão, histograma e boxplot (Python + Dashboard) | Miguel e Thyphanny | 28/11 |
+| Gráficos de dispersão, histograma e boxplot (Python + Dashboard) | Miguel (Python) e Simone (Dashboard, assumido pela Gestão em 27/11) | 28/11 |
 | Ajustar frases dos insights | Miguel | 28/11 |
 | Deploy: Vercel (front) e Render (Spring e Python) | Ryan | 29/11 |
 | Link do sistema publicado no relatório e no README | Simone | 30/11 |
