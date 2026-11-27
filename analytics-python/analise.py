@@ -101,8 +101,13 @@ def _correlacao(df: pd.DataFrame) -> dict:                                      
     r, p = sp.pearsonr(x, y)                                                        # correlação de Pearson (r e p)
     rho, p_rho = sp.spearmanr(x, y)                                                 # correlação de Spearman
     forca = "forte" if abs(r) >= 0.7 else "moderada" if abs(r) >= 0.4 else "fraca"  # força: forte, moderada ou fraca
+    if math.isfinite(p) and p >= 0.05:                                              # p ≥ 0,05: a relação pode ser só acaso
+        frase = ("Sem relação clara entre a quantidade de serviços e o faturamento: "  # não afirma correlação
+                 "nestes dados, ter mais serviços não indica faturamento maior ou menor.")  # (continuação) mesmo critério do Dashboard (estatistica.js)
+    else:                                                                           # p < 0,05: a relação existe
+        frase = f"Correlação {forca} {'positiva' if r > 0 else 'negativa'} entre a quantidade de serviços e o faturamento."  # força e sentido
     base.update({"pearson": num(r, 3), "p": num(p, 6), "spearman": num(rho, 3), "spearmanP": num(p_rho, 6),  # guarda os números
-                 "interpretacao": f"Correlação {forca} {'positiva' if r > 0 else 'negativa'} entre a quantidade de serviços e o faturamento."})  # e a frase explicando
+                 "interpretacao": frase})                                           # e a frase explicando
     return base                                                                     # devolve o resultado
 
 

@@ -35,6 +35,7 @@ SERVICOS = {                                                                    
     "backup": "Backup",                                                             # Backup
     "mpls": "MPLS",                                                                 # MPLS
     "cloud": "Cloud",                                                               # Cloud
+    "voip": "VoIP",                                                                 # VoIP (sem isso, o formato Título escreveria "Voip")
 }                                                                                   # fecha o bloco
 NIVEIS = {"A", "B", "C"}                                                            # níveis aceitos
 PARTICULAS = {"de", "da", "do", "das", "dos", "e"}                                  # palavras que ficam em minúsculo no nome
