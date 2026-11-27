@@ -753,7 +753,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <div>
 
-          <h1 class="text-3xl font-bold text-[#292A2F]">
+          <h1 class="text-3xl font-bold text-cti-grafite">
             Dashboard Executivo
           </h1>
 
@@ -785,7 +785,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <select
             id="filtro-segmento"
             v-model="filtroSegmento"
-            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#006EB7]"
+            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul"
           >
 
             <option value="Todos">
@@ -812,7 +812,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <select
             id="filtro-nivel"
             v-model="filtroNivel"
-            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#006EB7]"
+            class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-cti-azul"
           >
 
             <option value="Todos">
@@ -844,7 +844,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
               id="filtro-data-inicio"
               v-model="dataInicio"
               type="date"
-              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul"
             />
           </label>
 
@@ -857,7 +857,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
               id="filtro-data-fim"
               v-model="dataFim"
               type="date"
-              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]"
+              class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul"
             />
           </label>
 
@@ -865,7 +865,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
             v-if="filtroSegmento !== 'Todos' || filtroNivel !== 'Todos' || periodoAtivo"
             type="button"
             @click="limparFiltros"
-            class="text-sm text-[#006EB7] transition hover:underline"
+            class="text-sm text-cti-azul transition hover:underline"
           >
             Limpar
           </button>
@@ -873,7 +873,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <button
             type="button"
             @click="exportarCSV"
-            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#006EB7] hover:text-[#006EB7]"
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-cti-azul hover:text-cti-azul"
           >
             Exportar CSV
           </button>
@@ -881,7 +881,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           <button
             type="button"
             @click="exportarPDF"
-            class="rounded-md bg-[#FF8F00] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#E68100]"
+            class="rounded-md bg-cti-laranja px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-laranja-escuro"
           >
             Exportar PDF
           </button>
@@ -917,7 +917,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
         class="mt-6 rounded-lg border border-gray-200 bg-white p-10 text-center"
       >
 
-        <h2 class="text-lg font-bold text-[#292A2F]">
+        <h2 class="text-lg font-bold text-cti-grafite">
           Nenhum dado importado ainda
         </h2>
 
@@ -930,7 +930,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
         <RouterLink
           v-if="auth.pode('importarPlanilha')"
           to="/upload"
-          class="mt-6 inline-block rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+          class="mt-6 inline-block rounded-md bg-cti-azul px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro"
         >
           Importar planilha
         </RouterLink>
@@ -976,7 +976,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
              é largo; em tablet/celular fica embaixo, sem cortar os nomes -->
         <section class="@container flex flex-col rounded-lg border border-gray-200 bg-white p-6">
 
-          <h2 class="text-lg font-bold text-[#292A2F]">
+          <h2 class="text-lg font-bold text-cti-grafite">
             Faturamento por segmento
           </h2>
 
@@ -990,7 +990,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
               />
 
               <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span class="text-base font-bold text-[#292A2F]">
+                <span class="text-base font-bold text-cti-grafite">
                   {{ formatarMoedaCompacta(faturamentoTotal) }}
                 </span>
                 <span class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
@@ -1015,7 +1015,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
                   <span class="truncate">{{ item.segmento }}</span>
                 </span>
 
-                <span class="flex-shrink-0 font-semibold text-[#292A2F]">
+                <span class="flex-shrink-0 font-semibold text-cti-grafite">
                   {{ item.percentual }}%
                 </span>
               </div>
@@ -1035,7 +1035,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <section class="rounded-lg border border-gray-200 bg-white p-6">
 
-          <h2 class="text-lg font-bold text-[#292A2F]">
+          <h2 class="text-lg font-bold text-cti-grafite">
             Evolução das contratações
           </h2>
 
@@ -1068,7 +1068,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <section class="rounded-lg border border-gray-200 bg-white p-6">
 
-          <h2 class="text-lg font-bold text-[#292A2F]">
+          <h2 class="text-lg font-bold text-cti-grafite">
             Distribuição por nível A/B/C
           </h2>
 
@@ -1092,7 +1092,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <section class="rounded-lg border border-gray-200 bg-white p-6">
 
-          <h2 class="text-lg font-bold text-[#292A2F]">
+          <h2 class="text-lg font-bold text-cti-grafite">
             Top 5 serviços por faturamento
           </h2>
 
@@ -1118,7 +1118,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
                 <div class="flex items-center justify-between text-sm">
 
-                  <span class="font-medium text-[#292A2F]">
+                  <span class="font-medium text-cti-grafite">
                     {{ item.servico }}
                   </span>
 
@@ -1162,7 +1162,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
       <section aria-labelledby="titulo-estatistica" class="space-y-5">
 
         <div>
-          <h2 id="titulo-estatistica" class="text-lg font-bold text-[#292A2F]">
+          <h2 id="titulo-estatistica" class="text-lg font-bold text-cti-grafite">
             Estatística da carteira
           </h2>
           <p class="mt-1 text-sm text-gray-500">
@@ -1186,14 +1186,14 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
       <section class="rounded-lg border border-gray-200 bg-white p-6">
 
-        <h2 class="text-lg font-bold text-[#292A2F]">
+        <h2 class="text-lg font-bold text-cti-grafite">
           Insights Inteligentes
         </h2>
 
         <p
           v-if="filtroAtivo && !USAR_MOCK"
           role="note"
-          class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm text-[#03558c]"
+          class="mt-3 rounded-md border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm text-cti-azul-escuro"
         >
           Estes insights e o segmento com potencial são da <strong>carteira inteira</strong>: os filtros
           não se aplicam a eles. Os indicadores, os gráficos e a lista de oportunidades acompanham os filtros.
@@ -1207,11 +1207,11 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
             class="flex gap-3 rounded-lg bg-white p-4 shadow-md shadow-gray-200/60 ring-1 ring-gray-100"
           >
 
-            <span class="w-1.5 flex-shrink-0 rounded-full bg-[#FF8F00]"></span>
+            <span class="w-1.5 flex-shrink-0 rounded-full bg-cti-laranja"></span>
 
             <div class="min-w-0">
 
-              <p v-if="insight.titulo" class="text-sm font-bold text-[#006EB7]">
+              <p v-if="insight.titulo" class="text-sm font-bold text-cti-azul">
                 {{ insight.titulo }}
               </p>
 
@@ -1232,7 +1232,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
           class="mt-6 border-t border-gray-100 pt-5"
         >
 
-          <h3 class="text-sm font-bold text-[#292A2F]">
+          <h3 class="text-sm font-bold text-cti-grafite">
             Oportunidades de upsell
           </h3>
 
@@ -1240,7 +1240,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
             v-if="upsell.segmentoPotencial"
             class="mt-1 text-sm text-gray-500"
           >
-            Na empresa, <span class="font-semibold text-[#292A2F]">{{ upsell.segmentoPotencial.segmento }}</span>
+            Na empresa, <span class="font-semibold text-cti-grafite">{{ upsell.segmentoPotencial.segmento }}</span>
             tem {{ upsell.segmentoPotencial.participacaoServicos.toFixed(0) }}% dos serviços contratados,
             mas só {{ upsell.segmentoPotencial.participacaoFaturamento.toFixed(0) }}% do faturamento.
           </p>
@@ -1270,7 +1270,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
                   :key="cliente.codigo_cliente"
                   class="border-t border-gray-100 align-top"
                 >
-                  <th scope="row" class="px-4 py-3 font-medium text-[#292A2F]">{{ cliente.nome_cliente }}</th>
+                  <th scope="row" class="px-4 py-3 font-medium text-cti-grafite">{{ cliente.nome_cliente }}</th>
                   <td class="px-4 py-3 text-gray-600">{{ cliente.consultor }}</td>
                   <td class="px-4 py-3 text-gray-600">{{ cliente.segmento }}</td>
                   <td class="whitespace-nowrap px-4 py-3 text-right text-gray-600">{{ formatarMoedaInteira(cliente.faturamento || 0) }}</td>
@@ -1307,7 +1307,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
         <div class="flex flex-wrap items-end justify-between gap-3 border-b border-gray-200 p-5">
           <div>
-            <h2 class="text-lg font-bold text-[#292A2F]">
+            <h2 class="text-lg font-bold text-cti-grafite">
               Top 10 clientes por faturamento
             </h2>
             <p class="mt-1 text-sm text-gray-500">
@@ -1317,7 +1317,7 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
 
           <RouterLink
             to="/relatorios"
-            class="text-sm font-semibold text-[#006EB7] hover:underline print:hidden"
+            class="text-sm font-semibold text-cti-azul hover:underline print:hidden"
           >
             Ver todos em Clientes →
           </RouterLink>
@@ -1343,14 +1343,14 @@ const exportarCSV = () => exportarClientesCsv(clientesFiltrados.value)
                 class="border-t border-gray-200 transition-colors hover:bg-gray-50"
               >
                 <td class="p-4 text-gray-400">{{ posicao + 1 }}</td>
-                <td class="p-4 font-medium text-[#292A2F]">{{ cliente.nome_cliente }}</td>
+                <td class="p-4 font-medium text-cti-grafite">{{ cliente.nome_cliente }}</td>
                 <td class="p-4 text-gray-500">{{ cliente.consultor || '—' }}</td>
                 <td class="p-4 text-gray-500">{{ cliente.segmento }}</td>
                 <td class="whitespace-nowrap p-4 text-right text-gray-500">
                   {{ cliente.faturamento != null ? formatarMoeda(cliente.faturamento) : '—' }}
                 </td>
                 <td class="p-4">
-                  <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#006EB7]">
+                  <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-cti-azul">
                     {{ cliente.nivel_cliente }}
                   </span>
                 </td>

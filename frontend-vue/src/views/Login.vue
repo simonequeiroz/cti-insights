@@ -99,7 +99,7 @@ const entrar = async () => {
 
       <RouterLink
         to="/"
-        class="mb-4 flex w-full max-w-sm items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-[#006EB7]"
+        class="mb-4 flex w-full max-w-sm items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-cti-azul"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -119,10 +119,10 @@ const entrar = async () => {
       </RouterLink>
 
       <div
-        class="w-full max-w-sm rounded-xl border-t-4 border-[#FF8F00] bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
+        class="w-full max-w-sm rounded-xl border-t-4 border-cti-laranja bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
       >
 
-        <h1 class="text-2xl font-bold text-[#292A2F]">
+        <h1 class="text-2xl font-bold text-cti-grafite">
           Acesse sua conta
         </h1>
 
@@ -149,7 +149,7 @@ const entrar = async () => {
 
             <label
               for="email"
-              class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+              class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
             >
               E-mail
             </label>
@@ -160,7 +160,7 @@ const entrar = async () => {
               type="email"
               autocomplete="email"
               placeholder="nome.sobrenome@empresa.com"
-              class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+              class="w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-cti-azul focus:ring-2 focus:ring-cti-azul/10"
             />
 
           </div>
@@ -171,7 +171,7 @@ const entrar = async () => {
 
             <label
               for="password"
-              class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+              class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
             >
               Senha
             </label>
@@ -184,7 +184,7 @@ const entrar = async () => {
                 :type="mostrarSenha ? 'text' : 'password'"
                 autocomplete="current-password"
                 placeholder="Digite sua senha"
-                class="w-full rounded-md border border-gray-300 px-4 py-3 pr-11 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10"
+                class="w-full rounded-md border border-gray-300 px-4 py-3 pr-11 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-cti-azul focus:ring-2 focus:ring-cti-azul/10"
               />
 
               <button
@@ -240,7 +240,7 @@ const entrar = async () => {
             <button
               type="button"
               :aria-expanded="mostrarAjudaSenha"
-              class="font-medium text-[#006EB7] hover:underline"
+              class="font-medium text-cti-azul hover:underline"
               @click="mostrarAjudaSenha = !mostrarAjudaSenha"
             >
               Esqueci minha senha
@@ -249,7 +249,7 @@ const entrar = async () => {
 
           <p
             v-if="mostrarAjudaSenha"
-            class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-[#03558c]"
+            class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-cti-azul-escuro"
           >
             Por segurança, o sistema não envia senhas por e-mail. Peça ao
             administrador do CTI Insights uma <strong>senha temporária</strong>. Ao entrar
@@ -272,7 +272,7 @@ const entrar = async () => {
             type="submit"
             :disabled="entrando"
             :aria-busy="entrando"
-            class="flex w-full items-center justify-center gap-2 rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:cursor-wait disabled:opacity-80"
+            class="flex w-full items-center justify-center gap-2 rounded-md bg-cti-azul px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro disabled:cursor-wait disabled:opacity-80"
           >
             <svg
               v-if="entrando"
@@ -296,7 +296,7 @@ const entrar = async () => {
         >
           <button
             type="button"
-            class="cursor-pointer font-semibold text-[#006EB7] hover:underline"
+            class="cursor-pointer font-semibold text-cti-azul hover:underline"
             @click="entrarComContaDemo"
           >
             Entrar com a conta de demonstração
@@ -309,7 +309,7 @@ const entrar = async () => {
           Primeiro acesso?
           <RouterLink
             :to="{ path: '/cadastro', query: route.query }"
-            class="font-medium text-[#006EB7] hover:underline"
+            class="font-medium text-cti-azul hover:underline"
           >
             Criar conta
           </RouterLink>

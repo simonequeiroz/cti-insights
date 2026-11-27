@@ -39,7 +39,7 @@ const avisos = computed(() => {
     <header class="flex items-start gap-4" role="status">
       <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600" aria-hidden="true">✓</span>
       <div>
-        <h2 id="concluido-titulo" class="text-xl font-bold text-[#292A2F]">
+        <h2 id="concluido-titulo" class="text-xl font-bold text-cti-grafite">
           {{ contar(registro.linhasImportadas, 'cliente importado', 'clientes importados') }}
         </h2>
         <p class="mt-1 text-sm text-gray-500">
@@ -53,15 +53,15 @@ const avisos = computed(() => {
     </header>
 
     <div v-if="insights.length">
-      <h3 class="mb-3 text-sm font-bold text-[#292A2F]">Primeiros insights</h3>
+      <h3 class="mb-3 text-sm font-bold text-cti-grafite">Primeiros insights</h3>
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div
           v-for="item in insights"
           :key="item.rotulo"
           class="rounded-lg bg-blue-50 px-4 py-3"
         >
-          <dt class="text-xs text-[#006EB7]">{{ item.rotulo }}</dt>
-          <dd class="mt-1 truncate text-xl font-bold text-[#292A2F]">{{ item.valor }}</dd>
+          <dt class="text-xs text-cti-azul">{{ item.rotulo }}</dt>
+          <dd class="mt-1 truncate text-xl font-bold text-cti-grafite">{{ item.valor }}</dd>
           <dd class="text-xs text-gray-500">{{ item.detalhe }}</dd>
         </div>
       </dl>
@@ -78,7 +78,7 @@ const avisos = computed(() => {
 
       <RouterLink
         to="/dashboard"
-        class="rounded-md bg-[#006EB7] px-6 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+        class="rounded-md bg-cti-azul px-6 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro"
       >
         Ir para o Dashboard
       </RouterLink>

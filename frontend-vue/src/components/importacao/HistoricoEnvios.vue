@@ -41,7 +41,7 @@ const origem = item => ehManual(item)
 
 const statusInfo = item => {
   if (item.status === 'PROCESSANDO') {
-    return { texto: 'Processando...', classe: 'bg-orange-50 text-[#A85700]' }
+    return { texto: 'Processando...', classe: 'bg-orange-50 text-cti-laranja-texto' }
   }
 
   if (item.status === 'NORMALIZADO' && ehManual(item)) {
@@ -71,7 +71,7 @@ const statusInfo = item => {
         aria-controls="historico-conteudo"
         @click="aberto = !aberto"
       >
-        <span class="text-base font-bold text-[#292A2F]">Histórico da carteira</span>
+        <span class="text-base font-bold text-cti-grafite">Histórico da carteira</span>
         <span class="text-xs text-gray-500">
           {{ contar(upload.historico.length, 'registro', 'registros') }}
           <span aria-hidden="true">{{ aberto ? '▴' : '▾' }}</span>
@@ -105,7 +105,7 @@ const statusInfo = item => {
           <tbody>
             <template v-for="item in upload.historico" :key="item.id">
               <tr class="border-t border-gray-100 transition-colors hover:bg-gray-50">
-                <th scope="row" class="px-6 py-4 font-medium text-[#292A2F]">
+                <th scope="row" class="px-6 py-4 font-medium text-cti-grafite">
                   {{ origem(item).titulo }}
                   <span class="mt-0.5 block text-[11px] font-normal text-gray-400">{{ origem(item).detalhe }}</span>
                 </th>
@@ -130,7 +130,7 @@ const statusInfo = item => {
                   <button
                     v-if="item.mensagem"
                     type="button"
-                    class="mt-1.5 block text-[11px] font-semibold text-[#006EB7] hover:underline"
+                    class="mt-1.5 block text-[11px] font-semibold text-cti-azul hover:underline"
                     :aria-expanded="detalhesAbertos.has(item.id)"
                     @click="alternarDetalhes(item.id)"
                   >
@@ -143,7 +143,7 @@ const statusInfo = item => {
                     <button
                       v-if="item.conteudoOriginal"
                       type="button"
-                      class="text-gray-400 transition hover:text-[#006EB7]"
+                      class="text-gray-400 transition hover:text-cti-azul"
                       aria-label="Baixar linhas com erro"
                       title="Baixar linhas com erro"
                       @click="upload.baixarOriginal(item)"

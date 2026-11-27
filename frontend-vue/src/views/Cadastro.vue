@@ -81,7 +81,7 @@ const validar = () => {
 
 const classeCampo = campo => errosCampo.value[campo]
   ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10'
-  : 'border-gray-300 focus:border-[#006EB7] focus:ring-[#006EB7]/10'
+  : 'border-gray-300 focus:border-cti-azul focus:ring-cti-azul/10'
 
 const criarConta = async () => {
   erro.value = ''
@@ -139,7 +139,7 @@ const criarConta = async () => {
 
       <RouterLink
         to="/"
-        class="mb-4 flex w-full max-w-sm items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-[#006EB7]"
+        class="mb-4 flex w-full max-w-sm items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-cti-azul"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -159,7 +159,7 @@ const criarConta = async () => {
       </RouterLink>
 
       <div
-        class="w-full max-w-sm rounded-xl border-t-4 border-[#FF8F00] bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
+        class="w-full max-w-sm rounded-xl border-t-4 border-cti-laranja bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-9"
       >
 
         <!-- Cadastro enviado: aguardando aprovação de um Administrador -->
@@ -169,11 +169,11 @@ const criarConta = async () => {
           role="status"
         >
 
-          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF4E5] text-xl text-[#A85700]" aria-hidden="true">
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF4E5] text-xl text-cti-laranja-texto" aria-hidden="true">
             ⏳
           </div>
 
-          <h1 class="mt-5 text-2xl font-bold text-[#292A2F]">
+          <h1 class="mt-5 text-2xl font-bold text-cti-grafite">
             Cadastro enviado!
           </h1>
 
@@ -190,7 +190,7 @@ const criarConta = async () => {
 
           <RouterLink
             to="/login"
-            class="mt-8 block w-full rounded-md bg-[#006EB7] px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c]"
+            class="mt-8 block w-full rounded-md bg-cti-azul px-5 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro"
           >
             Ir para o login
           </RouterLink>
@@ -199,7 +199,7 @@ const criarConta = async () => {
 
         <template v-else>
 
-          <h1 class="text-2xl font-bold text-[#292A2F]">
+          <h1 class="text-2xl font-bold text-cti-grafite">
             Primeiro acesso
           </h1>
 
@@ -219,7 +219,7 @@ const criarConta = async () => {
 
               <label
                 for="nome"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
               >
                 Nome completo
               </label>
@@ -245,7 +245,7 @@ const criarConta = async () => {
 
               <label
                 for="email"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
               >
                 E-mail
               </label>
@@ -272,7 +272,7 @@ const criarConta = async () => {
 
               <label
                 for="papel"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
               >
                 Papel
               </label>
@@ -313,7 +313,7 @@ const criarConta = async () => {
 
               <label
                 for="senha"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
               >
                 Senha
               </label>
@@ -393,7 +393,7 @@ const criarConta = async () => {
 
               <label
                 for="confirmar-senha"
-                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#292A2F]"
+                class="mb-2 block text-xs font-semibold uppercase tracking-wide text-cti-grafite"
               >
                 Confirmar senha
               </label>
@@ -428,7 +428,7 @@ const criarConta = async () => {
             <button
               type="submit"
               :disabled="enviando"
-              class="w-full rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:cursor-wait disabled:opacity-70"
+              class="w-full rounded-md bg-cti-azul px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro disabled:cursor-wait disabled:opacity-70"
             >
               {{ enviando ? 'Criando conta...' : 'Criar conta' }}
             </button>
@@ -444,7 +444,7 @@ const criarConta = async () => {
           Já tem acesso?
           <RouterLink
             :to="{ path: '/login', query: route.query }"
-            class="font-medium text-[#006EB7] hover:underline"
+            class="font-medium text-cti-azul hover:underline"
           >
             Fazer login
           </RouterLink>

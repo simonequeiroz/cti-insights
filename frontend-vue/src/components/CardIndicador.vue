@@ -14,7 +14,7 @@ defineProps({
       {{ titulo }}
     </p>
 
-    <p class="mt-2 text-base font-bold whitespace-nowrap text-[#292A2F]">
+    <p class="mt-2 text-base font-bold whitespace-nowrap text-cti-grafite">
       {{ valor }}
     </p>
   </article>

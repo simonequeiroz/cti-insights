@@ -65,7 +65,7 @@ const novaImportacao = () => {
           <h1
             ref="tituloEtapa"
             tabindex="-1"
-            class="text-3xl font-bold tracking-tight text-[#292A2F] outline-none md:text-4xl"
+            class="text-3xl font-bold tracking-tight text-cti-grafite outline-none md:text-4xl"
           >
             Importar clientes
           </h1>

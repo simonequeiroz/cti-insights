@@ -79,7 +79,7 @@ const frase = computed(() => {
 
 <template>
   <article class="rounded-lg border border-gray-200 bg-white p-6">
-    <h3 class="text-lg font-bold text-[#292A2F]">
+    <h3 class="text-lg font-bold text-cti-grafite">
       Faturamento típico e fora do padrão (boxplot)
     </h3>
     <p class="mt-1 text-sm text-gray-500">
@@ -141,14 +141,14 @@ const frase = computed(() => {
 
       <dl class="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
         <div v-for="item in cinco" :key="item.rotulo" class="rounded-md border border-gray-100 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide" :class="item.destaque ? 'text-[#A85700]' : 'text-gray-500'">
+          <dt class="text-xs font-semibold uppercase tracking-wide" :class="item.destaque ? 'text-cti-laranja-texto' : 'text-gray-500'">
             {{ item.rotulo }}
           </dt>
-          <dd class="mt-0.5 font-semibold text-[#292A2F]">{{ formatarMoedaCurta(item.valor) }}</dd>
+          <dd class="mt-0.5 font-semibold text-cti-grafite">{{ formatarMoedaCurta(item.valor) }}</dd>
         </div>
       </dl>
 
-      <p class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-[#292A2F]">
+      <p class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-cti-grafite">
         {{ frase }}
       </p>
     </template>

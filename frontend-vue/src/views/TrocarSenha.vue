@@ -72,7 +72,7 @@ const sair = async () => {
   router.push('/login')
 }
 
-const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-[#006EB7] focus:ring-2 focus:ring-[#006EB7]/10'
+const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-cti-azul focus:ring-2 focus:ring-cti-azul/10'
 </script>
 
 <template>
@@ -85,9 +85,9 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
 
       <section
         aria-labelledby="trocar-senha-titulo"
-        class="w-full max-w-md rounded-xl border-t-4 border-[#FF8F00] bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-8"
+        class="w-full max-w-md rounded-xl border-t-4 border-cti-laranja bg-white p-6 shadow-lg ring-1 ring-gray-200 sm:p-8"
       >
-        <h1 id="trocar-senha-titulo" class="text-2xl font-bold text-[#292A2F]">
+        <h1 id="trocar-senha-titulo" class="text-2xl font-bold text-cti-grafite">
           {{ obrigatorio ? 'Crie uma senha nova' : 'Trocar senha' }}
         </h1>
 
@@ -109,7 +109,7 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
         </p>
 
         <form class="mt-6 space-y-4" novalidate @submit.prevent="salvar">
-          <label class="block text-xs font-semibold uppercase tracking-wide text-[#292A2F]">
+          <label class="block text-xs font-semibold uppercase tracking-wide text-cti-grafite">
             {{ obrigatorio ? 'Senha temporária' : 'Senha atual' }}
             <input
               v-model="senhaAtual"
@@ -119,7 +119,7 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
             />
           </label>
 
-          <label class="block text-xs font-semibold uppercase tracking-wide text-[#292A2F]">
+          <label class="block text-xs font-semibold uppercase tracking-wide text-cti-grafite">
             Senha nova
             <input
               v-model="novaSenha"
@@ -130,7 +130,7 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
             <span class="mt-1 block text-xs font-normal normal-case tracking-normal text-gray-500">Mínimo de 8 caracteres.</span>
           </label>
 
-          <label class="block text-xs font-semibold uppercase tracking-wide text-[#292A2F]">
+          <label class="block text-xs font-semibold uppercase tracking-wide text-cti-grafite">
             Confirme a senha nova
             <input
               v-model="confirmacao"
@@ -156,7 +156,7 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
           <button
             type="submit"
             :disabled="salvando"
-            class="w-full rounded-md bg-[#006EB7] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:opacity-70"
+            class="w-full rounded-md bg-cti-azul px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro disabled:opacity-70"
           >
             {{ salvando ? 'Salvando...' : (obrigatorio ? 'Salvar e entrar' : 'Trocar senha') }}
           </button>
@@ -164,7 +164,7 @@ const classeCampo = 'w-full rounded-md border border-gray-300 px-4 py-3 text-sm 
 
         <p v-if="obrigatorio" class="mt-6 text-center text-sm text-gray-500">
           Não é você?
-          <button type="button" class="font-medium text-[#006EB7] hover:underline" @click="sair">Sair</button>
+          <button type="button" class="font-medium text-cti-azul hover:underline" @click="sair">Sair</button>
         </p>
       </section>
 

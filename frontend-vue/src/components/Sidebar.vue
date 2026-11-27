@@ -136,9 +136,9 @@ const sair = async () => {
 
       <RouterLink
         to="/dashboard"
-        class="text-lg font-bold tracking-tight text-[#006EB7] sm:block sm:text-center md:text-left md:text-xl"
+        class="text-lg font-bold tracking-tight text-cti-azul sm:block sm:text-center md:text-left md:text-xl"
       >
-        <span class="sm:hidden md:inline">CTI Insights</span><span class="hidden sm:inline md:hidden">CTI</span><span class="text-[#FF8F00]">.</span>
+        <span class="sm:hidden md:inline">CTI Insights</span><span class="hidden sm:inline md:hidden">CTI</span><span class="text-cti-laranja">.</span>
       </RouterLink>
 
       <button
@@ -216,7 +216,7 @@ const sair = async () => {
           >
             <span
               class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] transition-colors"
-              :class="linkAtivo(item.caminho) ? 'bg-[#006EB7]' : 'bg-gray-100 group-hover:bg-blue-50'"
+              :class="linkAtivo(item.caminho) ? 'bg-cti-azul' : 'bg-gray-100 group-hover:bg-blue-50'"
             >
               <span
                 v-if="avisosDoItem(item)"
@@ -227,7 +227,7 @@ const sair = async () => {
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-[17px] w-[17px] transition-colors"
-                :class="linkAtivo(item.caminho) ? 'text-white' : 'text-gray-500 group-hover:text-[#006EB7]'"
+                :class="linkAtivo(item.caminho) ? 'text-white' : 'text-gray-500 group-hover:text-cti-azul'"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -243,7 +243,7 @@ const sair = async () => {
 
             <span
               class="font-['IBM_Plex_Mono'] text-[12.5px] uppercase tracking-wide transition-colors sm:hidden md:inline"
-              :class="linkAtivo(item.caminho) ? 'font-semibold text-[#006EB7]' : 'font-medium text-gray-500 group-hover:text-[#006EB7]'"
+              :class="linkAtivo(item.caminho) ? 'font-semibold text-cti-azul' : 'font-medium text-gray-500 group-hover:text-cti-azul'"
             >{{ item.rotulo }}</span>
           </RouterLink>
 
@@ -259,13 +259,13 @@ const sair = async () => {
 
           <div
             :title="nomeExibido"
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-[#A85700]">
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-[#FFF4E5] font-['IBM_Plex_Mono'] text-[11px] font-bold text-cti-laranja-texto">
             {{ iniciais }}
           </div>
 
           <div class="min-w-0 sm:hidden md:block">
             <p
-              class="truncate text-sm font-semibold text-[#292A2F]"
+              class="truncate text-sm font-semibold text-cti-grafite"
               :title="emailUsuario"
             >
               {{ nomeExibido }}
@@ -282,7 +282,7 @@ const sair = async () => {
           to="/trocar-senha"
           title="Trocar senha"
           aria-label="Trocar senha"
-          class="mt-4 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-[#006EB7] sm:w-full sm:justify-center md:w-auto md:justify-start"
+          class="mt-4 flex items-center gap-2 rounded-md text-sm font-medium text-gray-600 transition hover:text-cti-azul sm:w-full sm:justify-center md:w-auto md:justify-start"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

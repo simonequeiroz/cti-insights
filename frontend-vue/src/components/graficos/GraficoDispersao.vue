@@ -72,7 +72,7 @@ const opcoes = computed(() => ({
 
 <template>
   <article class="rounded-lg border border-gray-200 bg-white p-6">
-    <h3 class="text-lg font-bold text-[#292A2F]">
+    <h3 class="text-lg font-bold text-cti-grafite">
       Serviços × faturamento (dispersão)
     </h3>
     <p class="mt-1 text-sm text-gray-500">
@@ -92,7 +92,7 @@ const opcoes = computed(() => ({
       </p>
     </div>
 
-    <p class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-[#292A2F]">
+    <p class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-cti-grafite">
       {{ frase }}
       <span v-if="numeros" class="block text-xs text-gray-500">{{ numeros }} · {{ pontos.length }} clientes</span>
     </p>

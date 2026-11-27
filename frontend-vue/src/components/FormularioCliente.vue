@@ -108,7 +108,7 @@ onMounted(async () => {
 onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
 
 const classeCampo = campo => [
-  'mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#006EB7]',
+  'mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-cti-azul',
   erros.value[campo] ? 'border-red-300' : 'border-gray-300'
 ]
 </script>
@@ -125,7 +125,7 @@ const classeCampo = campo => [
       class="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-t-xl bg-white shadow-xl sm:rounded-xl"
     >
       <header class="border-b border-gray-200 px-6 py-5">
-        <h2 id="formulario-cliente-titulo" class="text-lg font-bold text-[#292A2F]">
+        <h2 id="formulario-cliente-titulo" class="text-lg font-bold text-cti-grafite">
           {{ editando ? 'Editar cliente' : 'Novo cliente' }}
         </h2>
         <p class="mt-1 text-sm text-gray-500">
@@ -234,7 +234,7 @@ const classeCampo = campo => [
           <button
             type="submit"
             :disabled="salvando"
-            class="rounded-md bg-[#006EB7] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#03558c] disabled:opacity-60"
+            class="rounded-md bg-cti-azul px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cti-azul-escuro disabled:opacity-60"
           >
             {{ salvando ? 'Salvando e recalculando...' : (editando ? 'Salvar alterações' : 'Incluir cliente') }}
           </button>

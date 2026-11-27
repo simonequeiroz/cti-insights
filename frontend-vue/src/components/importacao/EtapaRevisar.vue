@@ -36,9 +36,9 @@ const rotuloContinuar = computed(() => {
 })
 
 const indicadores = computed(() => [
-  { rotulo: 'Linhas lidas', valor: formatarNumero(analise.value.linhasLidas), classe: 'bg-gray-50 text-[#292A2F]' },
+  { rotulo: 'Linhas lidas', valor: formatarNumero(analise.value.linhasLidas), classe: 'bg-gray-50 text-cti-grafite' },
   { rotulo: 'Prontas para importar', valor: formatarNumero(upload.totalClientes), classe: 'bg-green-50 text-green-700' },
-  { rotulo: 'Corrigidas automaticamente', valor: formatarNumero(correcoes.value.clientesCorrigidos), classe: 'bg-blue-50 text-[#006EB7]' },
+  { rotulo: 'Corrigidas automaticamente', valor: formatarNumero(correcoes.value.clientesCorrigidos), classe: 'bg-blue-50 text-cti-azul' },
   { rotulo: 'Com erro', valor: formatarNumero(totalComErro.value), classe: totalComErro.value ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500' }
 ])
 
@@ -55,7 +55,7 @@ const trocarArquivo = () => {
   >
     <header class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h2 id="revisar-titulo" class="text-xl font-bold text-[#292A2F]">
+        <h2 id="revisar-titulo" class="text-xl font-bold text-cti-grafite">
           Revise antes de importar
         </h2>
         <p class="mt-1 text-sm text-gray-500">
@@ -116,7 +116,7 @@ const trocarArquivo = () => {
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- O que foi corrigido -->
       <div>
-        <h3 class="text-sm font-bold text-[#292A2F]">Corrigido automaticamente</h3>
+        <h3 class="text-sm font-bold text-cti-grafite">Corrigido automaticamente</h3>
 
         <p v-if="!correcoes.lista.length" class="mt-2 text-sm text-gray-500">
           Nenhuma correção necessária: a planilha já veio padronizada.
@@ -133,7 +133,7 @@ const trocarArquivo = () => {
               <span class="font-['IBM_Plex_Mono'] text-xs text-red-500 line-through">{{ correcao.de || '(vazio)' }}</span>
               <span aria-hidden="true"> → </span>
               <span class="sr-only"> corrigido para </span>
-              <span class="font-semibold text-[#292A2F]">{{ correcao.para }}</span>
+              <span class="font-semibold text-cti-grafite">{{ correcao.para }}</span>
             </span>
             <span class="shrink-0 text-xs text-gray-500">{{ correcao.quantidade }}×</span>
           </li>
@@ -142,7 +142,7 @@ const trocarArquivo = () => {
         <button
           v-if="correcoesOcultas > 0"
           type="button"
-          class="mt-2 text-xs font-semibold text-[#006EB7] hover:underline"
+          class="mt-2 text-xs font-semibold text-cti-azul hover:underline"
           :aria-expanded="verTodasCorrecoes"
           @click="verTodasCorrecoes = !verTodasCorrecoes"
         >
@@ -152,7 +152,7 @@ const trocarArquivo = () => {
 
       <!-- O que precisa de ajuste -->
       <div>
-        <h3 class="text-sm font-bold text-[#292A2F]">Precisa de ajuste</h3>
+        <h3 class="text-sm font-bold text-cti-grafite">Precisa de ajuste</h3>
 
         <p v-if="!totalComErro" class="mt-2 text-sm text-green-700">
           ✓ Nenhuma linha com erro.
@@ -165,7 +165,7 @@ const trocarArquivo = () => {
 
           <button
             type="button"
-            class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[#006EB7] hover:underline"
+            class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-cti-azul hover:underline"
             @click="upload.baixarLinhasComErro()"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -179,7 +179,7 @@ const trocarArquivo = () => {
 
     <!-- Prévia do que vai entrar -->
     <div v-if="upload.temDados">
-      <h3 class="text-sm font-bold text-[#292A2F]">Prévia do que será importado</h3>
+      <h3 class="text-sm font-bold text-cti-grafite">Prévia do que será importado</h3>
       <p class="mb-3 mt-1 text-xs text-gray-500">
         Total: {{ contar(upload.totalClientes, 'cliente', 'clientes') }} · Nível A: {{ formatarNumero(upload.clientesNivelA) }}
       </p>
@@ -217,7 +217,7 @@ const trocarArquivo = () => {
       <button
         type="button"
         :disabled="!upload.podeConfirmar"
-        class="rounded-md bg-[#006EB7] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:enabled:bg-[#03558c] disabled:cursor-not-allowed disabled:opacity-50"
+        class="rounded-md bg-cti-azul px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:enabled:bg-cti-azul-escuro disabled:cursor-not-allowed disabled:opacity-50"
         @click="emit('continuar')"
       >
         {{ rotuloContinuar }}

@@ -60,14 +60,14 @@ const formatarData = iso => {
   <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h3 class="text-sm font-bold text-[#292A2F]">
+        <h3 class="text-sm font-bold text-cti-grafite">
           Prévia dos clientes
         </h3>
         <p
           v-if="temRegistro"
           class="mt-0.5 text-xs text-gray-500"
         >
-          <span class="underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4">Sublinhado</span>
+          <span class="underline decoration-cti-laranja decoration-dotted decoration-2 underline-offset-4">Sublinhado</span>
           = corrigido pelo sistema; o valor original aparece logo abaixo.
         </p>
       </div>
@@ -79,7 +79,7 @@ const formatarData = iso => {
         <input
           v-model="soCorrigidas"
           type="checkbox"
-          class="h-4 w-4 accent-[#006EB7]"
+          class="h-4 w-4 accent-cti-azul"
         />
         Só linhas corrigidas
       </label>
@@ -120,13 +120,13 @@ const formatarData = iso => {
               {{ cliente.codigo_cliente || '—' }}
             </td>
 
-            <td class="px-4 py-3 font-medium text-[#292A2F]">
+            <td class="px-4 py-3 font-medium text-cti-grafite">
               {{ cliente.nome_cliente || '—' }}
             </td>
 
             <td class="px-4 py-3 text-gray-600">
               <span
-                :class="{ 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'consultor') }"
+                :class="{ 'underline decoration-cti-laranja decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'consultor') }"
               >
                 {{ cliente.consultor || '—' }}
               </span>
@@ -138,7 +138,7 @@ const formatarData = iso => {
 
             <td class="px-4 py-3 text-gray-600">
               <span
-                :class="{ 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'segmento') }"
+                :class="{ 'underline decoration-cti-laranja decoration-dotted decoration-2 underline-offset-4': corrigido(cliente, 'segmento') }"
               >
                 {{ cliente.segmento || '—' }}
               </span>
@@ -157,7 +157,7 @@ const formatarData = iso => {
                 class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                 :class="[
                   ESTILO_NIVEL[cliente.nivel_cliente]?.selo || 'bg-gray-100 text-gray-600',
-                  { 'underline decoration-[#FF8F00] decoration-dotted decoration-2 underline-offset-2': corrigido(cliente, 'nivel_cliente') }
+                  { 'underline decoration-cti-laranja decoration-dotted decoration-2 underline-offset-2': corrigido(cliente, 'nivel_cliente') }
                 ]"
               >
                 {{ cliente.nivel_cliente || '—' }}

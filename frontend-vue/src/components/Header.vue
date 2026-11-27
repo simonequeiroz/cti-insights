@@ -28,22 +28,22 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
   <header class="w-full">
     <div class="relative flex items-center justify-between py-6 md:py-8 px-4 sm:px-6 md:px-10 gap-4 max-w-7xl mx-auto">
       <!-- Logo -->
-      <a href="#inicio" class="whitespace-nowrap font-['Space_Grotesk'] font-bold text-[22px] md:text-[26px] tracking-tight text-[#006EB7]">
-        CTI Insights<span class="text-[#FF8F00]">.</span>
+      <a href="#inicio" class="whitespace-nowrap font-['Space_Grotesk'] font-bold text-[22px] md:text-[26px] tracking-tight text-cti-azul">
+        CTI Insights<span class="text-cti-laranja">.</span>
       </a>
 
       <!-- Menu: navega por seções desta mesma página (landing pública).
            Nenhum item aqui leva para telas internas do sistema — quem ainda
            não fez login não deve conseguir "entrar" pelo menu. -->
-      <nav aria-label="Seções da página" class="hidden md:flex gap-6 lg:gap-10 text-base text-[#4A5D66] font-medium">
-        <a href="#inicio" class="hover:text-[#292930] transition-colors">Apresentação</a>
-        <a href="#como-funciona" class="hover:text-[#292930] transition-colors">Como funciona</a>
-        <a href="#seguranca" class="hover:text-[#292930] transition-colors">Segurança</a>
+      <nav aria-label="Seções da página" class="hidden md:flex gap-6 lg:gap-10 text-base text-cti-cinza font-medium">
+        <a href="#inicio" class="hover:text-cti-grafite-home transition-colors">Apresentação</a>
+        <a href="#como-funciona" class="hover:text-cti-grafite-home transition-colors">Como funciona</a>
+        <a href="#seguranca" class="hover:text-cti-grafite-home transition-colors">Segurança</a>
       </nav>
 
       <!-- Botão (desktop) -->
       <router-link to="/login"
-        class="hidden md:inline-block bg-[#006EB7] text-[#FAFAF7] px-6 py-3 rounded text-base font-semibold whitespace-nowrap shadow-md hover:bg-[#03558c] transition-all">
+        class="hidden md:inline-block bg-cti-azul text-cti-fundo px-6 py-3 rounded text-base font-semibold whitespace-nowrap shadow-md hover:bg-cti-azul-escuro transition-all">
         Entrar no Sistema
       </router-link>
 
@@ -54,7 +54,7 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
         :aria-expanded="menuAberto"
         aria-controls="menu-mobile"
         :aria-label="menuAberto ? 'Fechar menu' : 'Abrir menu'"
-        class="md:hidden flex h-11 w-11 items-center justify-center rounded text-[#292930] hover:bg-white/80 transition-colors"
+        class="md:hidden flex h-11 w-11 items-center justify-center rounded text-cti-grafite-home hover:bg-white/80 transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path v-if="menuAberto" stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
@@ -68,15 +68,15 @@ onUnmounted(() => window.removeEventListener('keydown', aoPressionarTecla))
         v-if="menuAberto"
         id="menu-mobile"
         aria-label="Seções da página"
-        class="md:hidden absolute left-4 right-4 top-full z-50 flex flex-col rounded-lg border border-[#CDDADF] bg-white p-4 shadow-lg"
+        class="md:hidden absolute left-4 right-4 top-full z-50 flex flex-col rounded-lg border border-cti-linha bg-white p-4 shadow-lg"
       >
-        <a href="#inicio" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Apresentação</a>
-        <a href="#como-funciona" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Como funciona</a>
-        <a href="#seguranca" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-[#292930] hover:bg-[#FAFAF7]">Segurança</a>
+        <a href="#inicio" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-cti-grafite-home hover:bg-cti-fundo">Apresentação</a>
+        <a href="#como-funciona" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-cti-grafite-home hover:bg-cti-fundo">Como funciona</a>
+        <a href="#seguranca" @click="fecharMenu" class="rounded px-3 py-3 text-base font-medium text-cti-grafite-home hover:bg-cti-fundo">Segurança</a>
         <router-link
           to="/login"
           @click="fecharMenu"
-          class="mt-3 rounded bg-[#006EB7] px-4 py-3 text-center text-base font-semibold text-[#FAFAF7] hover:bg-[#03558c]"
+          class="mt-3 rounded bg-cti-azul px-4 py-3 text-center text-base font-semibold text-cti-fundo hover:bg-cti-azul-escuro"
         >
           Entrar no Sistema
         </router-link>

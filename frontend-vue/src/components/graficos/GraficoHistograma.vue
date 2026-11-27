@@ -70,7 +70,7 @@ const opcoes = {
 
 <template>
   <article class="rounded-lg border border-gray-200 bg-white p-6">
-    <h3 class="text-lg font-bold text-[#292A2F]">
+    <h3 class="text-lg font-bold text-cti-grafite">
       Distribuição do faturamento (histograma)
     </h3>
     <p class="mt-1 text-sm text-gray-500">
@@ -90,7 +90,7 @@ const opcoes = {
       </p>
     </div>
 
-    <p v-if="frase" class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-[#292A2F]">
+    <p v-if="frase" class="mt-4 rounded-md bg-gray-50 px-4 py-2.5 text-sm text-cti-grafite">
       {{ frase }}
     </p>
   </article>
