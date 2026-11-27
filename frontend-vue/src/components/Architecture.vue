@@ -30,21 +30,36 @@
     </div>
   </section>
 
-  <!-- Segurança dos dados: o que protege as informações da CTI -->
+  <!-- Segurança dos dados: mesmo formato do "Como funciona" (título fora,
+       grade de células separadas por linhas finas). 1 coluna no celular,
+       2 a partir de sm, 4 a partir de lg. -->
   <section id="seguranca" class="pb-16 md:pb-24 scroll-mt-4">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
-      <div class="rounded-xl border border-cti-linha bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
+
+      <div class="max-w-[640px] mb-10 md:mb-14">
         <span class="text-xs sm:text-[13px] tracking-[0.14em] uppercase text-cti-laranja-texto font-bold mb-4 block">Segurança</span>
-        <h2 class="font-['Space_Grotesk'] font-bold text-2xl md:text-3xl tracking-[-0.02em] text-cti-grafite-home mb-6">
+        <h2 class="font-['Space_Grotesk'] font-bold text-3xl md:text-4xl tracking-[-0.02em] text-cti-grafite-home">
           Os dados da sua carteira ficam protegidos.
         </h2>
-        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4 list-none p-0 m-0 text-base text-cti-cinza leading-[1.6]">
-          <li v-for="item in protecoes" :key="item" class="flex gap-3">
-            <span class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-cti-laranja"></span>
-            <span>{{ item }}</span>
-          </li>
-        </ul>
       </div>
+
+      <ul
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-cti-linha border border-cti-linha rounded-xl overflow-hidden shadow-sm list-none p-0 m-0">
+
+        <li v-for="item in protecoes" :key="item.titulo" class="bg-white p-6 sm:p-8 flex flex-col gap-4">
+          <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-cti-azul/10 text-cti-azul" aria-hidden="true">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" :d="item.icone" />
+            </svg>
+          </span>
+          <div>
+            <h3 class="font-['Space_Grotesk'] font-bold text-xl mb-2 text-cti-azul">{{ item.titulo }}</h3>
+            <p class="text-base text-cti-cinza leading-[1.6] m-0">{{ item.texto }}</p>
+          </div>
+        </li>
+
+      </ul>
+
     </div>
   </section>
 </template>
@@ -68,10 +83,31 @@ const passos = [
   }
 ]
 
+// Ícones em traço (contorno) da biblioteca Heroicons (licença MIT)
 const protecoes = [
-  'Só entra quem tem cadastro aprovado por um administrador.',
-  'Cada papel (consultor, gestor, administrador) só faz as ações da sua função: por exemplo, só o administrador exclui clientes e aprova acessos.',
-  'As senhas são guardadas criptografadas, nunca em texto.',
-  'Os dados ficam em banco na nuvem com conexão segura (SSL), e as credenciais nunca vão para o código.'
+  {
+    titulo: 'Acesso aprovado',
+    texto: 'Só entra quem tem o cadastro aprovado por um administrador.',
+    // cadeado
+    icone: 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z'
+  },
+  {
+    titulo: 'Cada um no seu papel',
+    texto: 'Consultor, gestor e administrador só fazem o que a função permite. Excluir clientes e aprovar acessos é só do administrador.',
+    // pessoas
+    icone: 'M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z'
+  },
+  {
+    titulo: 'Senhas protegidas',
+    texto: 'Guardadas criptografadas (BCrypt), nunca como texto. Nem a equipe do sistema consegue lê-las.',
+    // chave
+    icone: 'M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z'
+  },
+  {
+    titulo: 'Banco seguro na nuvem',
+    texto: 'Os dados ficam em PostgreSQL na nuvem, com conexão criptografada (SSL). As senhas do banco nunca vão para o código.',
+    // nuvem
+    icone: 'M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 1.332-7.257 3 3 0 0 0-3.758-3.848 5.25 5.25 0 0 0-10.233 2.33A4.5 4.5 0 0 0 2.25 15Z'
+  }
 ]
 </script>
