@@ -319,7 +319,7 @@ const CAMPOS_VALIDADOS = [
   { rotulo: 'data de contratação', coluna: 'data_contratacao', dica: 'use dd/mm/aaaa ou aaaa-mm-dd', invalido: c => !c.data_contratacao },
   { rotulo: 'serviço', coluna: 'servicos_contratados', alias: 'servico', invalido: c => !c.servicos.length },
   // Opcional: só é erro se vier preenchida com algo que não é sigla de UF
-  { rotulo: 'UF', coluna: 'uf', opcional: true, dica: 'use a sigla com 2 letras, ex.: SP', invalido: c => Boolean(c.uf) && !/^[A-Z]{2}$/.test(c.uf) }
+  { rotulo: 'UF', coluna: 'uf', opcional: true, dica: 'use a sigla de um estado brasileiro, ex.: SP', invalido: c => Boolean(c.uf) && !UFS.includes(c.uf) }
 ]
 
 // Colunas obrigatórias que não existem no cabeçalho. Sem esta checagem, um

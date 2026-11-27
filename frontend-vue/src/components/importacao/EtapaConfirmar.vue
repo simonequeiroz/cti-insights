@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useUploadStore } from '../../stores/uploadStore'
 import { USAR_MOCK } from '../../services/api'
 import { contar, formatarNumero } from '../../utils/datas'
@@ -27,6 +27,12 @@ const impacto = computed(() => [
   { rotulo: 'Já estavam na carteira', valor: formatarNumero(analise.value.clientesAtualizados), classe: 'text-cti-grafite' },
   { rotulo: 'Saem da carteira', valor: formatarNumero(analise.value.foraDaPlanilha.length), classe: analise.value.foraDaPlanilha.length ? 'text-cti-laranja-texto' : 'text-cti-grafite' }
 ])
+
+// Proteção contra planilha errada: se mais da metade da carteira atual vai
+// sair, o botão só libera depois de a pessoa marcar que entendeu
+const ciente = ref(false)
+const exigeCiencia = computed(() => Boolean(analise.value.baseAnterior)
+  && analise.value.foraDaPlanilha.length > analise.value.baseAnterior / 2)
 
 const MAX_NOMES = 10
 
@@ -81,6 +87,10 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
       <p class="mt-1">
         {{ analise.foraDaPlanilha.length === 1 ? 'Ele sai' : 'Eles saem' }} da carteira ao confirmar. Se a planilha está incompleta, volte e envie a carteira completa.
       </p>
+      <label v-if="exigeCiencia" class="mt-3 flex cursor-pointer items-start gap-2 rounded-md border border-amber-300 bg-white px-3 py-2 font-semibold">
+        <input v-model="ciente" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 accent-cti-laranja-texto" />
+        <span>Entendi que {{ contar(analise.foraDaPlanilha.length, 'cliente sai', 'clientes saem') }} da carteira ao confirmar.</span>
+      </label>
     </div>
 
     <p
@@ -128,7 +138,7 @@ const nomesForaDaPlanilha = computed(() => listarNomes(analise.value.foraDaPlani
 
       <button
         type="button"
-        :disabled="upload.carregando || !upload.podeConfirmar"
+        :disabled="upload.carregando || !upload.podeConfirmar || (exigeCiencia && !ciente)"
         class="inline-flex items-center justify-center gap-2 rounded-md bg-cti-laranja px-6 py-2.5 text-sm font-semibold text-cti-grafite shadow-sm transition hover:enabled:bg-cti-laranja-escuro disabled:cursor-not-allowed disabled:opacity-50"
         @click="emit('confirmar')"
       >
