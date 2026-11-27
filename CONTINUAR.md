@@ -26,12 +26,28 @@
   - Nota 10 exige todos os itens críticos e desejáveis. Sem todos os críticos,
     a nota é 4.
 
-## 2. Estado atual
+## 2. Estado atual (atualizado em 27/11/2026, fim do dia)
 
-- **Branch de trabalho:** `feat/banco-neon-config` (já no GitHub). **Nunca**
-  commitar na `main`: cada integrante trabalha na sua branch, e a integração é
-  por Pull Request. O PR desta branch fica **para o final**, junto com a tag
-  da entrega.
+- **Branch de trabalho:** `feat/gestao-reta-final`, sincronizada com a `main`
+  (PRs #19 e #20 mesclados em 27/11). **Nunca** commitar na `main`: cada
+  integrante trabalha na sua branch, e a integração é por Pull Request. Quem
+  mescla é a Simone.
+- **Feito em 27/11:**
+  - PR #18 do Ricardo (exceções, classes de domínio, CORS) + correção de acentos.
+  - `docs/AUTOMACAO-INDUSTRIAL.md` (HTTP/REST × Modbus).
+  - Kanban: [quadro](https://github.com/users/simonequeiroz/projects/1) e
+    `docs/DIVISAO-DE-TAREFAS.md`. Ricardo, Thyphanny e Miguel são editores;
+    falta o usuário do GitHub do Ryan.
+  - Gráficos de dispersão, histograma e boxplot no Dashboard, calculados em
+    `frontend-vue/src/utils/estatistica.js` (mesmo método do pandas/scipy). O
+    Python pode mandar o bloco `graficos` (formato no README do
+    `analytics-python`), mas é opcional. Parte de Dashboard assumida pela Gestão.
+  - Revisão "como cliente" de todas as telas e `docs/GUIA-DE-ACESSO.md`.
+  - Histórico de testes apagado do Neon: a carteira ativa é a telemetria 11
+    (`dados.xlsx`, 32 clientes). **Não rode `testes/navegador/edicao-cliente.mjs`
+    antes da apresentação**: ele suja o histórico.
+  - **Sempre usar o Vue na porta 5173** (o Spring só aceita essa origem). O
+    Vite agora para com "Port 5173 is already in use" em vez de pular de porta.
 - **Tudo testado em 26/11** (`evidencias/entrega-final/testes/passada-geral.txt`):
   - back-end 6/6;
   - Python: H01 confirmada;
@@ -68,22 +84,19 @@
 
 | # | Item | Rubrica | Dono original |
 |---|---|---|---|
-| 1 | **Deploy**: front na Vercel; Spring e Python no Render; Neon. Link funcionando na apresentação. Rodar a migração V2 no banco do deploy. CORS no Spring para o domínio da Vercel (ou proxy `/api` pela Vercel). | Crítico (apresentação) + desejável (Nuvem) | Ryan |
-| 2 | **Gráficos de dispersão, histograma e boxplot**, calculados no Python (`analise.py` → `estatistica.resultado`) e desenhados no Dashboard. | Crítico (Ciência de Dados) | Miguel + Thyphanny |
-| 3 | **Back-end**: 3 exceções próprias tratadas no `ErrosApi`, classes de domínio (Cliente, Consultor, Contrato…) e CORS. | Itens da UC de Back-end | Ricardo |
-| 4 | ✅ **Feito em 27/11** ([quadro](https://github.com/users/simonequeiroz/projects/1) e `docs/DIVISAO-DE-TAREFAS.md`). **Divisão de tarefas com prazos e Kanban** (GitHub Projects ou Trello). | Crítico (Relações Humanas) | Simone |
-| 5 | ✅ **Feito em 27/11** (`docs/AUTOMACAO-INDUSTRIAL.md`, com Modbus). **Documento de Automação**: HTTP/REST × Modbus ou OPC-UA, e a planilha como "coleta de dados". O relatório já registra o que não se aplica. | Desejável | Todos |
-| 6 | **Frases dos insights** (`analytics-python/insights.py`): "o consultor" para consultoras, "correlação fraca positiva" quando o p-valor mostra que não há correlação, empates em "maior carteira" e "VoIP" virando "Voip". | Crítico (sem conclusões enganosas) | Miguel |
-| 7 | **Relatório**: preencher os `<!-- ATUALIZAR -->` (link da Vercel e documento de Automação). | Crítico | Simone |
-| 8 | **Vídeo pitch** e **ensaio** da apresentação. Cada integrante precisa explicar a própria parte, um item crítico. | Crítico | Todos |
-| 9 | **Antes do PR final**: apagar este arquivo, abrir o PR de `feat/banco-neon-config` → `main` e criar a tag da entrega. | — | Simone |
+| 1 | **Frases dos insights** (`analytics-python/insights.py`): "segmento com mais clientes" no lugar de "concentra a maior carteira"; "o consultor" para consultoras; "correlação fraca" quando p ≥ 0,05 deve virar "sem relação clara"; empates; "VoIP" virando "Voip" (`limpeza.py`, linha 75). Mensagem enviada ao Miguel em 27/11; se ele não fizer até 28/11, a Simone faz com o Claude. A lista de insights do Dashboard (`utils/destaqueInsight.js`) já reconhece essas variações. | Crítico (sem conclusões enganosas) | Miguel |
+| 2 | **Deploy**: front na Vercel; Spring e Python no Render; Neon. Rodar a migração V2 no banco do deploy. `CORS_ALLOWED_ORIGINS` com o domínio da Vercel (ou proxy `/api`). | Crítico (apresentação) + desejável (Nuvem) | Ryan (prazo 29/11) |
+| 3 | **Relatório e README**: preencher os `<!-- ATUALIZAR -->` com o link publicado. | Crítico | Simone |
+| 4 | **Ensaio** (30/11) e **pré-apresentação** (01/12). Cada integrante explica a própria parte, um item crítico. | Crítico | Todos |
+| 5 | **Vídeo pitch** (até 09/12). | Crítico | Todos |
+| 6 | **Antes do PR final (03/12)**: apagar este arquivo, abrir o PR de `feat/gestao-reta-final` → `main` e criar a tag da entrega. | — | Simone |
 
 O relatório e o README já registram as limitações conhecidas (carteira por
 consultor, planilha como fonte oficial etc.).
 
 ## 4. Montar o ambiente numa máquina nova
 
-1. `git clone` do repositório e `git checkout feat/banco-neon-config`.
+1. `git clone` do repositório e `git checkout feat/gestao-reta-final`.
 2. **JDK 21.** Se não houver JDK instalado, um Temurin 21 portátil serve:
    aponte `JAVA_HOME` para ele em cada comando.
 3. **Python 3.11+** e **Node 20.19+**.
