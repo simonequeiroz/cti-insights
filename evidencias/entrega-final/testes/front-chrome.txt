@@ -1,0 +1,10 @@
+# Front no Chrome contra a API real (26/11/2026): erros amigáveis, login, gráficos, celular e logout
+[OK   ] servidor fora do ar mostra mensagem amigável -> "Não foi possível falar com o servidor. Confira a sua conexão e tente de novo."
+[OK   ] senha errada mostra "E-mail ou senha inválidos." -> "E-mail ou senha inválidos."
+[OK   ] login leva ao dashboard 
+[OK   ] 4 cartões de indicador (CardIndicador) ["Base: dados.xlsx · 26/11/2026 às 15:41 por Simone Queiroz","Faturamento Total","Clientes na base","Serviços Contratados"]
+[OK   ] 3 gráficos Chart.js desenhados (Top 5 é em HTML) 3 canvas
+[OK   ] sem rolagem lateral no celular scrollWidth=390
+[OK   ] logout encerra a sessão no Spring GET /api/dashboard -> 401
+[OK   ] sem erros de JavaScript na página 
+Resumo: 8 OK, 0 FALHA

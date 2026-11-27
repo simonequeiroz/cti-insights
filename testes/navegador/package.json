@@ -1,0 +1,9 @@
+{
+  "name": "cti-insights-testes-navegador",
+  "private": true,
+  "type": "module",
+  "description": "Testes do CTI Insights no navegador (Playwright controlando o Chrome instalado)",
+  "dependencies": {
+    "playwright-core": "^1.57.0"
+  }
+}

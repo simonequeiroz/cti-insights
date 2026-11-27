@@ -9,13 +9,22 @@ import Footer from '../components/Footer.vue'
 </script>
 
 <template>
-  <div class="grid-background min-h-screen">
+  <div class="min-h-screen fundo-home text-cti-grafite-home flex flex-col font-['Inter',sans-serif]">
+    
+    <!-- Header -->
     <Header />
-    <Hero />
-    <RevenueChart />
-    <Metrics />
-    <Architecture />
-    <CTA />
+
+    <!-- Conteúdo principal -->
+    <main class="flex-1">
+      <Hero />
+      <RevenueChart />
+      <Metrics />
+      <Architecture />
+      <CTA />
+    </main>
+
+    <!-- Footer -->
     <Footer />
+
   </div>
 </template>

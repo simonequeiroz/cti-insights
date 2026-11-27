@@ -1,0 +1,16 @@
+# Menu lateral no Chrome (26/11/2026): fixo ao rolar, hover, Clientes, tablet e menu hambúrguer do celular
+[OK   ] menu com "Clientes" no lugar de "Relatórios" ["DASHBOARD","IMPORTAR","CLIENTES","USUÁRIOS"]
+[OK   ] desktop: menu e "Sair" continuam visíveis ao rolar até o fim nav y=126 sair y=724
+[OK   ] passar o mouse muda o fundo do item 
+[OK   ] "Sair" em cinza (não vermelho) oklch(0.446 0.03 256.802)
+[OK   ] link "Clientes" abre a tela de clientes 
+[OK   ] tablet: legenda do gráfico sem nome cortado 
+[OK   ] tablet: ícones continuam visíveis ao rolar y=84
+[OK   ] celular: hambúrguer continua no topo ao rolar y=12
+[OK   ] celular: menu abre por cima, sem empurrar a página 
+[OK   ] celular: tocar fora fecha o menu 
+[OK   ] celular: Esc fecha o menu 
+[OK   ] celular: escolher uma tela navega e fecha o menu 
+[OK   ] celular: "Sair" dentro do menu encerra a sessão 
+[OK   ] sem erros de JavaScript 
+Resumo: 14 OK, 0 FALHA

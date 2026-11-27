@@ -1,0 +1,542 @@
+// Camada de acesso a dados do front-end.
+//
+// Toda leitura/gravação de dados e de sessão passa por aqui — nenhuma tela
+// ou store deve tocar em localStorage nem chamar a API diretamente. Assim,
+// ligar o back-end (Spring Boot) é trocar o corpo destas funções, sem mexer
+// nas telas.
+//
+// Modo mock (padrão): guarda tudo no localStorage deste navegador.
+// Modo API: defina VITE_USE_MOCK=false e VITE_API_URL no arquivo .env
+// (veja .env.example). As chamadas usam axios, e os endpoints estão em
+// API-CONTRATO.md.
+
+import axios from 'axios'
+import { STATUS_CONTA } from '../utils/papeis'
+
+export const USAR_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+
+const CHAVE_AUTH = 'ctiAuth'
+const CHAVE_USUARIO = 'ctiUsuario'
+const CHAVE_NOME = 'ctiNome'
+const CHAVE_PAPEL = 'ctiPapel'
+// 'true' quando a pessoa entrou com uma senha temporária e precisa criar outra
+const CHAVE_TROCAR_SENHA = 'ctiTrocarSenha'
+const CHAVE_CLIENTES = 'ctiClientes'
+const CHAVE_TELEMETRIA = 'ctiTelemetria'
+const CHAVE_CONTAS = 'ctiContas'
+
+// ---------- Utilitários ----------
+
+const lerJson = (chave, padrao) => {
+  const salvo = localStorage.getItem(chave)
+  return salvo ? JSON.parse(salvo) : padrao
+}
+
+// Erro com o status HTTP (e um código, quando houver), para a tela saber o
+// que aconteceu: 401 = senha errada, 403 + PENDENTE/REJEITADO = cadastro
+// não aprovado, 409 = e-mail já cadastrado.
+const erroComStatus = (mensagem, status, codigo = '') => Object.assign(new Error(mensagem), { status, codigo })
+
+// Cliente axios da API do Spring Boot. withCredentials envia o cookie da
+// sessão. O timeout cobre o processamento da planilha: o Spring espera o
+// Python por até 60 s.
+const cliente = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  timeout: 90000
+})
+
+// Mensagem que o usuário entende para cada tipo de falha. O Spring manda o
+// motivo em "mensagem" (ex.: e-mail já cadastrado). Sem isso, o texto
+// depende do que aconteceu: servidor fora do ar, demora ou erro interno.
+const mensagemDoErro = (erro, caminho) => {
+  if (erro.code === 'ECONNABORTED' || erro.code === 'ETIMEDOUT') {
+    return 'O servidor demorou para responder. Tente de novo em instantes.'
+  }
+
+  if (!erro.response) {
+    return 'Não foi possível falar com o servidor. Confira a sua conexão e tente de novo.'
+  }
+
+  const { status, data } = erro.response
+
+  if (data?.mensagem) return data.mensagem
+  if (status >= 500) return 'O servidor encontrou um problema. Tente de novo em instantes.'
+  if (status === 403) return 'Você não tem permissão para esta ação.'
+  if (status === 404) return 'Informação não encontrada.'
+  return `Não foi possível concluir a operação (erro ${status} em ${caminho}).`
+}
+
+const http = async (caminho, { method = 'GET', body } = {}) => {
+  const headers = {}
+  if (method !== 'GET') {
+    const csrf = await http('/auth/csrf')
+    headers[csrf.headerName] = csrf.token
+    headers['Content-Type'] = 'application/json'
+  }
+
+  try {
+    const resposta = await cliente.request({ url: caminho, method, data: body, headers })
+    return resposta.status === 204 || resposta.data === '' ? null : resposta.data
+  } catch (erro) {
+    const status = erro.response?.status ?? 0
+
+    // Sessão expirada no Spring (30 min sem uso): o localStorage ainda diz
+    // "logado", então limpa e volta ao login. As rotas /auth/* (ex.: senha
+    // errada no login) tratam o 401 na própria tela.
+    if (status === 401 && !caminho.startsWith('/auth/')) {
+      limparSessaoLocal()
+
+      if (window.location.pathname !== '/login') {
+        const destino = window.location.pathname + window.location.search
+        window.location.assign(`/login?redirect=${encodeURIComponent(destino)}&motivo=sessao`)
+      }
+    }
+
+    throw erroComStatus(mensagemDoErro(erro, caminho), status, erro.response?.data?.codigo)
+  }
+}
+
+// ---------- Sessão ----------
+
+// Síncronas de propósito: a guarda de rota e a Sidebar precisam da resposta
+// na hora. No modo API, a sessão é validada pelo Spring a cada requisição.
+// Sessão sem papel (de antes dos papéis existirem) não vale: entra de novo.
+export const estaAutenticado = () => {
+  return localStorage.getItem(CHAVE_AUTH) === 'true' && Boolean(papelUsuario())
+}
+
+export const usuarioAtual = () => {
+  return localStorage.getItem(CHAVE_USUARIO) || ''
+}
+
+// Contas do modo mock criadas quando o papel ainda se chamava Analista
+const papelVigente = papel => (papel === 'ANALISTA' ? 'CONSULTOR' : papel)
+
+// CONSULTOR, GESTOR ou ADMINISTRADOR (veja utils/papeis.js)
+export const papelUsuario = () => {
+  return papelVigente(localStorage.getItem(CHAVE_PAPEL) || '')
+}
+
+const limparSessaoLocal = () => {
+  localStorage.removeItem(CHAVE_AUTH)
+  localStorage.removeItem(CHAVE_USUARIO)
+  localStorage.removeItem(CHAVE_NOME)
+  localStorage.removeItem(CHAVE_PAPEL)
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
+}
+
+const salvarSessao = usuario => {
+  localStorage.setItem(CHAVE_AUTH, 'true')
+  localStorage.setItem(CHAVE_USUARIO, usuario.email)
+  localStorage.setItem(CHAVE_PAPEL, usuario.papel)
+
+  if (usuario.trocarSenha) {
+    localStorage.setItem(CHAVE_TROCAR_SENHA, 'true')
+  } else {
+    localStorage.removeItem(CHAVE_TROCAR_SENHA)
+  }
+
+  if (usuario.nome) {
+    localStorage.setItem(CHAVE_NOME, usuario.nome)
+  } else {
+    localStorage.removeItem(CHAVE_NOME)
+  }
+}
+
+// Nome para exibir na Sidebar. Vem da API quando ela informa (campo "nome"
+// do login). Sem isso — no mock, ou se a API só devolver o e-mail — deriva
+// do e-mail: "ana.lima@empresa.com" -> "Ana Lima".
+const nomeAPartirDoEmail = email => {
+  return String(email || '')
+    .split('@')[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase())
+    .join(' ')
+}
+
+export const precisaTrocarSenha = () => localStorage.getItem(CHAVE_TROCAR_SENHA) === 'true'
+
+export const nomeUsuario = () => {
+  return localStorage.getItem(CHAVE_NOME) || nomeAPartirDoEmail(usuarioAtual())
+}
+
+// Conta de demonstração (só no modo simulado), para apresentação e testes:
+// sempre existe, aprovada e como Administrador. A tela de login mostra os
+// dados. Com o back-end ligado (VITE_USE_MOCK=false) ela não existe.
+export const CONTA_DEMO = USAR_MOCK
+  ? { nome: 'Administrador Demo', email: 'admin@ctiinsights.com', senha: 'cti12345' }
+  : null
+
+// Cria a conta de demonstração, ou a restaura se tiver sido apagada,
+// recusada ou trocada de papel na tela Usuários.
+const garantirContaDemo = async () => {
+  const contas = lerContas()
+  const senha = await resumoSenha(CONTA_DEMO.senha)
+  const atual = contas.find(item => item.email === CONTA_DEMO.email)
+
+  if (atual && atual.senha === senha && atual.papel === 'ADMINISTRADOR' && atual.status === STATUS_CONTA.APROVADO) {
+    return
+  }
+
+  const demo = {
+    id: atual?.id ?? 1,
+    nome: CONTA_DEMO.nome,
+    email: CONTA_DEMO.email,
+    senha,
+    papel: 'ADMINISTRADOR',
+    papelSolicitado: 'ADMINISTRADOR',
+    status: STATUS_CONTA.APROVADO,
+    criadoEm: atual?.criadoEm ?? new Date().toISOString(),
+    avaliadoEm: null,
+    avaliadoPor: null
+  }
+
+  salvarContas([...contas.filter(item => item.email !== CONTA_DEMO.email), demo])
+}
+
+// API: POST /auth/login  { email, senha } -> { email, nome?, papel }
+// (403 com { codigo: "PENDENTE" | "REJEITADO" } se o cadastro não foi aprovado)
+export const login = async (email, senha) => {
+  if (!USAR_MOCK) {
+    const usuario = await http('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, senha })
+    })
+    salvarSessao(usuario)
+    return usuario
+  }
+
+  // Mock: só entra quem se cadastrou neste navegador (tela /cadastro)
+  // e já foi aprovado por um Administrador (tela /usuarios), além da
+  // conta de demonstração
+  await garantirContaDemo()
+  const conta = lerContas().find(item => item.email === normalizarEmail(email))
+
+  if (!conta || conta.senha !== await resumoSenha(senha)) {
+    throw erroComStatus('E-mail ou senha inválidos', 401)
+  }
+
+  if (conta.status !== STATUS_CONTA.APROVADO) {
+    throw erroComStatus('Cadastro não aprovado', 403, conta.status)
+  }
+
+  const usuario = semSenha(conta)
+  salvarSessao(usuario)
+  return usuario
+}
+
+// ---------- Cadastro (primeiro acesso) e aprovação ----------
+
+const lerContas = () => lerJson(CHAVE_CONTAS, []).map(conta => ({
+  ...conta,
+  papel: papelVigente(conta.papel),
+  papelSolicitado: papelVigente(conta.papelSolicitado)
+}))
+const salvarContas = contas => localStorage.setItem(CHAVE_CONTAS, JSON.stringify(contas))
+
+// O que sai do serviço nunca leva a senha
+const semSenha = conta => {
+  const copia = { ...conta }
+  delete copia.senha
+  return copia
+}
+
+const normalizarEmail = email => String(email || '').trim().toLowerCase()
+
+// Mock: a senha não fica em texto puro no localStorage, e sim o SHA-256
+// dela. Na API real quem guarda a senha é o back-end (com BCrypt).
+// crypto.subtle só existe em https ou localhost; fora disso (ex.: abrir o
+// npm run dev pelo IP da rede) cai para o texto puro, só no mock.
+const resumoSenha = async senha => {
+  if (!globalThis.crypto?.subtle) {
+    return senha
+  }
+
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(senha))
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+// API: POST /auth/cadastro  { nome, email, senha, papel }
+//   -> { id, nome, email, papel, status }   (409 se o e-mail já tiver cadastro)
+// O cadastro nasce PENDENTE: só entra depois que um Administrador aprovar.
+// No mock, a primeira conta pode ser Administrador. Na API, a primeira
+// conta administrativa é configurada no bootstrap do Spring.
+export const cadastrar = async (nome, email, senha, papel) => {
+  if (!USAR_MOCK) {
+    return http('/auth/cadastro', {
+      method: 'POST',
+      body: JSON.stringify({ nome, email, senha, papel })
+    })
+  }
+
+  const contas = lerContas()
+  const emailNormalizado = normalizarEmail(email)
+
+  if (contas.some(item => item.email === emailNormalizado)) {
+    throw erroComStatus('E-mail já cadastrado', 409)
+  }
+
+  const primeiraConta = contas.length === 0
+
+  const conta = {
+    id: Date.now(),
+    nome: nome.trim(),
+    email: emailNormalizado,
+    senha: await resumoSenha(senha),
+    papel: primeiraConta ? 'ADMINISTRADOR' : papel,
+    papelSolicitado: papel,
+    status: primeiraConta ? STATUS_CONTA.APROVADO : STATUS_CONTA.PENDENTE,
+    criadoEm: new Date().toISOString(),
+    avaliadoEm: null,
+    avaliadoPor: null
+  }
+
+  salvarContas([...contas, conta])
+  return semSenha(conta)
+}
+
+// API: GET /usuarios -> [Usuario]  (só Administrador)
+export const listarUsuarios = async () => {
+  if (!USAR_MOCK) {
+    return http('/usuarios')
+  }
+
+  return lerContas().map(semSenha)
+}
+
+// Aprovar ou recusar um cadastro; o Administrador pode trocar o papel
+// pedido antes de aprovar.
+// API: PATCH /usuarios/{id}  { status, papel } -> Usuario  (só Administrador)
+export const avaliarUsuario = async (id, { status, papel }, avaliadoPor) => {
+  if (!USAR_MOCK) {
+    return http(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, papel })
+    })
+  }
+
+  let atualizada = null
+
+  const contas = lerContas().map(conta => {
+    if (conta.id !== id) {
+      return conta
+    }
+
+    atualizada = { ...conta, status, papel, avaliadoEm: new Date().toISOString(), avaliadoPor }
+    return atualizada
+  })
+
+  if (!atualizada) {
+    throw erroComStatus('Usuário não encontrado', 404)
+  }
+
+  salvarContas(contas)
+  return semSenha(atualizada)
+}
+
+// ---------- Senha ----------
+
+// Troca a própria senha (confirma a atual). Também é o passo obrigatório de
+// quem entrou com uma senha temporária.
+// API: POST /auth/senha  { senhaAtual, novaSenha } -> 204
+export const trocarSenha = async (senhaAtual, novaSenha) => {
+  if (!USAR_MOCK) {
+    await http('/auth/senha', { method: 'POST', body: JSON.stringify({ senhaAtual, novaSenha }) })
+  } else {
+    const contas = lerContas()
+    const conta = contas.find(item => item.email === usuarioAtual())
+
+    if (!conta || conta.senha !== await resumoSenha(senhaAtual)) {
+      throw erroComStatus('A senha atual não confere.', 400)
+    }
+    if (novaSenha === senhaAtual) {
+      throw erroComStatus('A senha nova deve ser diferente da atual.', 400)
+    }
+
+    const senha = await resumoSenha(novaSenha)
+    salvarContas(contas.map(item => (item.email === conta.email ? { ...item, senha, trocarSenha: false } : item)))
+  }
+
+  localStorage.removeItem(CHAVE_TROCAR_SENHA)
+}
+
+// O administrador gera uma senha temporária para quem esqueceu a sua. Ela
+// volta uma única vez; o usuário cria uma nova no próximo acesso.
+// API: POST /usuarios/{id}/senha-temporaria -> { senhaTemporaria }
+export const gerarSenhaTemporaria = async id => {
+  if (!USAR_MOCK) {
+    return (await http(`/usuarios/${id}/senha-temporaria`, { method: 'POST' })).senhaTemporaria
+  }
+
+  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const numeros = crypto.getRandomValues(new Uint32Array(12))
+  const temporaria = [...numeros].map(n => alfabeto[n % alfabeto.length]).join('')
+  const senha = await resumoSenha(temporaria)
+  salvarContas(lerContas().map(item => (item.id === id ? { ...item, senha, trocarSenha: true } : item)))
+  return temporaria
+}
+
+// API: POST /auth/logout
+export const logout = async () => {
+  limparSessaoLocal()
+
+  if (!USAR_MOCK) {
+    await http('/auth/logout', { method: 'POST' })
+  }
+}
+
+// ---------- Clientes ----------
+
+// API: GET /clientes -> [Cliente]
+export const listarClientes = async () => {
+  if (!USAR_MOCK) {
+    return http('/clientes')
+  }
+
+  return lerJson(CHAVE_CLIENTES, [])
+}
+
+// Inclui (original = null) ou edita um cliente da carteira atual.
+// API: POST /clientes ou PUT /clientes/{id}. O Spring monta uma nova versão
+// da carteira e o Python recalcula os indicadores; os ids mudam, então quem
+// chama deve recarregar a lista. 409 = código já existe; 502 = falha no ETL.
+export const salvarCliente = async (original, dados) => {
+  if (!USAR_MOCK) {
+    const corpo = JSON.stringify({
+      codigo_cliente: dados.codigo_cliente,
+      nome_cliente: dados.nome_cliente,
+      consultor: dados.consultor,
+      segmento: dados.segmento,
+      nivel_cliente: dados.nivel_cliente,
+      faturamento_anual: dados.faturamento,
+      data_contratacao: dados.data_contratacao,
+      servicos_contratados: dados.servicos.join(';'),
+      cidade: dados.cidade,
+      uf: dados.uf
+    })
+
+    return original
+      ? http(`/clientes/${original.id}`, { method: 'PUT', body: corpo })
+      : http('/clientes', { method: 'POST', body: corpo })
+  }
+
+  // Mock: a carteira fica no localStorage; o código identifica o cliente
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  const outros = lista.filter(cliente => cliente.codigo_cliente !== original?.codigo_cliente)
+
+  if (outros.some(cliente => cliente.codigo_cliente === dados.codigo_cliente)) {
+    throw erroComStatus('Código de cliente já existe na carteira.', 409)
+  }
+
+  const cliente = { ...dados, servico: dados.servicos.join(', ') }
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify([...outros, cliente]))
+  return cliente
+}
+
+// API: DELETE /clientes/{id}  (só Administrador)
+export const excluirCliente = async cliente => {
+  if (!USAR_MOCK) {
+    return http(`/clientes/${cliente.id}`, { method: 'DELETE' })
+  }
+
+  const lista = lerJson(CHAVE_CLIENTES, [])
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify(lista.filter(item => item.codigo_cliente !== cliente.codigo_cliente)))
+}
+
+// Mock: o front trata a planilha e guarda o resultado aqui.
+// API: a base é gravada pelo back-end ao receber a planilha
+// (POST /uploads); esta função deixa de ser necessária.
+export const salvarClientes = async clientes => {
+  if (!USAR_MOCK) {
+    return
+  }
+
+  localStorage.setItem(CHAVE_CLIENTES, JSON.stringify(clientes))
+}
+
+// ---------- Histórico de processamento (telemetria) ----------
+
+// O Spring devolve em "enviadoPor" só o nome (texto); as telas usam
+// { nome, email }, como no modo mock.
+const comResponsavel = envio => (typeof envio?.enviadoPor === 'string'
+  ? { ...envio, enviadoPor: { nome: envio.enviadoPor } }
+  : envio)
+
+// API: GET /uploads -> [RegistroUpload]
+export const enviarPlanilha = ({ nomeArquivo, linhasLidas, validos }) => http('/uploads', {
+  method: 'POST',
+  body: JSON.stringify({
+    nomeArquivo,
+    linhasLidas,
+    linhas: validos.map(cliente => ({
+      codigo_cliente: cliente.codigo_cliente,
+      nome_cliente: cliente.nome_cliente,
+      consultor: cliente.consultor,
+      segmento: cliente.segmento,
+      nivel_cliente: cliente.nivel_cliente,
+      faturamento_anual: cliente.faturamento,
+      data_contratacao: cliente.data_contratacao,
+      servicos_contratados: (cliente.servicos || []).join(';'),
+      cidade: cliente.cidade,
+      uf: cliente.uf
+    }))
+  })
+}).then(comResponsavel)
+
+export const lerDashboard = async () => {
+  try {
+    return await http('/dashboard')
+  } catch (erro) {
+    if (erro.status === 404) return null
+    throw erro
+  }
+}
+
+export const listarHistorico = async () => {
+  if (!USAR_MOCK) {
+    return (await http('/uploads')).map(comResponsavel)
+  }
+
+  return lerJson(CHAVE_TELEMETRIA, [])
+}
+
+// Mesmo caso de salvarClientes: só existe no modo mock.
+export const salvarHistorico = async historico => {
+  if (!USAR_MOCK) {
+    return
+  }
+
+  localStorage.setItem(CHAVE_TELEMETRIA, JSON.stringify(historico))
+}
+
+// ---------- Apoio a testes ----------
+
+// Só em desenvolvimento (npm run dev): se a chave ctiDelayUpload do
+// localStorage tiver um número (milissegundos), o processamento do upload
+// espera esse tempo, para dar para ver o status PROCESSANDO na tela. Em
+// produção (npm run build) não faz nada. Para usar, no console do navegador:
+//   localStorage.setItem('ctiDelayUpload', 3000)
+// e para desligar: localStorage.removeItem('ctiDelayUpload')
+export const esperarSimulado = async () => {
+  if (!import.meta.env.DEV) {
+    return
+  }
+
+  const atraso = Number(localStorage.getItem('ctiDelayUpload'))
+
+  if (atraso > 0) {
+    await new Promise(resolver => setTimeout(resolver, atraso))
+  }
+}
+
+// ---------- Limpeza ----------
+
+// Ferramenta de teste (botão "Limpar dados locais" em Relatórios).
+// API: DELETE /clientes e DELETE /uploads, se o back-end oferecer isso.
+export const limparDados = async () => {
+  localStorage.removeItem(CHAVE_CLIENTES)
+  localStorage.removeItem(CHAVE_TELEMETRIA)
+}

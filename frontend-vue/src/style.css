@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+/* Cores da marca do CTI Provedor (protótipos no Figma), definidas uma vez só
+   com o @theme do Tailwind v4 (aula 3). Cada nome vira classe pronta:
+   bg-cti-azul, text-cti-grafite, border-cti-linha, hover:bg-cti-azul-escuro...
+   Regra 60-30-10 (aula 1): fundos claros (60%), textos e menus em grafite
+   (30%), azul e laranja nos destaques e botões (10%). */
+@theme {
+  --color-cti-azul: #006EB7;           /* cor principal: botões, links, gráficos */
+  --color-cti-azul-escuro: #03558c;    /* azul ao passar o mouse */
+  --color-cti-laranja: #FF8F00;        /* destaque: ponto da logo, alertas, mediana */
+  --color-cti-laranja-escuro: #E68100; /* laranja ao passar o mouse */
+  --color-cti-laranja-texto: #A85700;  /* laranja escuro para texto (contraste) */
+  --color-cti-grafite: #292A2F;        /* títulos e textos principais */
+  --color-cti-grafite-home: #292930;   /* texto e rodapé da página inicial */
+  --color-cti-cinza: #4A5D66;          /* textos secundários */
+  --color-cti-linha: #CDDADF;          /* bordas e grade de fundo */
+  --color-cti-fundo: #FAFAF7;          /* fundo claro */
+  --color-cti-marinho: #0B2545;        /* painel institucional do Login e do Cadastro */
+  --color-cti-marinho-linha: #15335A;  /* grade do painel marinho */
+}
+
+/* Fundo claro quadriculado da página inicial. Também é usado no Login e no
+   Cadastro, para as telas públicas terem a mesma cara. */
+@utility fundo-home {
+  background-color: var(--color-cti-fundo);
+  background-image:
+    linear-gradient(to right, var(--color-cti-linha) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-cti-linha) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
@@ -11,4 +41,13 @@ body {
     linear-gradient(#dce5ec 1px, transparent 1px),
     linear-gradient(90deg, #dce5ec 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* Usado pelo botão "Exportar PDF" (window.print()): esconde sidebar,
+   filtros e botões de ação na hora de imprimir, deixando só o conteúdo
+   (KPIs, gráficos, insights, tabela). */
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }

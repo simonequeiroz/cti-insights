@@ -1,0 +1,49 @@
+// Papéis de usuário e o que cada um pode fazer. É a única fonte das regras
+// de acesso do front: Sidebar, guarda de rota e botões consultam daqui.
+// No front isso só esconde/bloqueia telas; quem garante de verdade é o
+// back-end, que deve aplicar as mesmas regras em cada endpoint.
+//
+// Todos consultam o Dashboard e os Relatórios e exportam os dados. Além disso:
+//   Consultor     → importa a planilha da carteira e inclui/edita clientes
+//   Gestor        → só acompanha os resultados (perfil estratégico)
+//   Administrador → tudo do consultor, mais excluir clientes, aprovar
+//                   cadastros e apagar dados/histórico
+
+export const PAPEIS = [
+  {
+    valor: 'CONSULTOR',
+    rotulo: 'Consultor',
+    descricao: 'Importa as planilhas, mantém a carteira de clientes e acompanha o Dashboard.'
+  },
+  {
+    valor: 'GESTOR',
+    rotulo: 'Gestor',
+    descricao: 'Acompanha o Dashboard e a carteira de clientes e exporta os dados.'
+  },
+  {
+    valor: 'ADMINISTRADOR',
+    rotulo: 'Administrador',
+    descricao: 'Tudo o que o consultor faz, mais aprovar cadastros, gerenciar acessos e excluir clientes.'
+  }
+]
+
+export const rotuloPapel = valor => PAPEIS.find(papel => papel.valor === valor)?.rotulo || ''
+
+// Ação → papéis que podem fazê-la
+const PERMISSOES = {
+  importarPlanilha: ['CONSULTOR', 'ADMINISTRADOR'],
+  editarCliente: ['CONSULTOR', 'ADMINISTRADOR'],
+  excluirCliente: ['ADMINISTRADOR'],
+  removerHistorico: ['ADMINISTRADOR'],
+  limparDados: ['ADMINISTRADOR'],
+  gerenciarUsuarios: ['ADMINISTRADOR']
+}
+
+export const podeFazer = (papel, acao) => Boolean(PERMISSOES[acao]?.includes(papel))
+
+// Situação do cadastro: só entra quem foi aprovado por um Administrador
+export const STATUS_CONTA = {
+  PENDENTE: 'PENDENTE',
+  APROVADO: 'APROVADO',
+  REJEITADO: 'REJEITADO'
+}

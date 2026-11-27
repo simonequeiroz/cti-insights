@@ -1,71 +1,44 @@
 <template>
-  <section class="px-4 pb-16 sm:px-6 lg:px-10">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 sm:grid-cols-2 lg:grid-cols-4">
+  <!-- O que o cliente recebe: 1 coluna no mobile, 2 a partir de sm, 4 a
+       partir de lg. Sem números de exemplo: os valores reais só aparecem
+       no Dashboard, calculados a partir da planilha enviada.
+       As linhas entre os cards vêm do gap-px sobre o fundo cinza da grade. -->
+  <section class="border-t border-b border-cti-linha bg-white mb-8 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-cti-linha">
 
-      <!-- Clientes nível A -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Clientes nível A
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          320
-        </p>
-
-        <p class="mt-1 text-[9px] text-gray-400">
-          22,1% da base total
-        </p>
-      </div>
-
-      <!-- Total de clientes -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Total de clientes
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          1.450
-        </p>
-
-        <p class="mt-1 text-[9px] text-[#72B82A]">
-          ↑ 12,4% no período
-        </p>
-      </div>
-
-      <!-- Ticket médio -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Ticket médio
-        </p>
-
-        <p class="mt-2 text-2xl font-bold text-[#292A2F]">
-          R$ 180,4
-        </p>
-
-        <p class="mt-1 text-[9px] text-[#72B82A]">
-          ↑ 6,8% no período
-        </p>
-      </div>
-
-      <!-- Integridade -->
-      <div class="bg-white px-6 py-5">
-        <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
-          Integridade dos dados
-        </p>
-
-        <div class="mt-2 flex items-center gap-2">
-          <p class="text-2xl font-bold text-[#292A2F]">
-            100%
-          </p>
-
-          <span class="h-2 w-2 rounded-full bg-[#72B82A]"></span>
+        <div v-for="item in itens" :key="item.titulo" class="bg-white p-5 md:p-8">
+          <h3 class="text-[13px] text-cti-cinza mb-3 font-bold font-['IBM_Plex_Mono'] uppercase">{{ item.rotulo }}</h3>
+          <p class="font-['Space_Grotesk'] font-bold text-xl text-cti-azul m-0">{{ item.titulo }}</p>
+          <p class="text-sm mt-2 text-cti-cinza leading-[1.5]">{{ item.texto }}</p>
         </div>
 
-        <p class="mt-1 text-[9px] text-gray-400">
-          Última atualização: agora
-        </p>
       </div>
-
     </div>
   </section>
 </template>
+
+<script setup>
+const itens = [
+  {
+    rotulo: 'Onde está a receita',
+    titulo: 'Faturamento por segmento e nível',
+    texto: 'Quanto cada segmento e cada nível A, B e C representam no faturamento da carteira.'
+  },
+  {
+    rotulo: 'Curva ABC',
+    titulo: 'Concentração da carteira',
+    texto: 'Quantos clientes sustentam a maior parte da receita, com a curva acumulada.'
+  },
+  {
+    rotulo: 'Equipe',
+    titulo: 'Resultado por consultor',
+    texto: 'Faturamento e número de clientes sob a gestão de cada consultor.'
+  },
+  {
+    rotulo: 'Upsell',
+    titulo: 'Quem pode comprar mais',
+    texto: 'Clientes e segmentos com espaço para contratar mais serviços, explicados em frases.'
+  }
+]
+</script>

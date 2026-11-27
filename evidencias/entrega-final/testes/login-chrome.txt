@@ -1,0 +1,13 @@
+# Tela de login no Chrome (26/11/2026): carregando, sessão expirada, redirect seguro e celular
+[OK   ] botão mostra "Entrando..." e fica desabilitado "Entrando..."
+[OK   ] depois da resposta, o botão volta e o erro aparece 
+[OK   ] aviso de sessão expirada aparece 
+[OK   ] sem o motivo, o aviso não aparece 
+[OK   ] redirect "https://site-falso.com" vai ao Dashboard http://localhost:5173/dashboard
+[OK   ] redirect "//site-falso.com" vai ao Dashboard http://localhost:5173/dashboard
+[OK   ] redirect "/\site-falso.com" vai ao Dashboard http://localhost:5173/dashboard
+[OK   ] redirect "javascript:alert(1)" vai ao Dashboard http://localhost:5173/dashboard
+[OK   ] redirect interno "/relatorios" continua funcionando http://localhost:5173/relatorios
+[OK   ] endereço inexistente volta à página inicial http://localhost:5173/
+[OK   ] celular: título do formulário mais perto do topo y=248 (antes 323)
+Resumo: 11 OK, 0 FALHA

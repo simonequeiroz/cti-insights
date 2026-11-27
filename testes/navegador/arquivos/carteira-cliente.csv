@@ -1,0 +1,7 @@
+consultor,codigo_cliente,nome_cliente,segmento,nivel_cliente,data_contratacao,servicos_contratados,faturamento_anual,cidade,uf
+ana souza,CLI-001,Metalúrgica Horizonte,IND.,A,15/01/2025,Firewall;Internet Dedicada,1850000,Campinas,SP
+Carlos Lima,CLI-002,Mercado Central,Comercio,B,30/01/2025,Backup;Firewall,420000,Sumaré,SP
+Carlos Lima,CLI-003,Padaria Bom Dia,Alimentos,C,10/02/2025,Internet Dedicada,90000,Hortolândia,SP
+Ana Souza,CLI-004,Transportadora Rota,Serviços,D,05/03/2025,Backup,300000,Valinhos,SP
+Ana Souza,CLI-004,Transportadora Rota Duplicada,Serviços,B,05/03/2025,Backup,300000,Valinhos,SP
+Beatriz Reis,CLI-005,Clínica Vida,Serviços,B,31/02/2025,VoIP,250000,Campinas,XX

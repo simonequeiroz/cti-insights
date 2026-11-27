@@ -1,0 +1,23 @@
+# Tela Clientes no Chrome (26/11/2026, carteira de 32 clientes): busca, filtros, ordenação, resumo, selo de upsell, CSV e celular
+[OK   ] resumo com faturamento total e upsell 32 de 32 clientes · R$ 72,4 mi em faturamento · 7 com oportunidade de upsell
+[OK   ] 7 selos "Upsell" no total 
+[OK   ] busca "Ana Souza" acha 9 -> 9
+[OK   ] busca "ana souza" acha 9 -> 9
+[OK   ] busca "CTI010" acha 1 -> 1
+[OK   ] busca "cti010" acha 1 -> 1
+[OK   ] busca "metalurgica" acha 1 -> 1
+[OK   ] filtro segmento Indústria = 7 
+[OK   ] filtros combinados (Indústria + A + Ana Souza) Indústria+A=6, +Ana=2; 2 de 32 clientes · R$ 7,3 mi em faturamento · 2 com oportunidade de upsell
+[OK   ] limpar filtros volta a 32 
+[OK   ] ordenar por faturamento (maior primeiro) 7200000 ... 2850000
+[OK   ] cabeçalho informa a ordem (aria-sort) 
+[OK   ] segundo clique inverte (menor primeiro) 
+[OK   ] selos Upsell na página ordenada por faturamento 2 nesta página
+[OK   ] selo explica o motivo ao passar o mouse Faturamento acima da mediana do segmento, com poucos serviços (2 contra média de 2,4)
+[OK   ] CSV com os nomes da tela "Código";"Empresa";"Consultor";"Segmento";"Faturamento";"Nível";"Serviços";"Data da contratação"
+[OK   ] "+ Novo cliente" na linha do título 
+[OK   ] celular: sem rolagem lateral 
+[OK   ] celular: Editar visível sem arrastar para o lado x=37
+[OK   ] celular: ordenar pela lista Indústria Prime
+[OK   ] sem erros de JavaScript 
+Resumo: 21 OK, 0 FALHA

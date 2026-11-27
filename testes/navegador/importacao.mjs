@@ -1,0 +1,56 @@
+import { chromium } from 'playwright-core'
+import { ARQUIVOS, CHROME, ENV_JAVA, PLANILHA_PROFESSOR, RAIZ } from './config.mjs'
+import { readFileSync } from 'node:fs'
+const env = Object.fromEntries(readFileSync(ENV_JAVA,'utf8').split(/\r?\n/).filter(l=>l.includes('=')&&!l.startsWith('#')).map(l=>[l.slice(0,l.indexOf('=')).trim(),l.slice(l.indexOf('=')+1).trim()]))
+const out = process.argv[2] || `${RAIZ}/testes/navegador/saida`, B='http://localhost:5173'
+let ok=0,falha=0; const confere=(n,c,d='')=>{c?ok++:falha++; console.log(`[${c?'OK   ':'FALHA'}] ${n} ${d}`)}
+const b = await chromium.launch({ executablePath:CHROME })
+const ctx = await b.newContext({ viewport:{ width:1366, height:900 }, acceptDownloads:true })
+const p = await ctx.newPage(); const erros=[]; p.on('pageerror',e=>erros.push(e.message))
+await p.goto(B+'/login'); await p.locator('input[type=email]').fill(env.ADMIN_EMAIL); await p.locator('input[type=password]').fill(env.ADMIN_PASSWORD)
+await p.locator('button[type=submit]').click(); await p.waitForURL('**/dashboard')
+await p.goto(B+'/upload'); await p.waitForTimeout(1500)
+// 1) histórico
+const hist = await p.locator('#historico-conteudo').innerText()
+confere('histórico com colunas novas', /Origem/.test(hist) && /Clientes na carteira/.test(hist) && /Responsável/.test(hist))
+confere('alterações manuais identificadas', /Cliente incluído/.test(hist) && /Cliente editado/.test(hist) && /Cliente excluído/.test(hist) && /Atualizada/.test(hist))
+confere('planilha identificada', /dados\.xlsx[\s\S]*Planilha/.test(hist))
+await p.getByRole('button',{name:/ver detalhes/}).first().click(); await p.waitForTimeout(300)
+const caixa = p.locator('#historico-conteudo p.rounded-md').first()
+confere('detalhe de sucesso em verde, não vermelho', (await caixa.getAttribute('class')).includes('green'), (await caixa.innerText()).trim()); confere('detalhe sem o termo ETL', /Processamento concluído/.test(await caixa.innerText()))
+await p.screenshot({ path:`${out}/imp2-historico.png`, fullPage:true })
+// 3) segmentos na ajuda e no modelo
+await p.getByRole('button',{name:/Quais colunas/}).click(); await p.waitForTimeout(300)
+confere('ajuda lista os segmentos aceitos', /um destes: Agronegócio, Comércio, Educação/.test(await p.locator('main').innerText()))
+const [dl] = await Promise.all([p.waitForEvent('download'), p.getByRole('button',{name:'Baixar modelo'}).click()])
+await dl.saveAs(`${out}/modelo2.xlsx`)
+// 4) prévia
+await p.locator('input[type=file]').setInputFiles(`${ARQUIVOS}/carteira-cliente.csv`)
+await p.getByRole('button',{name:'Verificar planilha'}).click(); await p.waitForTimeout(1500)
+const linhaPadaria = p.locator('tr', { hasText: 'Padaria Bom Dia' })
+confere('prévia marca o cliente que será descartado', /será descartado/.test(await linhaPadaria.innerText()))
+confere('outros clientes sem a marca', !(/será descartado/.test(await p.locator('tr', { hasText: 'Mercado Central' }).innerText())))
+await p.screenshot({ path:`${out}/imp2-revisar.png`, fullPage:true })
+// 5) aviso de tempo + 2) tela final (resposta simulada)
+await p.route('**/api/uploads', async r => {
+  if (r.request().method() !== 'POST') return r.fallback()
+  await new Promise(s=>setTimeout(s,2500))
+  r.fulfill({ status:201, contentType:'application/json', body: JSON.stringify({ id:999, tipoOperacao:'UPLOAD', nomeArquivo:`${ARQUIVOS}/carteira-cliente.csv`, dataHora:new Date().toISOString(), status:'NORMALIZADO', linhasLidas:6, mensagem:'', enviadoPor:'Simone Queiroz', linhasImportadas:2 }) })
+})
+const revisao = (await p.locator('main').innerText()).replace(/\s+/g,' ')
+confere('"Prontas para importar" já desconta o segmento descartado', /Prontas para importar 2 \+1 descartado \(segmento\)/.test(revisao))
+await p.getByRole('button',{name:/continuar/i}).first().click(); await p.waitForTimeout(500)
+// Mais da metade da carteira sai: o botão só libera depois de marcar a ciência
+const botaoImportar = p.getByRole('button',{name:/Importar \d/})
+confere('carteira quase toda saindo: botão bloqueado até marcar "Entendi"', await botaoImportar.isDisabled())
+await p.getByRole('checkbox',{name:/Entendi que/}).check()
+confere('depois de marcar "Entendi", o botão libera', await botaoImportar.isEnabled())
+await botaoImportar.click(); await p.waitForTimeout(700)
+confere('aviso de tempo durante o processamento', /pode levar alguns segundos/.test(await p.locator('main').innerText()))
+await p.screenshot({ path:`${out}/imp2-processando.png` })
+await p.getByRole('heading',{name:/importados?/}).waitFor({ timeout: 10000 })
+const fim = (await p.locator('section[aria-labelledby=concluido-titulo]').innerText()).replace(/\s+/g,' ')
+confere('tela final separa os motivos', /fora. 1 cliente/.test(fim) && /descartado. 32 clientes/.test(fim), fim.slice(0,260))
+await p.screenshot({ path:`${out}/imp2-concluido.png` })
+confere('sem erros de JavaScript', erros.length===0, erros.join('|'))
+await b.close(); console.log(`\nResumo: ${ok} OK, ${falha} FALHA`)

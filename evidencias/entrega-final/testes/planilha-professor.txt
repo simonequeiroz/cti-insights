@@ -1,0 +1,21 @@
+# Planilha de aula do professor (material-frontend/dados.xlsx, dados fictícios), etapas Revisar e Confirmar (26/11/2026). Nada foi gravado.
+Linhas lidas
+36
+Prontas para importar
+32
+Corrigidas automaticamente
+25
+Com erro
+4
+32	faturamento anual	vazio
+33	serviço	vazio
+34	consultor	vazio
+37	código do cliente	"CTI035" repetido (já usado na linha 36)
+Total: 32 clientes · Nível A: 13
+Novos clientes
++0
+Já estavam na carteira
+32
+Saem da carteira
+0
+Importar 32 clientes
