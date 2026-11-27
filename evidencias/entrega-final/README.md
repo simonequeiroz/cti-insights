@@ -47,7 +47,7 @@ clientes). Desktop em 1366 px e celular em 390 px.
 | `clientes-chrome.txt` | Tela Clientes: busca, filtros, ordenação, resumo, upsell, CSV e celular: 21 de 21 |
 | `cadastro-chrome.txt` | Cadastro: papéis, erros por campo, e-mail, tela final e retorno seguro: 14 de 14 |
 | `usuarios-chrome.txt` | Usuários e troca de senha: 28 de 28 |
-| `backend-mvn-test.txt` | Back-end: 6 de 6, incluindo o teste de bloqueio, troca de papel e senha temporária |
+| `backend-mvn-test.txt` | Back-end: 9 de 9, incluindo bloqueio, troca de papel, senha temporária, exceções próprias e classes de domínio |
 | `menu-lateral-chrome.txt` | Menu lateral: fixo ao rolar, tablet e hambúrguer do celular: 14 de 14 |
 | `edicao-cliente-chrome.txt` | Inclusão, edição e exclusão de cliente com recálculo do dashboard: 11 de 11 |
 | `front-lint-build.txt` | `npm run lint` sem erros e `npm run build` concluído |

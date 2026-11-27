@@ -127,7 +127,7 @@ com a ponte que ligaria máquinas ao sistema, está em
 | H01: 100 registros com erros propositais (`analytics-python/teste_h01.py`) | 94 de 94 grafias previstas padronizadas |
 | Planilha de aula do professor (`dados.xlsx`, 36 linhas com erros intencionais) | 25 linhas corrigidas sozinhas, os 4 erros intencionais recusados com o motivo, 32 clientes importados |
 | Importação: histórico, prévia, aviso de tempo e tela final | 11 de 11 |
-| Back-end (`mvnw test`, com a suíte de integração no Neon) | 6 de 6 |
+| Back-end (`mvnw test`, com a suíte de integração no Neon) | 9 de 9 |
 | Usuários: bloquear, mudar papel, senha temporária e troca obrigatória | 28 de 28 |
 | Front (`npm run lint` e `npm run build`) | Sem erros |
 
