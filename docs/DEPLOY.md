@@ -53,8 +53,15 @@ telas de variáveis de cada serviço.
 | `DB_USER` | o usuário antes dos `:` |
 | `DB_PASSWORD` | Connect → Show password |
 | `DB_SSLMODE` | `require` |
-| `ETL_API_KEY` | a mesma do `analytics-python/.env` |
+| `ETL_API_KEY` | uma chave nova de 40 caracteres (comando abaixo); a mesma vai no Java |
 | `PYTHON_VERSION` | `3.12.7` |
+
+Para gerar a chave sem que ela apareça na tela (PowerShell; ela vai para o
+Ctrl + V):
+
+```powershell
+$b = New-Object byte[] 20; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); -join ($b | % { $_.ToString('x2') }) | Set-Clipboard
+```
 
 **Teste:** `https://cti-insights-python.onrender.com/saude` → `{"status":"ok"}`.
 Anote o endereço exato que o Render mostrar no topo da página do serviço.
@@ -81,7 +88,7 @@ Anote o endereço exato que o Render mostrar no topo da página do serviço.
 | `ETL_URL` | endereço do Python, **sem `/etl` e sem `/` no fim**. Ex.: `https://cti-insights-python.onrender.com` |
 | `ETL_API_KEY` | a **mesma** do Python |
 | `ETL_READ_TIMEOUT` | `120s` (o Python pode estar acordando) |
-| `ADMIN_NAME` · `ADMIN_EMAIL` · `ADMIN_PASSWORD` | os do `backend-java/.env` (só valem se a conta ainda não existir no banco) |
+| `ADMIN_NAME` · `ADMIN_EMAIL` · `ADMIN_PASSWORD` | **opcionais**: só criam o administrador se o banco ainda não tiver um. No Neon do projeto ele já existe; deixe de fora |
 | `CORS_ALLOWED_ORIGINS` | deixe para o passo 5 |
 
 O primeiro deploy leva de 5 a 8 minutos.
